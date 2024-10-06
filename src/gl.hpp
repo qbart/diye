@@ -18,6 +18,7 @@ struct GL
 	using Program = uint;
 	using AttribLocation = uint32;
 	using FramebufferStatus = int;
+	using UniformLocation = int;
 
 	enum class Face
 	{
@@ -106,15 +107,16 @@ struct GL
 		VertexShader = GL_VERTEX_SHADER,
 		FragmentShader = GL_FRAGMENT_SHADER
 	};
-	enum class Capability
+	enum class Capability : uint
 	{
 		DepthTest = GL_DEPTH_TEST,
-		CullFace = GL_CULL_FACE
+		CullFace = GL_CULL_FACE,
+		Blend = GL_BLEND
 	};
 	enum class Type
 	{
 		Float = GL_FLOAT,
-		Uint = GL_UNSIGNED_INT,
+		UInt = GL_UNSIGNED_INT,
 		Byte = GL_BYTE
 	};
 
@@ -131,12 +133,14 @@ struct GL
 	};
 	enum class ShaderParameter
 	{
-		CompileStatus = GL_COMPILE_STATUS
+		CompileStatus = GL_COMPILE_STATUS,
+		InfoLogLength = GL_INFO_LOG_LENGTH
 	};
 	enum class ProgramParameter
 	{
 		LinkStatus = GL_LINK_STATUS,
-		ValidateStatus = GL_VALIDATE_STATUS
+		ValidateStatus = GL_VALIDATE_STATUS,
+		InfoLogLength = GL_INFO_LOG_LENGTH
 	};
 	enum class Parameter
 	{
@@ -160,15 +164,7 @@ struct GL
 		MaxTextureBufferSize = GL_MAX_TEXTURE_BUFFER_SIZE,
 		MaxDepthTextureSamples = GL_MAX_DEPTH_TEXTURE_SAMPLES,
 		MaxRectangleTextureSize = GL_MAX_RECTANGLE_TEXTURE_SIZE,
-		MaxTextureMaxAnisotropy = GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT,
-		MaxTextureSize = GL_MAX_TEXTURE_SIZE,
-		MaxTextureImageUnits = GL_MAX_TEXTURE_IMAGE_UNITS,
-		MaxTextureBufferSize = GL_MAX_TEXTURE_BUFFER_SIZE,
-		MaxRectangleTextureSize = GL_MAX_RECTANGLE_TEXTURE_SIZE,
-		MaxDepthTextureSamples = GL_MAX_DEPTH_TEXTURE_SAMPLES,
-		MaxRenderbufferSize = GL_MAX_RENDERBUFFER_SIZE,
-		MaxCubeMapTextureSize = GL_MAX_CUBE_MAP_TEXTURE_SIZE,
-		MaxTextureMaxAnisotropy = GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT,
+		MaxTextureMaxAnisotropy = GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT
 	};
 
 	static const std::unordered_map<int, std::string> Types;
@@ -192,6 +188,26 @@ struct GL
 		return val;
 	}
 
+	void Enable(Capability cap)
+	{
+		glEnable((uint)cap);
+	}
+
+	void Disable(Capability cap)
+	{
+		glDisable((uint)cap);
+	}
+
+	void BlendFunc(BlendFactor src, BlendFactor dst)
+	{
+		glBlendFunc((uint)src, (uint)dst);
+	}
+
+	void Clear(BufferMask mask)
+	{
+		glClear((uint)mask);
+	}
+
 	void ColorColorBuffer(const Vec3 &floats, int drawBuffer = 0)
 	{
 		Vec4 f(floats, 1);
@@ -201,6 +217,13 @@ struct GL
 	void ClearDepthBuffer(float val = 1)
 	{
 		glClearBufferfv(GL_DEPTH, 0, &val);
+	}
+
+	Framebuffer CreateFramebuffer()
+	{
+		uint fb;
+		glGenFramebuffers(1, &fb);
+		return fb;
 	}
 
 	void Viewport(int x, int y, int w, int h)
@@ -229,14 +252,14 @@ struct GL
 		glCompileShader(shader);
 	}
 
-	int ShaderGetInt(Shader shader, uint param) const
+	int GetShaderInt(Shader shader, ShaderParameter param) const
 	{
 		int val;
-		glGetShaderiv(shader, param, &val);
+		glGetShaderiv(shader, (uint)param, &val);
 		return val;
 	}
 
-	std::string ShaderInfoLog(Shader shader, int bufSize) const
+	std::string GetShaderInfoLog(Shader shader, int bufSize) const
 	{
 		std::vector<char> log;
 		if (bufSize > 0)
@@ -283,14 +306,14 @@ struct GL
 		glLinkProgram(program);
 	}
 
-	int ProgramGetInt(Program program, ProgramParameter param)
+	int GetProgramInt(Program program, ProgramParameter param)
 	{
 		int val;
 		glGetProgramiv(program, (uint)param, &val);
 		return val;
 	}
 
-	std::string ProgramInfoLog(Program program, int bufSize)
+	std::string GetProgramInfoLog(Program program, int bufSize)
 	{
 		std::vector<char> log;
 		if (bufSize > 0)
@@ -301,12 +324,12 @@ struct GL
 		return std::string(std::begin(log), std::end(log));
 	}
 
-	int UniformLocation(Program program, const std::string &name)
+	UniformLocation GetUniformLocation(Program program, const std::string &name)
 	{
 		return glGetUniformLocation(program, name.c_str());
 	}
 
-	void Uniform(UniformLocation loc, const Vec3 &v)
+	void Uniform(uint loc, const Vec3 &v)
 	{
 		glUniform3fv(loc, 1, glm::value_ptr(v));
 	}
@@ -333,12 +356,12 @@ struct GL
 		glDeleteVertexArrays(1, &va);
 	}
 
-	void VertexAttribEnableArray(uint index)
+	void EnableVertexAttribArray(uint index)
 	{
 		glEnableVertexAttribArray(index);
 	}
 
-	void VertexAttribDisableArray(uint index)
+	void DisableVertexAttribArray(uint index)
 	{
 		glDisableVertexAttribArray(index);
 	}
@@ -348,12 +371,12 @@ struct GL
 		glVertexAttribPointer(index, size, type, GL_FALSE, 0, (void *)0);
 	}
 
-	void VertexAttribPointerf(uint index, int size)
+	void VertexAttribPointer(uint index, int size)
 	{
 		glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, 0, (void *)0);
 	}
 
-	uint GenBuffer()
+	Buffer GenBuffer()
 	{
 		uint buf;
 		glGenBuffers(1, &buf);
@@ -365,87 +388,51 @@ struct GL
 		glDeleteBuffers(1, &buf);
 	}
 
-	void BindBuffer(uint target, uint buf)
+	void BindBuffer(BufferType target, Buffer buf)
 	{
-		glBindBuffer(target, buf);
+		glBindBuffer((uint)target, buf);
 	}
 
-	void BufferData(uint target, const std::vector<Vec3> &vv, uint usage = GL_STATIC_DRAW)
+	void BufferData(BufferType target, const std::vector<Vec3> &vv, BufferUsage usage = BufferUsage::Static)
 	{
-		glBufferData(target, sizeof(Vec3) * vv.size(), &vv[0], usage);
+		glBufferData((uint)target, sizeof(Vec3) * vv.size(), &vv[0], (uint)usage);
 	}
 
-	void BufferData(uint target, const std::vector<uint32> &vv, uint usage = GL_STATIC_DRAW)
+	void BufferData(BufferType target, const std::vector<uint32> &vv, BufferUsage usage = BufferUsage::Static)
 	{
-		glBufferData(target, sizeof(uint32) * vv.size(), &vv[0], usage);
+		glBufferData((uint)target, sizeof(uint32) * vv.size(), &vv[0], (uint)usage);
 	}
 
-	void BindBufferArray(uint buf)
+	void DrawArrays(DrawMode mode, int offset, int count)
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, buf);
+		glDrawArrays((uint)mode, offset, count);
 	}
 
-	void BufferDataArray(const std::vector<Vec3> &vv, uint usage = GL_STATIC_DRAW)
+	void DrawElements(DrawMode mode, int count)
 	{
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3) * vv.size(), &vv[0], usage);
+		glDrawElements((uint)mode, sizeof(uint32) * count, GL_UNSIGNED_INT, nullptr);
 	}
 
-	void BindBufferElement(uint buf)
+	void DrawElementsBaseVertex(DrawMode mode, int count, int offset = 0)
 	{
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf);
+		glDrawElementsBaseVertex((uint)mode, sizeof(uint32) * count, GL_UNSIGNED_INT, nullptr, offset);
 	}
 
-	void BufferDataElement(const std::vector<uint32> &ii, uint usage = GL_STATIC_DRAW)
+	void CullFace(Face face = Face::Back)
 	{
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32) * ii.size(), &ii[0], usage);
-	}
-
-	void DrawArrays(uint mode, int offset, int count)
-	{
-		glDrawArrays(mode, offset, count);
-	}
-
-	void DrawElements(uint mode, int count)
-	{
-		glDrawElements(mode, sizeof(uint32) * count, GL_UNSIGNED_INT, nullptr);
-	}
-
-	void DrawElementsBaseVertex(uint mode, int count, int offset = 0)
-	{
-		glDrawElementsBaseVertex(mode, sizeof(uint32) * count, GL_UNSIGNED_INT, nullptr, offset);
-	}
-	void DrawArraysTriangles(int offset, int count)
-	{
-		glDrawArrays(GL_TRIANGLES, offset, count);
-	}
-
-	void DrawElementsTriangles(int count)
-	{
-		glDrawElements(GL_TRIANGLES, sizeof(uint32) * count, GL_UNSIGNED_INT, nullptr);
-	}
-
-	void DrawElementsBaseVertexTriangles(int count, int offset = 0)
-	{
-		glDrawElementsBaseVertex(GL_TRIANGLES, sizeof(uint32) * count, GL_UNSIGNED_INT, nullptr, offset);
-	}
-
-	void CullFace(bool val = true, Face face = Face::Back)
-	{
-		if (val)
-		{
-			glEnable(GL_CULL_FACE);
-			glCullFace((uint)face);
-		}
-		else
-		{
-			glDisable(GL_CULL_FACE);
-		}
+		glCullFace((uint)face);
 	}
 
 	void FrontFace(FrontFace val)
 	{
 		glFrontFace((uint)val);
 	}
+
+	// extended
+
+	void Defaults();
+	Shader CreateAndCompileShader(ShaderType type, const std::string &src);
+	Program CreateDefaultProgram(const std::string &vertex, const std::string &frag);
 };
 
 struct Bytes

@@ -1,6 +1,7 @@
 #include "window.hpp"
 
-#include <fmt/core.h>
+#include "glm.hpp"
+#include <memory>
 
 std::unique_ptr<Window> Window::New(int w, int h, const std::string &title)
 {
@@ -10,7 +11,11 @@ std::unique_ptr<Window> Window::New(int w, int h, const std::string &title)
         std::cerr << "Failed to initialize GLFW";
         return nullptr;
     }
+#ifdef __APPLE__
+    ptr->glfw.WindowHintContextVersion(4, 1);
+#else
     ptr->glfw.WindowHintContextVersion(4, 5);
+#endif
     ptr->glfw.WindowHintCoreProfileForwardCompat();
     ptr->glfw.WindowHintResizable(true);
     ptr->wnd = ptr->glfw.WindowCreate(w, h, title);
@@ -25,7 +30,7 @@ std::unique_ptr<Window> Window::New(int w, int h, const std::string &title)
     if (!ptr->glfw.InitGLEW())
     {
         std::cerr << "Failed to init GLEW";
-        return false;
+        return nullptr;
     }
     return ptr;
 }
