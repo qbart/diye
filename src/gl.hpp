@@ -306,6 +306,11 @@ struct GL
 		glLinkProgram(program);
 	}
 
+	void ValidateProgram(Program program)
+	{
+		glValidateProgram(program);
+	}
+
 	int GetProgramInt(Program program, ProgramParameter param)
 	{
 		int val;
@@ -318,8 +323,8 @@ struct GL
 		std::vector<char> log;
 		if (bufSize > 0)
 		{
-			int len;
-			glGetProgramInfoLog(program, bufSize, &len, &log[0]);
+			log.resize(bufSize);
+			glGetProgramInfoLog(program, bufSize, nullptr, log.data());
 		}
 		return std::string(std::begin(log), std::end(log));
 	}
@@ -440,15 +445,29 @@ struct Bytes
 public:
 	explicit Bytes(int _bytes) : bytes(_bytes) {}
 
+	int KiB() const
+	{
+		return bytes / 1024;
+	}
+
 	int MiB() const
 	{
 		return bytes / 1024 / 1024;
 	}
+
 	std::string mib_s() const
 	{
 		std::stringstream ss;
 		ss << MiB();
 		ss << " MB";
+		return ss.str();
+	}
+
+	std::string kib_s() const
+	{
+		std::stringstream ss;
+		ss << KiB();
+		ss << " KB";
 		return ss.str();
 	}
 
@@ -463,7 +482,7 @@ static void gl_printInfo()
 	std::cout << "gl:            " << gl.GetString(GL_VERSION) << "\n";
 	std::cout << "glsl.version:  " << gl.GetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 	std::cout << "ssbo.max:      " << Bytes(gl.GetInt(GL_MAX_SHADER_STORAGE_BLOCK_SIZE)).mib_s() << "\n";
-	std::cout << "ubo.max:       " << Bytes(gl.GetInt(GL_MAX_UNIFORM_BLOCK_SIZE)).mib_s() << "\n";
+	std::cout << "ubo.max:       " << Bytes(gl.GetInt(GL_MAX_UNIFORM_BLOCK_SIZE)).kib_s() << "\n";
 	std::cout << "viewports.max: " << gl.GetInt(GL_MAX_VIEWPORTS) << "\n";
 	std::cout << "\n";
 	std::cout << "framebuffer.width.max:   " << gl.GetInt(GL_MAX_FRAMEBUFFER_WIDTH) << "\n";

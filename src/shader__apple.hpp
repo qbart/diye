@@ -1,14 +1,11 @@
 #pragma once
 
-#include "shader__apple.hpp"
-
-#ifdef WIN32
-
+#ifdef __APPLE__
 const char *VertexShaderSource = R"glsl(
-#version 450 core
+#version 410
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 uv;
+in vec3 position;
+in vec2 uv;
 
 out vec2 vUV;
 
@@ -24,13 +21,14 @@ void main(void) {
 
 // Fragment shader for rendering with texture
 const char *FragmentShaderSource = R"glsl(
-#version 450 core
+#version 410
+precision mediump float;
 
 in vec2 vUV;
 
 out vec4 FragColor;
 
-layout(binding = 0) uniform sampler2D tileset;
+uniform sampler2D tileset;
 
 void main(void)
 {

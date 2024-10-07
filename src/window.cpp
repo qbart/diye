@@ -47,6 +47,7 @@ Window::~Window()
 
 void Window::Debug()
 {
+	glEnable(GL_DEBUG_OUTPUT);
     gl_printInfo();
     gl_bindDebugCallback();
 }

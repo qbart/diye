@@ -55,7 +55,9 @@ GL::Program GL::CreateDefaultProgram(const std::string &vertex, const std::strin
 		fmt::print("Program linking failed:\n{}\n", str);
 		return 0;
 	}
-	if (glewIsExtensionSupported("GL_ARB_debug_output"))
+
+	ValidateProgram(program);
+	if (GLEW_ARB_debug_output)
 	{
 		auto valid = GetProgramInt(program, ProgramParameter::ValidateStatus) == GL_TRUE;
 		if (!valid)

@@ -8,6 +8,7 @@
 
 int main()
 {
+
     auto window = Window::New(1024, 768, "app");
     if (window == nullptr)
     {
@@ -20,6 +21,7 @@ int main()
 
     GL gl;
     gl.Defaults();
+
     auto program = gl.CreateDefaultProgram(VertexShaderSource, FragmentShaderSource);
     if (program == 0)
     {
