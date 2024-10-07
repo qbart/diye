@@ -4,8 +4,9 @@ project(squash)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    src/input.cpp
     src/gl.cpp
+    src/input.cpp
+    src/ui.cpp
     src/window.cpp
     )
 
@@ -18,6 +19,7 @@ find_package(fmt CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(GLEW CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -46,5 +48,6 @@ else()
         GLEW::GLEW
         glfw
         glm::glm
+        imgui::imgui
     )
 endif()

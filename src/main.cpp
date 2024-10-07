@@ -5,16 +5,19 @@
 #include "window.hpp"
 #include "geometry.hpp"
 #include "shader.hpp"
+#include "ui.hpp"
 
 int main()
 {
 
-    auto window = Window::New(1024, 768, "app");
+    auto window = Window::New(1600, 1000, "app");
     if (window == nullptr)
     {
         fmt::print("Failed to create window\n");
         return -1;
     }
+
+    UI ui(window->Get());
 
     Input input = window->GetInput();
     window->Debug();
@@ -33,6 +36,12 @@ int main()
 
     while (window->IsOpen())
     {
+        // inputs
+        window->PollEvents();
+        if (input.KeyReleasedOnce(GLFW_KEY_ESCAPE))
+            window->Close();
+
+        // render
         auto size = window->Size();
         auto proj = Mathf::Fov(55, size.w, size.h);
         auto model = Mat4(1.0f);
@@ -40,11 +49,14 @@ int main()
         gl.ClearDepthBuffer();
         gl.ColorColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
 
-        window->PollEvents();
-        window->Swap();
+        // ui
+        ui.BeginFrame();
+        ui.Demo();
+        ui.EndFrame();
+        ui.Draw();
 
-        if (input.KeyReleasedOnce(GLFW_KEY_ESCAPE))
-            window->Close();
+        // swap
+        window->Swap();
     }
 
     return 0;

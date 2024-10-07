@@ -72,3 +72,8 @@ public:
         return glm::abs(val);
     }
 };
+
+inline Vec4 rgb(byte r, byte g, byte b, byte a = 1)
+{
+	return Vec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
+}
