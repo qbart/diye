@@ -32,7 +32,7 @@ using uint32 = std::uint32_t;
 using uint64 = std::uint64_t;
 
 const Vec3 UP = Vec3(0, 1, 0);
-
+const Vec3 FORWARD = Vec3(0, 0, -1);
 
 using Dimension = struct
 {
@@ -70,6 +70,17 @@ public:
     float static Abs(float val)
     {
         return glm::abs(val);
+    }
+
+    Quat static QuatAngles(const Vec3 &angles)
+    {
+        return glm::quat(
+            glm::vec3(
+                glm::radians(angles.x),
+                glm::radians(angles.y),
+                glm::radians(angles.z)
+            )
+        );
     }
 };
 

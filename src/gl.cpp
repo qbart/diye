@@ -68,6 +68,10 @@ GL::Program GL::CreateDefaultProgram(const std::string &vertex, const std::strin
 			return 0;
 		}
 	}
+	DetachShader(program, vertexShader);
+	DetachShader(program, fragShader);
+	DeleteShader(vertexShader);
+	DeleteShader(fragShader);
 
 	return program;
 }
