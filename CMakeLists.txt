@@ -7,6 +7,7 @@ add_executable(${PROJECT_NAME}
     src/gl.cpp
     src/transform.cpp
     src/camera.cpp
+    src/image.cpp
     src/input.cpp
     src/ui.cpp
     src/window.cpp
@@ -22,6 +23,8 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(GLEW CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(SDL2_image CONFIG REQUIRED)
 
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -42,6 +45,10 @@ if(APPLE)
         GLEW::GLEW
         glfw
         glm::glm
+        imgui::imgui
+        SDL2::SDL2
+        SDL2::SDL2main
+        SDL2_image::SDL2_image
     )
 else()
     # For non-macOS systems, you can specify general linking here
@@ -51,5 +58,8 @@ else()
         glfw
         glm::glm
         imgui::imgui
+        SDL2::SDL2
+        SDL2::SDL2main
+        SDL2_image::SDL2_image
     )
 endif()

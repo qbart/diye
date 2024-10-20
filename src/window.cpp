@@ -2,9 +2,11 @@
 
 #include "glm.hpp"
 #include <memory>
+#include "sdl.hpp"
 
 std::unique_ptr<Window> Window::New(int w, int h, const std::string &title)
 {
+    IMG_Init(IMG_INIT_PNG);
     auto ptr = std::make_unique<Window>();
     if (!ptr->glfw.Init())
     {
@@ -43,6 +45,7 @@ Window::~Window()
         wnd = nullptr;
     }
     glfw.Terminate();
+    IMG_Quit();
 }
 
 void Window::Debug()

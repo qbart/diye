@@ -24,6 +24,7 @@ using Vec4 = glm::vec4;
 using Mat4 = glm::mat4;
 using Quat = glm::quat;
 
+using uint8 = std::uint8_t;
 using int32 = std::int32_t;
 using int64 = std::int64_t;
 using uint = unsigned int;

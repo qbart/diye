@@ -11,8 +11,8 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
 layout(location = 2) in vec2 uv;
 
-out vec3 fragColor;
-out vec2 fragUV;
+out vec3 vertColor;
+out vec2 vertUV;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -20,8 +20,8 @@ uniform mat4 projection;
 
 void main(void) {
   gl_Position = projection * view * model * vec4(position, 1.0);
-  fragColor = color;
-  fragUV = uv;
+  vertColor = color;
+  vertUV = uv;
 }
 )glsl";
 
@@ -29,17 +29,18 @@ void main(void) {
 const char *FragmentShaderSource = R"glsl(
 #version 450 core
 
-in vec3 fragColor;
-in vec2 fragUV;
+in vec3 vertColor;
+in vec2 vertUV;
 
-out vec4 outColor;
+out vec4 FragColor;
 
 layout(binding = 0) uniform sampler2D tileset;
 
 void main(void)
 {
-  // FragColor = texture(tileset, vUV) * vec4(color, 1.0);
-  outColor = vec4(fragColor, 1.0);
+  FragColor = texture(tileset, vertUV);
+  // FragColor = texture(tileset, vertUV) * vec4(vertColor, 1.0);
+  // FragColor = vec4(vertColor, 1.0);
 }
 )glsl";
 

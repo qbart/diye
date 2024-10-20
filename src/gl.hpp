@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm.hpp"
+#include "image.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <sstream>
@@ -51,6 +52,8 @@ struct GL
 	{
 		Nearest = GL_NEAREST,
 		Linear = GL_LINEAR,
+		LinearMipmapNearest = GL_LINEAR_MIPMAP_NEAREST,
+		LinearMipmapLinear = GL_LINEAR_MIPMAP_LINEAR,
 		ClampToEdge = GL_CLAMP_TO_EDGE
 	};
 	enum class TextureUnit
@@ -89,7 +92,7 @@ struct GL
 	{
 		Static = GL_STATIC_DRAW,
 		Dynamic = GL_DYNAMIC_DRAW,
-		Sream = GL_STREAM_DRAW
+		Stream = GL_STREAM_DRAW
 	};
 	enum class BufferType
 	{
@@ -217,6 +220,57 @@ struct GL
 	void ClearDepthBuffer(float val = 1)
 	{
 		glClearBufferfv(GL_DEPTH, 0, &val);
+	}
+
+	Texture GenTexture()
+	{
+		uint tex;
+		glGenTextures(1, &tex);
+		return tex;
+	}
+
+	void DeleteTexture(Texture tex)
+	{
+		glDeleteTextures(1, &tex);
+	}
+
+	void ActiveTexture(TextureUnit unit)
+	{
+		glActiveTexture((uint)unit);
+	}
+
+	void BindTexture(TextureType target, Texture tex)
+	{
+		glBindTexture((uint)target, tex);
+	}
+
+	void GenerateMipmap(TextureType target)
+	{
+		glGenerateMipmap((uint)target);
+	}
+
+	void TextureParameter(TextureType target, TextureParameterName name, TextureParameter param)
+	{
+		glTexParameteri((uint)target, (uint)name, (uint)param);
+	}
+
+	void TextureImage2D(TextureType target, const Image &image)
+	{
+		PixelFormat format = PixelFormat::RGBA;
+		if (image.Channels == 3)
+		{
+			format = PixelFormat::RGB;
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		}
+		glTexImage2D(
+			(uint)target,
+			0,
+			(int)format,
+			image.Width, image.Height,
+			0,
+			(uint)format,
+			GL_UNSIGNED_BYTE,
+			image.GetPixelData());
 	}
 
 	Framebuffer CreateFramebuffer()
@@ -401,6 +455,11 @@ struct GL
 	void BufferData(BufferType target, const std::vector<Vec3> &vv, BufferUsage usage = BufferUsage::Static)
 	{
 		glBufferData((uint)target, sizeof(Vec3) * vv.size(), &vv[0], (uint)usage);
+	}
+
+	void BufferData(BufferType target, const std::vector<Vec2> &vv, BufferUsage usage = BufferUsage::Static)
+	{
+		glBufferData((uint)target, sizeof(Vec2) * vv.size(), &vv[0], (uint)usage);
 	}
 
 	void BufferData(BufferType target, const std::vector<uint32> &vv, BufferUsage usage = BufferUsage::Static)

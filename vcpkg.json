@@ -4,6 +4,8 @@
     "glew",
     "glfw3",
     "glm",
+    "sdl2",
+    "sdl2-image",
     {
       "name": "imgui",
       "features": [
