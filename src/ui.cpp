@@ -38,11 +38,13 @@ UI::~UI()
     }
 }
 
-void UI::BeginFrame()
+void UI::BeginFrame(const Dimension &size)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
+    ImGuizmo::SetRect(0, 0, size.w, size.h);
 }
 
 void UI::EndFrame()
@@ -53,6 +55,11 @@ void UI::EndFrame()
 void UI::Draw()
 {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void UI::Grid(const Camera &camera)
+{
+    ImGuizmo::DrawGrid(glm::value_ptr(camera.GetViewMatrix()), glm::value_ptr(camera.GetProjection()), glm::value_ptr(glm::mat4(1.f)), 100.f);
 }
 
 void UI::Demo()

@@ -497,6 +497,7 @@ struct GL
 	void Defaults();
 	Shader CreateAndCompileShader(ShaderType type, const std::string &src);
 	Program CreateDefaultProgram(const std::string &vertex, const std::string &frag);
+	Texture CreateDefaultTexture(const Image &image);
 };
 
 struct Bytes

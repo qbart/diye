@@ -15,10 +15,23 @@ std::vector<Vec2> TileQuadUV(float TileX, float TileY)
     float tileWidth = 16.0f / 272.0f;  // normalized width of one tile
     float tileHeight = 16.0f / 288.0f; // normalized height of one tile
 
+    // float u2 = TileX * tileWidth;  // left
+    // float v2 = TileY * tileHeight; // top
+    // float u1 = u2 + tileWidth;     // right
+    // float v1 = v2 + tileHeight;    // bottom
+    // std::vector<Vec2> uvCoords = {
+    //     {u1, v2},  // Bottom-left
+    //     {u2, v2}, // Bottom-right
+    //     {u1, v1}, // Top-left
+    //     {u2, v2}, // Bottom-right
+    //     {u2, v1}, // Top-right
+    //     {u1, v1}, // Top-left
+    // };
+
     float u1 = TileX * tileWidth;  // left
-    float v1 = TileY * tileHeight; // top
     float u2 = u1 + tileWidth;     // right
-    float v2 = v1 + tileHeight;    // bottom
+    float v1 = TileY * tileHeight + tileHeight; // top
+    float v2 = v1 - tileHeight;    // bottom
     std::vector<Vec2> uvCoords = {
         {u1, v2},  // Bottom-left
         {u2, v2}, // Bottom-right
@@ -44,9 +57,7 @@ int main()
     Input input = window->GetInput();
     window->Debug();
 
-    auto cube = std::move(CubeMesh(1.0f));
-    auto quad = std::move(QuadMesh(1.0f));
-    quad.UVs = TileQuadUV(0,0);
+    auto mesh = std::move(TiledMesh(3,3));
     Transform transform;
     transform.position = Vec3(0.0f, 0.0f, 0.0f);
     transform.Update();
@@ -68,21 +79,21 @@ int main()
 
         gl.EnableVertexAttribArray(0);
         gl.BindBuffer(GL::BufferType::Array, vbo);
-        gl.BufferData(GL::BufferType::Array, quad.Vertices, GL::BufferUsage::Stream);
+        gl.BufferData(GL::BufferType::Array, mesh.Vertices, GL::BufferUsage::Stream);
         gl.VertexAttribPointer(0, 3);
 
         gl.EnableVertexAttribArray(1);
         gl.BindBuffer(GL::BufferType::Array, cbo);
-        gl.BufferData(GL::BufferType::Array, quad.Colors, GL::BufferUsage::Stream);
+        gl.BufferData(GL::BufferType::Array, mesh.Colors, GL::BufferUsage::Stream);
         gl.VertexAttribPointer(1, 3);
 
         gl.EnableVertexAttribArray(2);
         gl.BindBuffer(GL::BufferType::Array, uvbo);
-        gl.BufferData(GL::BufferType::Array, quad.UVs, GL::BufferUsage::Stream);
+        gl.BufferData(GL::BufferType::Array, mesh.UVs, GL::BufferUsage::Stream);
         gl.VertexAttribPointer(2, 2);
 
         gl.BindBuffer(GL::BufferType::ElementArray, ibo);
-        gl.BufferData(GL::BufferType::ElementArray, quad.Indices, GL::BufferUsage::Stream);
+        gl.BufferData(GL::BufferType::ElementArray, mesh.Indices, GL::BufferUsage::Stream);
 
         gl.BindVertexArray(0);
         gl.BindBuffer(GL::BufferType::Array, 0);
@@ -104,20 +115,13 @@ int main()
 
     fmt::println("Loading textures");
     Image tileset;
-    if (!tileset.Load("./res/debug.png"))
+    if (!tileset.Load("../res/debug.png"))
     {
         fmt::print("Failed to load image {}\n", "res/cliffs_city_tileset.png");
         return -1;
     }
     fmt::println("Uploading textures to GPU");
-    auto tilesetID = gl.GenTexture();
-    gl.BindTexture(GL::TextureType::Texture2D, tilesetID);
-    gl.TextureParameter(GL::TextureType::Texture2D, GL::TextureParameterName::WrapS, GL::TextureParameter::ClampToEdge);
-    gl.TextureParameter(GL::TextureType::Texture2D, GL::TextureParameterName::WrapT, GL::TextureParameter::ClampToEdge);
-    gl.TextureParameter(GL::TextureType::Texture2D, GL::TextureParameterName::MinFilter, GL::TextureParameter::Nearest);
-    gl.TextureParameter(GL::TextureType::Texture2D, GL::TextureParameterName::MagFilter, GL::TextureParameter::Nearest);
-    gl.TextureImage2D(GL::TextureType::Texture2D, tileset);
-    gl.BindTexture(GL::TextureType::Texture2D, 0);
+    auto tilesetID = gl.CreateDefaultTexture(tileset);
 
     fmt::println("Entering main loop");
     while (window->IsOpen())
@@ -127,6 +131,18 @@ int main()
         if (input.KeyReleasedOnce(GLFW_KEY_ESCAPE))
             window->Close();
 
+        if (input.KeyPress(GLFW_KEY_W))
+            camera.MoveForward(1*dt);
+
+        if (input.KeyPress(GLFW_KEY_S))
+            camera.MoveBackward(1*dt);
+
+        if (input.KeyPress(GLFW_KEY_A))
+            camera.MoveLeft(1*dt);
+
+        if (input.KeyPress(GLFW_KEY_D))
+            camera.MoveRight(1*dt);
+
         // render
         auto size = window->Size();
         gl.Viewport(size.w, size.h);
@@ -134,8 +150,14 @@ int main()
         gl.ColorColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
         camera.UpdatePerspective(size);
 
-        transform.rotation = glm::rotate(transform.rotation, glm::radians(3.0f) * dt, UP);
-        transform.Update();
+        // ui
+        ui.BeginFrame(size);
+        ui.Grid(camera);
+        ui.EndFrame();
+        ui.Draw();
+
+        // transform.rotation = glm::rotate(transform.rotation, glm::radians(5.0f) * dt, UP);
+        // transform.Update();
 
         // for each ( render target )			// frame buffer
         // for each ( pass )					// depth, blending, etc. states
@@ -163,30 +185,22 @@ int main()
         gl.Uniform(viewLoc, view);
         gl.Uniform(projLoc, proj);
         gl.BindVertexArray(vao);
-        // gl.BindBuffer(GL::BufferType::Array, vbo);
-        // gl.BufferData(GL::BufferType::Array, cube.Vertices, GL::BufferUsage::Stream);
-        // gl.BindBuffer(GL::BufferType::Array, color);
-        // gl.BufferData(GL::BufferType::Array, cube.Colors, GL::BufferUsage::Stream);
-        // gl.BindBuffer(GL::BufferType::ElementArray, ibo);
-        // gl.BufferData(GL::BufferType::ElementArray, cube.Indices, GL::BufferUsage::Stream);
-        // gl.DrawElements(GL::DrawMode::Triangles, cube.Indices.size());
         gl.BindBuffer(GL::BufferType::Array, vbo);
-        gl.BufferData(GL::BufferType::Array, quad.Vertices, GL::BufferUsage::Stream);
+        gl.BufferData(GL::BufferType::Array, mesh.Vertices, GL::BufferUsage::Stream);
         gl.BindBuffer(GL::BufferType::Array, cbo);
-        gl.BufferData(GL::BufferType::Array, quad.Colors, GL::BufferUsage::Stream);
+        gl.BufferData(GL::BufferType::Array, mesh.Colors, GL::BufferUsage::Stream);
         gl.BindBuffer(GL::BufferType::Array, uvbo);
-        gl.BufferData(GL::BufferType::Array, quad.UVs, GL::BufferUsage::Stream);
+        gl.BufferData(GL::BufferType::Array, mesh.UVs, GL::BufferUsage::Stream);
         gl.BindBuffer(GL::BufferType::ElementArray, ibo);
-        gl.BufferData(GL::BufferType::ElementArray, quad.Indices, GL::BufferUsage::Stream);
-        gl.DrawElements(GL::DrawMode::Triangles, quad.Indices.size());
+        gl.BufferData(GL::BufferType::ElementArray, mesh.Indices, GL::BufferUsage::Stream);
+        gl.DrawElements(GL::DrawMode::Triangles, mesh.Indices.size());
         gl.BindTexture(GL::TextureType::Texture2D, 0);
         gl.BindBuffer(GL::BufferType::Array, 0);
         gl.BindBuffer(GL::BufferType::ElementArray, 0);
         gl.BindVertexArray(0);
 
         // ui
-        ui.BeginFrame();
-        // ui.Demo();
+        ui.BeginFrame(size);
         ui.EndFrame();
         ui.Draw();
 

@@ -23,6 +23,7 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(GLEW CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(imguizmo CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image CONFIG REQUIRED)
 
@@ -46,6 +47,7 @@ if(APPLE)
         glfw
         glm::glm
         imgui::imgui
+        imguizmo::imguizmo
         SDL2::SDL2
         SDL2::SDL2main
         SDL2_image::SDL2_image
@@ -58,6 +60,7 @@ else()
         glfw
         glm::glm
         imgui::imgui
+        imguizmo::imguizmo
         SDL2::SDL2
         SDL2::SDL2main
         SDL2_image::SDL2_image

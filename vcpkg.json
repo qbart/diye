@@ -12,7 +12,8 @@
         "glfw-binding",
         "opengl3-binding"
       ]
-    }
+    },
+    "imguizmo"
   ]
 }
 

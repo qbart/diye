@@ -107,6 +107,31 @@ auto CubeMesh(float size)
 		// down top
 		33, 34, 35};
 
+	mesh.UVs = {
+		// Face 1 - Left
+		Vec2(0, 0), Vec2(1, 0), Vec2(1, 1),
+		Vec2(0, 0), Vec2(1, 1), Vec2(0, 1),
+
+		// Face 2 - Front
+		Vec2(0, 0), Vec2(1, 0), Vec2(0, 1),
+		Vec2(1, 0), Vec2(1, 1), Vec2(0, 1),
+
+		// Face 3 - Right
+		Vec2(0, 0), Vec2(1, 0), Vec2(0, 1),
+		Vec2(1, 0), Vec2(1, 1), Vec2(0, 1),
+
+		// Face 4 - Back
+		Vec2(0, 0), Vec2(1, 0), Vec2(1, 1),
+		Vec2(0, 0), Vec2(1, 1), Vec2(0, 1),
+
+		// Face 5 - Top
+		Vec2(0, 0), Vec2(1, 0), Vec2(0, 1),
+		Vec2(1, 0), Vec2(1, 1), Vec2(0, 1),
+
+		// Face 6 - Bottom
+		Vec2(0, 0), Vec2(1, 0), Vec2(0, 1),
+		Vec2(1, 0), Vec2(1, 1), Vec2(0, 1)};
+
 	for (auto i = 0; i < 6; ++i)
 	{
 		mesh.Colors.push_back(Vec3(1, 0, 0));
@@ -155,6 +180,81 @@ auto QuadMesh(float size)
 		Vec2(1, 0),
 		Vec2(1, 1),
 		Vec2(0, 1)};
+
+	return std::move(mesh);
+}
+
+auto TiledMesh(float w, float h)
+{
+	float tileW = 16.0f / 272.0f;
+	float tileH = 16.0f / 288.0f;
+	float z = 0;
+	Geometry mesh;
+	int capacity = w * h * 6;	
+	mesh.Vertices.reserve(capacity);
+	mesh.Indices.reserve(capacity);
+	mesh.UVs.reserve(capacity);
+	mesh.Colors.reserve(capacity);
+	float tile = 0;
+
+	for (int y = 0; y < h; ++y)
+	{
+		for (int cellx = 0; cellx < w; ++cellx)
+		{
+			float x = cellx - w * 0.5f;
+			// 0
+			int i1 = mesh.Vertices.size();
+			mesh.Vertices.push_back(Vec3(x, y, z));
+			// 1
+			int i2 = mesh.Vertices.size();
+			mesh.Vertices.push_back(Vec3(x + 1, y, z));
+			// 2
+			int i3 = mesh.Vertices.size();
+			mesh.Vertices.push_back(Vec3(x, y + 1, z));
+			// 3
+			int i4 = mesh.Vertices.size();
+			mesh.Vertices.push_back(Vec3(x + 1, y + 1, z));
+			// 2
+			int i5 = mesh.Vertices.size();
+			mesh.Vertices.push_back(Vec3(x, y + 1, z));
+			// 1
+			int i6 = mesh.Vertices.size();
+			mesh.Vertices.push_back(Vec3(x + 1, y, z));
+
+			mesh.Indices.push_back(i1);
+			mesh.Indices.push_back(i2);
+			mesh.Indices.push_back(i3);
+			mesh.Indices.push_back(i4);
+			mesh.Indices.push_back(i5);
+			mesh.Indices.push_back(i6);
+
+			float u1 = tile * tileW;
+			float u2 = u1 + tileW;
+			float v1 = tile * tileH + tileH;
+			float v2 = v1 - tileH;
+
+    // float u2 = TileX * tileW;  // left
+    // float v2 = TileY * tileH; // top
+    // float u1 = u2 + tileW;     // right
+    // float v1 = v2 + tileH;    // bottom
+
+			mesh.UVs.push_back(Vec2(u1, v2)); // 0
+			mesh.UVs.push_back(Vec2(u2, v2)); // 1
+			mesh.UVs.push_back(Vec2(u1, v1)); // 2
+			mesh.UVs.push_back(Vec2(u2, v1)); // 3
+			mesh.UVs.push_back(Vec2(u1, v1)); // 2
+			mesh.UVs.push_back(Vec2(u2, v2)); // 1
+
+			mesh.Colors.push_back(Vec3(1, 1, 1));
+			mesh.Colors.push_back(Vec3(1, 1, 1));
+			mesh.Colors.push_back(Vec3(1, 1, 1));
+			mesh.Colors.push_back(Vec3(1, 1, 1));
+			mesh.Colors.push_back(Vec3(1, 1, 1));
+			mesh.Colors.push_back(Vec3(1, 1, 1));
+
+			tile++;
+		}
+	}
 
 	return std::move(mesh);
 }

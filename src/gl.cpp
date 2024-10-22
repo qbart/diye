@@ -75,3 +75,16 @@ GL::Program GL::CreateDefaultProgram(const std::string &vertex, const std::strin
 
 	return program;
 }
+
+GL::Texture GL::CreateDefaultTexture(const Image &image)
+{
+    auto id = GenTexture();
+    BindTexture(GL::TextureType::Texture2D, id);
+    TextureParameter(GL::TextureType::Texture2D, GL::TextureParameterName::WrapS, GL::TextureParameter::ClampToEdge);
+    TextureParameter(GL::TextureType::Texture2D, GL::TextureParameterName::WrapT, GL::TextureParameter::ClampToEdge);
+    TextureParameter(GL::TextureType::Texture2D, GL::TextureParameterName::MinFilter, GL::TextureParameter::Nearest);
+    TextureParameter(GL::TextureType::Texture2D, GL::TextureParameterName::MagFilter, GL::TextureParameter::Nearest);
+    TextureImage2D(GL::TextureType::Texture2D, image);
+    BindTexture(GL::TextureType::Texture2D, 0);
+    return Texture(id);
+}
