@@ -8,6 +8,7 @@
 #include "camera.hpp"
 #include "ui.hpp"
 #include "image.hpp"
+#include "debug_draw_renderer.hpp"
 
 std::vector<Vec2> TileQuadUV(float TileX, float TileY)
 {
@@ -28,12 +29,12 @@ std::vector<Vec2> TileQuadUV(float TileX, float TileY)
     //     {u1, v1}, // Top-left
     // };
 
-    float u1 = TileX * tileWidth;  // left
-    float u2 = u1 + tileWidth;     // right
+    float u1 = TileX * tileWidth;               // left
+    float u2 = u1 + tileWidth;                  // right
     float v1 = TileY * tileHeight + tileHeight; // top
-    float v2 = v1 - tileHeight;    // bottom
+    float v2 = v1 - tileHeight;                 // bottom
     std::vector<Vec2> uvCoords = {
-        {u1, v2},  // Bottom-left
+        {u1, v2}, // Bottom-left
         {u2, v2}, // Bottom-right
         {u1, v1}, // Top-left
         {u2, v2}, // Bottom-right
@@ -57,7 +58,7 @@ int main()
     Input input = window->GetInput();
     window->Debug();
 
-    auto mesh = std::move(TiledMesh(3,3));
+    auto mesh = std::move(TiledMesh(3, 3));
     Transform transform;
     transform.position = Vec3(0.0f, 0.0f, 0.0f);
     transform.Update();
@@ -123,6 +124,9 @@ int main()
     fmt::println("Uploading textures to GPU");
     auto tilesetID = gl.CreateDefaultTexture(tileset);
 
+    fmt::println("Initializing debug renderer");
+    DebugDrawRenderer debug;
+
     fmt::println("Entering main loop");
     while (window->IsOpen())
     {
@@ -132,16 +136,22 @@ int main()
             window->Close();
 
         if (input.KeyPress(GLFW_KEY_W))
-            camera.MoveForward(1*dt);
+            camera.MoveForward(2 * dt);
 
         if (input.KeyPress(GLFW_KEY_S))
-            camera.MoveBackward(1*dt);
+            camera.MoveBackward(2 * dt);
 
         if (input.KeyPress(GLFW_KEY_A))
-            camera.MoveLeft(1*dt);
+            camera.MoveLeft(2 * dt);
 
         if (input.KeyPress(GLFW_KEY_D))
-            camera.MoveRight(1*dt);
+            camera.MoveRight(2 * dt);
+
+        if (input.KeyPress(GLFW_KEY_Q))
+            camera.LookAround(0, -30 * dt);
+
+        if (input.KeyPress(GLFW_KEY_E))
+            camera.LookAround(0, 30 * dt);
 
         // render
         auto size = window->Size();
@@ -150,14 +160,8 @@ int main()
         gl.ColorColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
         camera.UpdatePerspective(size);
 
-        // ui
-        ui.BeginFrame(size);
-        ui.Grid(camera);
-        ui.EndFrame();
-        ui.Draw();
-
-        // transform.rotation = glm::rotate(transform.rotation, glm::radians(5.0f) * dt, UP);
-        // transform.Update();
+        transform.rotation = glm::rotate(transform.rotation, glm::radians(5.0f) * dt, UP);
+        transform.Update();
 
         // for each ( render target )			// frame buffer
         // for each ( pass )					// depth, blending, etc. states
@@ -193,7 +197,7 @@ int main()
         gl.BufferData(GL::BufferType::Array, mesh.UVs, GL::BufferUsage::Stream);
         gl.BindBuffer(GL::BufferType::ElementArray, ibo);
         gl.BufferData(GL::BufferType::ElementArray, mesh.Indices, GL::BufferUsage::Stream);
-        gl.DrawElements(GL::DrawMode::Triangles, mesh.Indices.size());
+        // gl.DrawElements(GL::DrawMode::Triangles, mesh.Indices.size());
         gl.BindTexture(GL::TextureType::Texture2D, 0);
         gl.BindBuffer(GL::BufferType::Array, 0);
         gl.BindBuffer(GL::BufferType::ElementArray, 0);
@@ -203,6 +207,11 @@ int main()
         ui.BeginFrame(size);
         ui.EndFrame();
         ui.Draw();
+
+        debug.Begin(size, camera);
+        debug.Grid(-50.0f, 50.0f, -0.01f, 1.f, GRAY);
+        debug.Grid(-50.0f, 50.0f, -0.01f, 0.25f, BLACK);
+        debug.End();
 
         // swap
         window->Swap();

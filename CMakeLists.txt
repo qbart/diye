@@ -11,6 +11,7 @@ add_executable(${PROJECT_NAME}
     src/input.cpp
     src/ui.cpp
     src/window.cpp
+    src/debug_draw_renderer.cpp
     )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
