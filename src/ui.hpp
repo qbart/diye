@@ -23,6 +23,9 @@ public:
     void Demo();
     void PushFont(uint size);
     void PopFont();
+    void TranslateGizmo(const Camera &camera, Transform &transform);
+    void RotationGizmo(const Camera &camera, Transform &transform);
+    void ScaleGizmo(const Camera &camera, Transform &transform);
 
 private:
     GLFWwindow *wnd = nullptr;

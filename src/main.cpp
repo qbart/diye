@@ -60,7 +60,7 @@ int main()
 
     auto mesh = std::move(TiledMesh(3, 3));
     Transform transform;
-    transform.position = Vec3(0.0f, 0.0f, 0.0f);
+    transform.position = Vec3(0.0f, 1.5f, 0.0f);
     transform.Update();
 
     Camera camera;
@@ -128,6 +128,7 @@ int main()
     DebugDrawRenderer debug;
 
     fmt::println("Entering main loop");
+    Mat4 model(1);
     while (window->IsOpen())
     {
         // inputs
@@ -179,9 +180,9 @@ int main()
         //			object->baseVertex
         //		);
         // }
-        auto mat = transform.GetModelMatrix();
         auto view = camera.GetViewMatrix();
         auto proj = camera.GetProjection();
+        auto mat = transform.GetModelMatrix();
         gl.UseProgram(program);
         gl.ActiveTexture(GL::TextureUnit::Texture0);
         gl.BindTexture(GL::TextureType::Texture2D, tilesetID);
@@ -197,21 +198,22 @@ int main()
         gl.BufferData(GL::BufferType::Array, mesh.UVs, GL::BufferUsage::Stream);
         gl.BindBuffer(GL::BufferType::ElementArray, ibo);
         gl.BufferData(GL::BufferType::ElementArray, mesh.Indices, GL::BufferUsage::Stream);
-        // gl.DrawElements(GL::DrawMode::Triangles, mesh.Indices.size());
+        gl.DrawElements(GL::DrawMode::Triangles, mesh.Indices.size());
         gl.BindTexture(GL::TextureType::Texture2D, 0);
         gl.BindBuffer(GL::BufferType::Array, 0);
         gl.BindBuffer(GL::BufferType::ElementArray, 0);
         gl.BindVertexArray(0);
 
-        // ui
-        ui.BeginFrame(size);
-        ui.EndFrame();
-        ui.Draw();
-
+        // debug
         debug.Begin(size, camera);
         debug.Grid(-50.0f, 50.0f, -0.01f, 1.f, GRAY);
         debug.Grid(-50.0f, 50.0f, -0.01f, 0.25f, BLACK);
         debug.End();
+
+        // ui
+        ui.BeginFrame(size);
+        ui.EndFrame();
+        ui.Draw();
 
         // swap
         window->Swap();
