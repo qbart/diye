@@ -77,26 +77,34 @@ void UI::PopFont()
     ImGui::PopFont();
 }
 
-void UI::TranslateGizmo(const Camera &camera, Transform &transform)
+void UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
 {
-    auto mat = transform.GetModelMatrix();
-    auto skew = Vec3(0.0f);
+    auto skew = Vec3(0.f);
     auto perspective = Vec4(0.0f);
     auto rotation = transform.rotation;
     auto scale = transform.scale;
+    auto mode = ImGuizmo::MODE::WORLD;
+    auto mat = transform.ModelMatrix(Transform::Space::World);
+    Vec3 &translation = transform.position;
+
+    if (local)
+    {
+        mode = ImGuizmo::MODE::LOCAL;
+    }
+
     ImGuizmo::Manipulate(
         glm::value_ptr(camera.GetViewMatrix()),
         glm::value_ptr(camera.GetProjection()),
         ImGuizmo::OPERATION::TRANSLATE,
-        ImGuizmo::MODE::WORLD,
+        mode,
         glm::value_ptr(mat));
-    glm::decompose(mat, scale, rotation, transform.position, skew, perspective);
+    glm::decompose(mat, scale, rotation, translation, skew, perspective);
     transform.Update();
 }
 
 void UI::RotationGizmo(const Camera &camera, Transform &transform)
 {
-    auto mat = transform.GetModelMatrix();
+    auto mat = transform.ModelMatrix(Transform::Space::World);
     auto skew = Vec3(0.0f);
     auto perspective = Vec4(0.0f);
     auto position = transform.position;
@@ -114,7 +122,7 @@ void UI::RotationGizmo(const Camera &camera, Transform &transform)
 
 void UI::ScaleGizmo(const Camera &camera, Transform &transform)
 {
-    auto mat = transform.GetModelMatrix();
+    auto mat = transform.ModelMatrix(Transform::Space::World);
     auto skew = Vec3(0.0f);
     auto perspective = Vec4(0.0f);
     auto rotation = transform.rotation;

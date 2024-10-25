@@ -153,6 +153,7 @@ int main()
 
         if (input.KeyPress(GLFW_KEY_E))
             camera.LookAround(0, 30 * dt);
+        
 
         // render
         auto size = window->Size();
