@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glm.hpp"
+#include "core/all.hpp"
 #include <vector>
 #include "sdl.hpp"
 

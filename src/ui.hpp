@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glm.hpp"
+#include "core/all.hpp"
 #include "glfw.hpp"
 #include <sstream>
 
@@ -9,7 +9,6 @@
 #include <imgui_impl_opengl3.h>
 #include <ImGuizmo.h>
 #include <unordered_map>
-#include "camera.hpp"
 
 class UI
 {

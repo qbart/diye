@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glm.hpp"
+#include "types.hpp"
 
 class Transform
 {

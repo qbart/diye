@@ -1,9 +1,8 @@
 #pragma once
 
 #include "deps/debug_draw.hpp"
+#include "core/all.hpp"
 #include "gl.hpp"
-#include "glm.hpp"
-#include "camera.hpp"
 
 class DebugDrawRenderer : public dd::RenderInterface
 {

@@ -1,6 +1,6 @@
 #include "window.hpp"
 
-#include "glm.hpp"
+#include "core/all.hpp"
 #include <memory>
 #include "sdl.hpp"
 

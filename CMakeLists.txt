@@ -3,15 +3,17 @@ cmake_minimum_required(VERSION 3.29)
 project(squash)
 
 add_executable(${PROJECT_NAME}
-    src/main.cpp
+    src/core/transform.cpp
+    src/core/camera.cpp
+
+    src/debug_draw_renderer.cpp
     src/gl.cpp
-    src/transform.cpp
-    src/camera.cpp
     src/image.cpp
     src/input.cpp
     src/ui.cpp
     src/window.cpp
-    src/debug_draw_renderer.cpp
+
+    src/main.cpp
     )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

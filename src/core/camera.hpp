@@ -1,6 +1,7 @@
 #pragma once
 
-#include "glm.hpp"
+#include "types.hpp"
+#include "math.hpp"
 #include "transform.hpp"
 
 class Camera

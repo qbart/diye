@@ -5,7 +5,6 @@
 #include "window.hpp"
 #include "geometry.hpp"
 #include "shader.hpp"
-#include "camera.hpp"
 #include "ui.hpp"
 #include "image.hpp"
 #include "debug_draw_renderer.hpp"
