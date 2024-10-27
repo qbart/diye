@@ -84,7 +84,7 @@ bool UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
     auto rotation = transform.rotation;
     auto scale = transform.scale;
     auto mode = ImGuizmo::MODE::WORLD;
-    auto mat = transform.ModelMatrix(Transform::Space::World);
+    auto mat = transform.ModelMatrix(Transform::Space::WorldOnly);
     Vec3 &translation = transform.position;
 
     if (local)
