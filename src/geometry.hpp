@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/all.hpp"
-#include <vector>
 
 using Geometry = struct
 {

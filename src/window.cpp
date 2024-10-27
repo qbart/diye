@@ -2,7 +2,7 @@
 
 #include "core/all.hpp"
 #include <memory>
-#include "sdl.hpp"
+#include "deps/sdl.hpp"
 
 std::unique_ptr<Window> Window::New(int w, int h, const std::string &title)
 {

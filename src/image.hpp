@@ -1,8 +1,7 @@
 #pragma once
 
 #include "core/all.hpp"
-#include <vector>
-#include "sdl.hpp"
+#include "deps/sdl.hpp"
 
 class Image
 {

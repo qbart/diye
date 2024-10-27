@@ -15,6 +15,26 @@ public:
         return glm::ortho(left, right, bottom, top, zNear, zFar);
     }
 
+    Vec3 static Cross(const Vec3 &a, const Vec3 &b)
+    {
+        return glm::cross(a, b);
+    }
+
+    Vec3 static Normalize(const Vec3 &v)
+    {
+        return glm::normalize(v);
+    }
+
+    Vec3 static Lerp(const Vec3 &a, const Vec3 &b, float t)
+    {
+        return glm::mix(a, b, t);
+    }
+
+    float static Lerp(float a, float b, float t)
+    {
+        return glm::mix(a, b, t);
+    }
+
     float static Clamp(float val, float min, float max)
     {
         return glm::clamp(val, min, max);

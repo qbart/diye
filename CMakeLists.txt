@@ -5,6 +5,7 @@ project(squash)
 add_executable(${PROJECT_NAME}
     src/core/transform.cpp
     src/core/camera.cpp
+    src/core/animation_curve.cpp
 
     src/debug_draw_renderer.cpp
     src/gl.cpp

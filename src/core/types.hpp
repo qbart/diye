@@ -18,6 +18,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
 #include <memory>
+#include <vector>
 
 using Vec2 = glm::vec2;
 using Vec3 = glm::vec3;

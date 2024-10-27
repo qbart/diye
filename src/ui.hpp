@@ -1,14 +1,11 @@
 #pragma once
 
+#include <sstream>
+#include <unordered_map>
+
 #include "core/all.hpp"
 #include "glfw.hpp"
-#include <sstream>
-
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <ImGuizmo.h>
-#include <unordered_map>
+#include "deps/imgui.hpp"
 
 class UI
 {
@@ -22,9 +19,16 @@ public:
     void Demo();
     void PushFont(uint size);
     void PopFont();
-    void TranslateGizmo(const Camera &camera, Transform &transform, bool local = false);
-    void RotationGizmo(const Camera &camera, Transform &transform);
-    void ScaleGizmo(const Camera &camera, Transform &transform);
+    bool TranslateGizmo(const Camera &camera, Transform &transform, bool local = false);
+    bool RotationGizmo(const Camera &camera, Transform &transform);
+    bool ScaleGizmo(const Camera &camera, Transform &transform);
+    bool AnimationCurveWidget(AnimationCurve &curve);
+    bool DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, const Vec3 &color);
+
+private:
+    ImVec2 screenPosTo01(const ImVec2 &pos, const ImRect &rect, int precision = 3, bool flipY = false) const;
+    ImVec2 screenPosFrom01(const ImVec2 &pos, const ImRect &rect, bool flipY = false) const;
+    ImVec2 screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &mappedRect) const;
 
 private:
     GLFWwindow *wnd = nullptr;
