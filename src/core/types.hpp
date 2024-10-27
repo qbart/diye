@@ -19,6 +19,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <fmt/format.h>
 
 using Vec2 = glm::vec2;
 using Vec3 = glm::vec3;

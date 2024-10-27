@@ -1,35 +1,60 @@
 #include "animation_curve.hpp"
 #include <algorithm>
+#include <fmt/core.h>
 
 AnimationCurve::AnimationCurve()
 {
     points = {
-        Vec2(0, 0),       // anchor 1
-        Vec2(0.9f, 0), // out tangent
-        Vec2(1, -0.5f),      // in tangent
-        Vec2(1, 1),       // anchor 2
+        Vec2(0, 0),     // anchor 1
+        Vec2(0.9f, 0),  // out tangent
+        Vec2(1, -0.5f), // in tangent
+        Vec2(1, 1),     // anchor 2
     };
-    sort();
 }
 
 void AnimationCurve::AddKey(float time, float value)
 {
-    // int insertAt = 0;
-    // for (int i = 0; i < points.size(); i += 3)
-    // {
-    //     if (time < points[i].x)
-    //         insertAt = i;
-    // }
+    if (time < 0)
+        time = 0;
+    if (time > 1)
+        time = 1;
 
-    // points.insert(points.begin() + insertAt - 1, Vec2(time, value + 0.5f));
-    // points.insert(points.begin() + insertAt, Vec2(time, value));
-    // points.insert(points.begin() + insertAt + 1, Vec2(time, value - 0.5f));
+    for (int anchor = 0; anchor < Segments(); ++anchor)
+    {
+        int i = anchor * 3;
+        if (time > points[i].x && time < points[i + 3].x)
+        {
+            // we are between anchor i and i+1,
+            // and we need to skip the out tangent of i
+            points.insert(points.begin() + 1 + 1, Vec2(time, value - 0.1f));
+            points.insert(points.begin() + 2 + 1, Vec2(time, value));
+            points.insert(points.begin() + 3 + 1, Vec2(time, value + 0.1f));
+            return;
+        }
+    }
 }
 
-void AnimationCurve::SetKeyframe(int i, float t, float v)
+void AnimationCurve::SetKeyframe(int anchor, float t, float v)
 {
-    points[i] = Vec2(t, v);
-    // sort();
+    points[anchor * 3] = Vec2(t, v);
+}
+
+void AnimationCurve::SetPoint(int i, float t, float v)
+{
+    bool isAnchor = i % 3 == 0;
+    if (isAnchor)
+    {
+        points[i] = Vec2(t, v);
+    }
+    else
+    {
+        points[i] = Vec2(t, v);
+    }
+}
+
+const Vec2 &AnimationCurve::operator[](int anchor) const
+{
+    return points[anchor * 3];
 }
 
 float AnimationCurve::interpolate(int anchorA, int anchorB, float t) const
@@ -59,22 +84,16 @@ float AnimationCurve::Evaluate(float t) const
     if (t >= points.back().x)
         return points.back().y;
 
-    int lenAnchors = points.size() / 3;
-    for (int i = 0; i < lenAnchors; ++i)
+    int segments = points.size() / 3;
+    for (int anchor = 0; anchor < segments; ++anchor)
     {
-        if (t <= points[i * 3 + 3].x)
+        int i = anchor * 3;
+        if (t <= points[i + 3].x)
         {
-            float u = (t - points[i * 3].x) / (points[i * 3 + 3].x - points[i * 3].x);
-            return interpolate(i * 3, i * 3 + 3, u);
+            float u = (t - points[i].x) / (points[i + 3].x - points[i].x);
+            return interpolate(i, i + 3, u);
         }
     }
 
     return 0.0f;
-}
-
-void AnimationCurve::sort()
-{
-    // Ensure points are sorted by time
-    // std::sort(keyframes.begin(), keyframes.end(), [](const Keyframe &a, const Keyframe &b)
-    //           { return a.time < b.time; });
 }

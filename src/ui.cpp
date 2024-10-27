@@ -143,6 +143,13 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
     return changed;
 }
 
+// TODO:
+// - lock dragging
+// - render proper grid
+// - allow to delete
+// - ensure C1 continuity when adding keyframes
+// - lock/break tangents
+// - move anchor with tangents
 bool UI::AnimationCurveWidget(AnimationCurve &curve)
 {
     using namespace ImGui;
@@ -175,17 +182,27 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
 
     for (int i = 0; i <= curveEditorSize.x; i += (curveEditorSize.x / 4))
     {
+        auto pos = screenPosTo01(ImVec2(bb.Min.x + i, bb.Min.y), bb, 3, true);
         drawList->AddLine(
             ImVec2(bb.Min.x + i, bb.Min.y),
             ImVec2(bb.Min.x + i, bb.Max.y),
             GetColorU32(ImGuiCol_TextDisabled));
+        drawList->AddText(
+            ImVec2(bb.Min.x + i - 5, bb.Min.y - 20),
+            GetColorU32(ImGuiCol_TextDisabled),
+            fmt::format("{}", pos.x).c_str());
     }
     for (int i = 0; i <= curveEditorSize.y; i += (curveEditorSize.y / 4))
     {
+        auto pos = screenPosTo01(ImVec2(bb.Min.x, bb.Min.y + i), bb, 3, true);
         drawList->AddLine(
             ImVec2(bb.Min.x, bb.Min.y + i),
             ImVec2(bb.Max.x, bb.Min.y + i),
             GetColorU32(ImGuiCol_TextDisabled));
+        drawList->AddText(
+            ImVec2(bb.Max.x + 5, bb.Min.y + i - 5),
+            GetColorU32(ImGuiCol_TextDisabled),
+            fmt::format("{}", pos.y).c_str());
     }
 
     float timeStep = curve.Time() / (resolution - 1);
@@ -205,61 +222,42 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         ImVec2 s(q.x * (bb.Max.x - bb.Min.x) + bb.Min.x, q.y * (bb.Max.y - bb.Min.y) + bb.Min.y);
         drawList->AddLine(r, s, color, CURVE_WIDTH);
     }
+
+    // Ghost keyframe that could be added
     ImVec2 mouse = GetIO().MousePos;
     auto mouse01 = screenPosTo01(mouse, bb, 3, true);
-    if (mouse01.x >= 0 && mouse01.x <= 1)
+    if (mouse01.x >= 0 && mouse01.x <= 1 && !ImGui::IsMouseDragging(0))
     {
         float ghostY = curve.Evaluate(mouse01.x);
-        float distance = (ghostY - mouse01.y) * (ghostY - mouse01.y);
-        if (distance < 0.02f)
+        bool allowAdd = true;
+        for (const auto &point : curve.Points())
         {
-            auto screenPos = screenPosFrom01(ImVec2(mouse01.x, ghostY), bb, true);
-            drawList->AddCircleFilled(screenPos, 8, color);
-            if (IsMouseClicked(0))
+            float distance2 = sqrt(pow((mouse01.x - point.x), 2) + pow((mouse01.y - point.y), 2));
+            if (distance2 < 0.05f)
             {
-                curve.AddKey(mouse01.x, mouse01.y);
-                changed = true;
+                auto screenPos = screenPosFrom01(ImVec2(point.x, point.y), bb, true);
+                allowAdd = false;
+                break;
+            }
+        }
+        if (allowAdd)
+        {
+            float distance = (ghostY - mouse01.y) * (ghostY - mouse01.y);
+            if (distance < 0.02f)
+            {
+                auto screenPos = screenPosFrom01(ImVec2(mouse01.x, ghostY), bb, true);
+                drawList->AddCircleFilled(screenPos, 8, color);
+                if (IsMouseClicked(ImGuiMouseButton_Left))
+                {
+                    fmt::print("Adding keyframe at {}, {}\n", mouse01.x, mouse01.y);
+                    curve.AddKey(mouse01.x, mouse01.y);
+                    changed = true;
+                }
             }
         }
     }
 
-    // {
-    //     // handle grabbers
-    //     ImVec2 mouse = GetIO().MousePos, pos[2];
-    //     float distance[2];
-
-    //     for (int i = 0; i < curve.Keyframes().size() - 1; ++i)
-    //     {
-    //         const auto &kf = curve.Keyframes()[i];
-    //         const auto &next = curve.Keyframes()[i + 1];
-    //         pos[i] = ImVec2(kf.time, 1 - next.time) * (bb.Max - bb.Min) + bb.Min;
-    //         distance[i] = (pos[i].x - mouse.x) * (pos[i].x - mouse.x) + (pos[i].y - mouse.y) * (pos[i].y - mouse.y);
-    //     }
-
-    //     int selected = distance[0] < distance[1] ? 0 : 1;
-    //     // if (distance[selected] < (4 * GRAB_RADIUS * 4 * GRAB_RADIUS))
-    //     // {
-    //     //     SetTooltip("(%4.3f, %4.3f)", P[selected * 2 + 0], P[selected * 2 + 1]);
-
-    //     //     if (/*hovered &&*/ (IsMouseClicked(0) || IsMouseDragging(0)))
-    //     //     {
-    //     //         float &px = (P[selected * 2 + 0] += GetIO().MouseDelta.x / Canvas.x);
-    //     //         float &py = (P[selected * 2 + 1] -= GetIO().MouseDelta.y / Canvas.y);
-
-    //     //         if (true)
-    //     //         {
-    //     //             px = (px < 0 ? 0 : (px > 1 ? 1 : px));
-    //     //             py = (py < 0 ? 0 : (py > 1 ? 1 : py));
-    //     //         }
-
-    //     //         changed = true;
-    //     //     }
-    //     // }
-    // }
-
-    // draw lines and grabbers
     const auto points = curve.Points();
-
     ImVec2 moved(0, 0);
     Vec2 keyframe;
     int selected = -1;
@@ -286,7 +284,8 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             drawList->AddLine(ImVec2(x, y), pos, ImColor(0, 128, 0), 2.0f);
         }
 
-        drawList->AddText(ImVec2(x - 10, y + 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", point.x, point.y).c_str());
+        if (isAnchor)
+            drawList->AddText(ImVec2(x - 10, y + 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", point.x, point.y).c_str());
         if (DragHandle("AnimationCurveDrag" + i, ImVec2(x, y), moved, isAnchor ? rgb(0, 188, 227) : rgb(255, 102, 204)))
         {
             selected = i;
@@ -296,7 +295,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     if (selected != -1)
     {
         auto keyframe = screenPosTo01(moved, bb, 3, true);
-        curve.SetKeyframe(selected, keyframe.x, keyframe.y);
+        curve.SetPoint(selected, keyframe.x, keyframe.y);
     }
 
     return changed;
@@ -305,7 +304,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
 bool UI::DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, const Vec3 &color)
 {
     bool changed = false;
-    static const int GRAB_RADIUS = 8;
+    static const int GRAB_RADIUS = 10;
     static const int GRAB_BORDER = 2;
     ImVec2 handlePos = ImVec2(pos.x, pos.y);
     ImDrawList *drawList = ImGui::GetWindowDrawList();
