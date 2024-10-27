@@ -275,19 +275,15 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
 
         if (isOutTangent)
         {
-            const Vec2 &outTangent = points[i - 1];
-            float otx = bb.Min.x + (outTangent.x - points.front().x) / (curve.Time()) * bb.GetWidth();
-            float oty = bb.Max.y - (outTangent.y * bb.GetHeight());
-
-            drawList->AddLine(ImVec2(x, y), ImVec2(otx, oty), ImColor(0, 128, 0), 2.0f);
+            const Vec2 &prevAnchor = points[i - 1];
+            auto pos = screenPosFrom01(ImVec2(prevAnchor.x, prevAnchor.y), bb, true);
+            drawList->AddLine(ImVec2(x, y), pos, ImColor(0, 128, 0), 2.0f);
         }
         if (isInTangent)
         {
-            const Vec2 &inTangent = points[i + 1];
-            float itx = bb.Min.x + (inTangent.x - points.front().x) / (curve.Time()) * bb.GetWidth();
-            float ity = bb.Max.y - (inTangent.y * bb.GetHeight());
-
-            drawList->AddLine(ImVec2(x, y), ImVec2(itx, ity), ImColor(0, 128, 0), 2.0f);
+            const Vec2 &nextAnchor = points[i + 1];
+            auto pos = screenPosFrom01(ImVec2(nextAnchor.x, nextAnchor.y), bb, true);
+            drawList->AddLine(ImVec2(x, y), pos, ImColor(0, 128, 0), 2.0f);
         }
 
         drawList->AddText(ImVec2(x - 10, y + 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", point.x, point.y).c_str());
@@ -352,8 +348,10 @@ ImVec2 UI::screenPosFrom01(const ImVec2 &pos, const ImRect &rect, bool flipY) co
     float y = pos.y;
     if (flipY)
         y = 1 - pos.y;
-    return ImVec2(pos.x * (rect.Max.x - rect.Min.x) + rect.Min.x,
-                  y * (rect.Max.y - rect.Min.y) + rect.Min.y);
+
+    return ImVec2(
+        pos.x * (rect.Max.x - rect.Min.x) + rect.Min.x,
+        y * (rect.Max.y - rect.Min.y) + rect.Min.y);
 }
 
 ImVec2 UI::screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &mappedRect) const
