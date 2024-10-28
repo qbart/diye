@@ -25,5 +25,10 @@ private:
     float interpolate(int anchorA, int anchorB, float t) const;
 
 private:
+    // Cubic Hermite spline
+    // 
+    // PO IPO IPO IPO IP  layout
+    // 0   1   2   3   4  anchors
+    // 01 234 567 890 12  points
     std::vector<Vec2> points;
 };

@@ -249,7 +249,6 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
                 drawList->AddCircleFilled(screenPos, 8, color);
                 if (IsMouseClicked(ImGuiMouseButton_Left))
                 {
-                    fmt::print("Adding keyframe at {}, {}\n", mouse01.x, mouse01.y);
                     curve.AddKey(mouse01.x, mouse01.y);
                     changed = true;
                 }
@@ -269,7 +268,6 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         bool isOutTangent = i % 3 == 1;
         float x = bb.Min.x + (point.x - points.front().x) / (curve.Time()) * bb.GetWidth();
         float y = bb.Max.y - (point.y * bb.GetHeight());
-        // Draw keyframe point
 
         if (isOutTangent)
         {
@@ -285,12 +283,17 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         }
 
         if (isAnchor)
-            drawList->AddText(ImVec2(x - 10, y + 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", point.x, point.y).c_str());
+            drawList->AddText(ImVec2(x - 10, y + 10),
+                              ImColor(1.0f, 1.0f, 1.0f),
+                              fmt::format("{},{}", point.x, point.y).c_str());
         if (DragHandle("AnimationCurveDrag" + i, ImVec2(x, y), moved, isAnchor ? rgb(0, 188, 227) : rgb(255, 102, 204)))
         {
             selected = i;
             changed = true;
         }
+            drawList->AddText(ImVec2(x - 10, y - 8),
+                              ImColor(1.0f, 1.0f, 1.0f),
+                              fmt::format("[{}]",i).c_str());
     }
     if (selected != -1)
     {
@@ -315,7 +318,7 @@ bool UI::DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, con
 
     auto cursor = ImGui::GetCursorScreenPos();
     ImGui::SetCursorScreenPos(buttonPos);
-    ImGui::InvisibleButton(("DragHandle__" + id).c_str(), ImVec2(10, 10));
+    ImGui::InvisibleButton(("@DragHandle__" + id).c_str(), ImVec2(10, 10));
     ImGui::SetCursorScreenPos(cursor);
     float alpha = ImGui::IsItemActive() || ImGui::IsItemHovered() ? 0.5f : 1.0f;
     drawList->AddCircleFilled(handlePos, GRAB_RADIUS, ImColor(1.0f, 1.0f, 1.0f));

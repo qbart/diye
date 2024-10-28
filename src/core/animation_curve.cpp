@@ -19,16 +19,19 @@ void AnimationCurve::AddKey(float time, float value)
     if (time > 1)
         time = 1;
 
-    for (int anchor = 0; anchor < Segments(); ++anchor)
+    for (int anchor = 0; anchor < Anchors() - 1; ++anchor)
     {
         int i = anchor * 3;
         if (time > points[i].x && time < points[i + 3].x)
         {
-            // we are between anchor i and i+1,
+            fmt::print("Adding key after anchor {}  [{}]\n", anchor, i);
+            // we are between anchor and anchor+1,
             // and we need to skip the out tangent of i
-            points.insert(points.begin() + 1 + 1, Vec2(time, value - 0.1f));
-            points.insert(points.begin() + 2 + 1, Vec2(time, value));
-            points.insert(points.begin() + 3 + 1, Vec2(time, value + 0.1f));
+            int gap = 1;
+
+            points.insert(points.begin() + i + 1 + 1, Vec2(time, value - 0.1f));
+            points.insert(points.begin() + i + 2 + 1, Vec2(time, value));
+            points.insert(points.begin() + i + 3 + 1, Vec2(time, value + 0.1f));
             return;
         }
     }
@@ -44,7 +47,16 @@ void AnimationCurve::SetPoint(int i, float t, float v)
     bool isAnchor = i % 3 == 0;
     if (isAnchor)
     {
-        points[i] = Vec2(t, v);
+        float x = points[i].x;
+        float lowerLimit = 0;
+        float upperLimit = 1;
+        if (i != 0)
+            lowerLimit = points[i - 3].x;
+        if (i != points.size() - 1)
+            upperLimit = points[i + 3].x;
+
+        x = Mathf::Clamp(t, lowerLimit, upperLimit);
+        points[i] = Vec2(x, v);
     }
     else
     {
