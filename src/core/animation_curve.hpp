@@ -22,6 +22,7 @@ public:
     inline int Segments() const { return points.size() / 3; }
 
 private:
+    float function(float t, float p0, float out, float in, float p1) const;
     float interpolate(int anchorA, int anchorB, float t) const;
 
 private:

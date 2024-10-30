@@ -262,6 +262,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     int selected = -1;
     for (int i = 0; i < points.size(); ++i)
     {
+        ImGui::PushID(i);
         const auto &point = points[i];
         bool isAnchor = i % 3 == 0;
         bool isInTangent = i % 3 == 2;
@@ -286,14 +287,15 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             drawList->AddText(ImVec2(x - 10, y + 10),
                               ImColor(1.0f, 1.0f, 1.0f),
                               fmt::format("{},{}", point.x, point.y).c_str());
-        if (DragHandle("AnimationCurveDrag" + i, ImVec2(x, y), moved, isAnchor ? rgb(0, 188, 227) : rgb(255, 102, 204)))
+        if (DragHandle("AnimationCurveDrag", ImVec2(x, y), moved, isAnchor ? rgb(0, 188, 227) : rgb(255, 102, 204)))
         {
             selected = i;
             changed = true;
         }
             drawList->AddText(ImVec2(x - 10, y - 8),
-                              ImColor(1.0f, 1.0f, 1.0f),
+                              ImColor(1.0f, 0.0f, 0.0f),
                               fmt::format("[{}]",i).c_str());
+        ImGui::PopID();
     }
     if (selected != -1)
     {
@@ -306,28 +308,29 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
 
 bool UI::DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, const Vec3 &color)
 {
+    static const float GRAB_RADIUS = 5;
+    static const float GRAB_BORDER = 2;
     bool changed = false;
-    static const int GRAB_RADIUS = 10;
-    static const int GRAB_BORDER = 2;
     ImVec2 handlePos = ImVec2(pos.x, pos.y);
     ImDrawList *drawList = ImGui::GetWindowDrawList();
 
     auto buttonPos = ImVec2(
-        handlePos.x - 5.0f,
-        handlePos.y - 5.0f);
+        handlePos.x - GRAB_RADIUS,
+        handlePos.y - GRAB_RADIUS);
 
     auto cursor = ImGui::GetCursorScreenPos();
     ImGui::SetCursorScreenPos(buttonPos);
-    ImGui::InvisibleButton(("@DragHandle__" + id).c_str(), ImVec2(10, 10));
+    ImGui::InvisibleButton(("@DragHandle__" + id).c_str(), ImVec2(GRAB_RADIUS * 2, GRAB_RADIUS * 2));
     ImGui::SetCursorScreenPos(cursor);
     float alpha = ImGui::IsItemActive() || ImGui::IsItemHovered() ? 0.5f : 1.0f;
-    drawList->AddCircleFilled(handlePos, GRAB_RADIUS, ImColor(1.0f, 1.0f, 1.0f));
-    drawList->AddCircleFilled(handlePos, GRAB_RADIUS - GRAB_BORDER, ImColor(color.x, color.y, color.z, alpha));
+    drawList->AddCircleFilled(handlePos, GRAB_RADIUS*2, ImColor(1.0f, 1.0f, 1.0f));
+    drawList->AddCircleFilled(handlePos, GRAB_RADIUS*2 - GRAB_BORDER, ImColor(color.x, color.y, color.z, alpha));
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
-        cursor = ImGui::GetIO().MouseDelta;
-        moved = ImVec2(handlePos.x + cursor.x, handlePos.y + cursor.y);
+        auto delta = ImGui::GetIO().MouseDelta;
+        moved = ImVec2(handlePos.x + delta.x, handlePos.y + delta.y);
         changed = true;
+        drawList->AddText(ImVec2(moved.x - 10, moved.y - 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", moved.x, moved.y).c_str());
     }
     return changed;
 }

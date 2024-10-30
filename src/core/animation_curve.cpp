@@ -29,9 +29,14 @@ void AnimationCurve::AddKey(float time, float value)
             // and we need to skip the out tangent of i
             int gap = 1;
 
-            points.insert(points.begin() + i + 1 + 1, Vec2(time, value - 0.1f));
-            points.insert(points.begin() + i + 2 + 1, Vec2(time, value));
-            points.insert(points.begin() + i + 3 + 1, Vec2(time, value + 0.1f));
+            auto inTangent = Vec2(time + 0.1f, value - 0.1f);
+            auto anchorPoint = Vec2(time, value);
+            auto outTangent = Vec2(time + 0.1f, value + 0.1f);
+            auto smoothTangent = (inTangent + outTangent) * 0.5f;
+
+            points.emplace(points.begin() + i + 1 + 1, smoothTangent);
+            points.emplace(points.begin() + i + 2 + 1, anchorPoint);
+            points.emplace(points.begin() + i + 3 + 1, smoothTangent);
             return;
         }
     }
@@ -69,6 +74,18 @@ const Vec2 &AnimationCurve::operator[](int anchor) const
     return points[anchor * 3];
 }
 
+float AnimationCurve::function(float t, float p0, float out, float in, float p1) const
+{
+    float t2 = t * t;
+    float t3 = t2 * t;
+    float h00 = 2.0f * t3 - 3.0f * t2 + 1.0f;
+    float h10 = t3 - 2.0f * t2 + t;
+    float h01 = -2.0f * t3 + 3.0f * t2;
+    float h11 = t3 - t2;
+
+    return p0 * h00 + out * h10 + p1 * h01 + in * h11;
+}
+
 float AnimationCurve::interpolate(int anchorA, int anchorB, float t) const
 {
     assert(anchorA + 3 == anchorB);
@@ -78,15 +95,9 @@ float AnimationCurve::interpolate(int anchorA, int anchorB, float t) const
     const auto &inTangent1 = points[anchorB - 1] - points[anchorB]; // p1in - p1
     const auto &p1 = points[anchorB];
 
-    float t2 = t * t;
-    float t3 = t2 * t;
-    float h00 = 2.0f * t3 - 3.0f * t2 + 1.0f;
-    float h10 = t3 - 2.0f * t2 + t;
-    float h01 = -2.0f * t3 + 3.0f * t2;
-    float h11 = t3 - t2;
-
-    Vec2 result = p0 * h00 + outTangent0 * h10 + p1 * h01 + inTangent1 * h11;
-    return result.y;
+    float x = function(t, p0.x, outTangent0.x, inTangent1.x, p1.x);
+    float y = function(t, p0.y, outTangent0.y, inTangent1.y, p1.y);
+    return y;
 }
 
 float AnimationCurve::Evaluate(float t) const
