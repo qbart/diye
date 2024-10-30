@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.29)
 
-project(squash)
+project(diye)
 
 add_executable(${PROJECT_NAME}
     src/core/transform.cpp
