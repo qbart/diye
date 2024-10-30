@@ -12,6 +12,7 @@ public:
     float Evaluate(float t) const;
     const std::vector<Vec2> &Points() const { return points; }
     void SetKeyframe(int anchor, float t, float v);
+    void RemoveKeyframe(int anchor);
     void SetPoint(int i, float t, float v);
     inline float Time() const
     {

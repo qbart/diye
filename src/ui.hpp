@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <unordered_map>
+#include <functional>
 
 #include "core/all.hpp"
 #include "glfw.hpp"
@@ -23,7 +24,7 @@ public:
     bool RotationGizmo(const Camera &camera, Transform &transform);
     bool ScaleGizmo(const Camera &camera, Transform &transform);
     bool AnimationCurveWidget(AnimationCurve &curve);
-    bool DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, const Vec3 &color);
+    bool DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, const Vec3 &color, std::function<void()> onDoubleClick = []() {});
 
 private:
     ImVec2 screenPosTo01(const ImVec2 &pos, const ImRect &rect, int precision = 3, bool flipY = false) const;

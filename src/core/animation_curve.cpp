@@ -24,7 +24,7 @@ void AnimationCurve::AddKey(float time, float value)
         int i = anchor * 3;
         if (time > points[i].x && time < points[i + 3].x)
         {
-            fmt::print("Adding key after anchor {}  [{}]\n", anchor, i);
+            // fmt::print("Adding key after anchor {}  [{}]\n", anchor, i);
             // we are between anchor and anchor+1,
             // and we need to skip the out tangent of i
             int gap = 1;
@@ -45,6 +45,17 @@ void AnimationCurve::AddKey(float time, float value)
 void AnimationCurve::SetKeyframe(int anchor, float t, float v)
 {
     points[anchor * 3] = Vec2(t, v);
+}
+
+void AnimationCurve::RemoveKeyframe(int anchor)
+{
+    // never delete first or last anchor
+    if (anchor == 0 || anchor == Anchors() - 1)
+        return;
+
+    points.erase(
+        points.begin() + anchor * 3 - 1,
+        points.begin() + anchor * 3 + 2);
 }
 
 void AnimationCurve::SetPoint(int i, float t, float v)

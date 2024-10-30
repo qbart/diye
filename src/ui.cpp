@@ -144,9 +144,7 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
 }
 
 // TODO:
-// - lock dragging
 // - render proper grid
-// - allow to delete
 // - ensure C1 continuity when adding keyframes
 // - lock/break tangents
 // - move anchor with tangents
@@ -260,15 +258,22 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     ImVec2 moved(0, 0);
     Vec2 keyframe;
     int selected = -1;
+    int deleted = -1;
     for (int i = 0; i < points.size(); ++i)
     {
         ImGui::PushID(i);
         const auto &point = points[i];
-        bool isAnchor = i % 3 == 0;
-        bool isInTangent = i % 3 == 2;
-        bool isOutTangent = i % 3 == 1;
-        float x = bb.Min.x + (point.x - points.front().x) / (curve.Time()) * bb.GetWidth();
-        float y = bb.Max.y - (point.y * bb.GetHeight());
+        const bool isAnchor = i % 3 == 0;
+        const auto color = isAnchor ? rgb(255, 102, 204) : rgb(0, 188, 227);
+        const bool isInTangent = i % 3 == 2;
+        const bool isOutTangent = i % 3 == 1;
+        const float x = bb.Min.x + (point.x - points.front().x) / (curve.Time()) * bb.GetWidth();
+        const float y = bb.Max.y - (point.y * bb.GetHeight());
+        const auto doubleClick = [i, isAnchor, &deleted]()
+        {
+            if (isAnchor)
+                deleted = i;
+        };
 
         if (isOutTangent)
         {
@@ -287,14 +292,18 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             drawList->AddText(ImVec2(x - 10, y + 10),
                               ImColor(1.0f, 1.0f, 1.0f),
                               fmt::format("{},{}", point.x, point.y).c_str());
-        if (DragHandle("AnimationCurveDrag", ImVec2(x, y), moved, isAnchor ? rgb(0, 188, 227) : rgb(255, 102, 204)))
+        if (DragHandle("AnimationCurveDrag",
+                       ImVec2(x, y),
+                       moved,
+                       color,
+                       doubleClick))
         {
             selected = i;
             changed = true;
         }
-            drawList->AddText(ImVec2(x - 10, y - 8),
-                              ImColor(1.0f, 0.0f, 0.0f),
-                              fmt::format("[{}]",i).c_str());
+        drawList->AddText(ImVec2(x - 10, y - 8),
+                          ImColor(1.0f, 0.0f, 0.0f),
+                          fmt::format("[{}]", i).c_str());
         ImGui::PopID();
     }
     if (selected != -1)
@@ -302,11 +311,16 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         auto keyframe = screenPosTo01(moved, bb, 3, true);
         curve.SetPoint(selected, keyframe.x, keyframe.y);
     }
+    if (deleted != -1)
+    {
+        curve.RemoveKeyframe(deleted / 3);
+        changed = true;
+    }
 
     return changed;
 }
 
-bool UI::DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, const Vec3 &color)
+bool UI::DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, const Vec3 &color, std::function<void()> onDoubleClick)
 {
     static const float GRAB_RADIUS = 5;
     static const float GRAB_BORDER = 2;
@@ -323,14 +337,18 @@ bool UI::DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, con
     ImGui::InvisibleButton(("@DragHandle__" + id).c_str(), ImVec2(GRAB_RADIUS * 2, GRAB_RADIUS * 2));
     ImGui::SetCursorScreenPos(cursor);
     float alpha = ImGui::IsItemActive() || ImGui::IsItemHovered() ? 0.5f : 1.0f;
-    drawList->AddCircleFilled(handlePos, GRAB_RADIUS*2, ImColor(1.0f, 1.0f, 1.0f));
-    drawList->AddCircleFilled(handlePos, GRAB_RADIUS*2 - GRAB_BORDER, ImColor(color.x, color.y, color.z, alpha));
+    drawList->AddCircleFilled(handlePos, GRAB_RADIUS * 2, ImColor(1.0f, 1.0f, 1.0f));
+    drawList->AddCircleFilled(handlePos, GRAB_RADIUS * 2 - GRAB_BORDER, ImColor(color.x, color.y, color.z, alpha));
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
         auto delta = ImGui::GetIO().MouseDelta;
         moved = ImVec2(handlePos.x + delta.x, handlePos.y + delta.y);
         changed = true;
         drawList->AddText(ImVec2(moved.x - 10, moved.y - 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", moved.x, moved.y).c_str());
+    }
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+    {
+        onDoubleClick();
     }
     return changed;
 }
