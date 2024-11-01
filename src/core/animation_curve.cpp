@@ -4,7 +4,6 @@
 
 AnimationCurve::AnimationCurve()
 {
-    // for tangents locking is ignored
     points = {
         {Vec2(0, 0), true},       // anchor 1
         {Vec2(0.2f, 0.2f), true}, // out tangent
@@ -61,7 +60,7 @@ void AnimationCurve::RemoveKeyframe(int anchor)
 
 void AnimationCurve::SetPoint(int i, float t, float v)
 {
-    bool isAnchor = i % 3 == 0;
+    const bool isAnchor = i % 3 == 0;
     if (isAnchor)
     {
         float sx = points[i].P.x;
@@ -91,6 +90,19 @@ void AnimationCurve::SetPoint(int i, float t, float v)
     else
     {
         points[i].P = Vec2(t, v);
+        if (points[i].Locked)
+        {
+            const bool isOutTangent = i % 3 == 1;
+            const bool isInTangent = i % 3 == 2;
+            if (isOutTangent && i - 2 > 0)
+            {
+                points[i - 2].P = points[i].P;
+            }
+            if (isInTangent && i + 2 < points.size() - 1)
+            {
+                points[i + 2].P = points[i].P;
+            }
+        }
     }
 }
 
