@@ -145,7 +145,6 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
 
 // TODO:
 // - ensure C1 continuity when adding keyframes
-// - lock/break tangents
 bool UI::AnimationCurveWidget(AnimationCurve &curve)
 {
     // styles
@@ -304,6 +303,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     Vec2 keyframe;
     int selected = -1;
     int deleted = -1;
+    int tangentSplitJoin = -1;
     for (int i = 0; i < points.size(); ++i)
     {
         ImGui::PushID(i);
@@ -312,10 +312,12 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         const auto color = isAnchor ? anchorColor : tangentColor;
         const float x = bb.Min.x + (point.P.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
         const float y = bb.Max.y - (point.P.y * bb.GetHeight());
-        const auto doubleClick = [i, isAnchor, &deleted]()
+        const auto doubleClick = [i, isAnchor, &tangentSplitJoin, &deleted]()
         {
             if (isAnchor)
                 deleted = i;
+            else
+                tangentSplitJoin = i;
         };
 
         if (isAnchor)
@@ -346,6 +348,11 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     if (deleted != -1)
     {
         curve.RemoveKeyframe(deleted / 3);
+        changed = true;
+    }
+    if (tangentSplitJoin != -1)
+    {
+        curve.ToggleTangentSplitJoin(tangentSplitJoin);
         changed = true;
     }
 

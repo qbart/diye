@@ -60,8 +60,7 @@ void AnimationCurve::RemoveKeyframe(int anchor)
 
 void AnimationCurve::SetPoint(int i, float t, float v)
 {
-    const bool isAnchor = i % 3 == 0;
-    if (isAnchor)
+    if (IsAnchor(i))
     {
         float sx = points[i].P.x;
         float sy = points[i].P.y;
@@ -92,16 +91,43 @@ void AnimationCurve::SetPoint(int i, float t, float v)
         points[i].P = Vec2(t, v);
         if (points[i].Locked)
         {
-            const bool isOutTangent = i % 3 == 1;
-            const bool isInTangent = i % 3 == 2;
-            if (isOutTangent && i - 2 > 0)
+            if (IsOutTangent(i) && i - 2 > 0)
             {
                 points[i - 2].P = points[i].P;
             }
-            if (isInTangent && i + 2 < points.size() - 1)
+            if (IsInTangent(i) && i + 2 < points.size() - 1)
             {
                 points[i + 2].P = points[i].P;
             }
+        }
+    }
+}
+
+void AnimationCurve::ToggleTangentSplitJoin(int i)
+{
+    assert(IsTangent(i));
+    bool wasLocked = points[i].Locked;
+    bool nowLocked = !wasLocked;
+    points[i].Locked = nowLocked;
+
+    if (IsOutTangent(i))
+    {
+        points[i - 1].Locked = nowLocked;
+        if (i - 2 > 0) // if there is a corresponding in-tangent
+        {
+            points[i - 2].Locked = nowLocked;
+            if (nowLocked)
+                points[i - 2].P = points[i].P;
+        }
+    }
+    if (IsInTangent(i))
+    {
+        points[i + 1].Locked = nowLocked;
+        if (i + 2 < points.size() - 1) // if there is a corresponding out-tangent
+        {
+            points[i + 2].Locked = nowLocked;
+            if (nowLocked)
+                points[i + 2].P = points[i].P;
         }
     }
 }
