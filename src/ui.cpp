@@ -144,19 +144,25 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
 }
 
 // TODO:
-// - render proper grid
 // - ensure C1 continuity when adding keyframes
 // - lock/break tangents
-// - move anchor with tangents
 bool UI::AnimationCurveWidget(AnimationCurve &curve)
 {
+    // styles
+    static ImColor gridCaptionColor(rgb(128, 128, 128));
+    static ImColor captionColor(rgb(255, 255, 255));
+    static ImColor gridSquareColor(rgb(32, 32, 32));
+    static ImColor gridLineColor(rgb(64, 64, 64));
+    static ImColor curveColor(rgb(255, 255, 200));
+    static ImColor anchorColor(rgb(255, 102, 204));
+    static ImColor tangentColor(rgb(0, 188, 227));
+    static ImColor tangentLineColor(rgb(255, 192, 0));
+    static const float curveWidth = 3;
+    static const float tangentWidth = 1.5f;
+
     using namespace ImGui;
     bool changed = false;
     static const int resolution = 64;
-    static const int CURVE_WIDTH = 4;
-    static const int GRAB_RADIUS = 8;
-    static const int GRAB_BORDER = 2;
-    static const int LINE_WIDTH = 1;
     Vec2 values[resolution + 1];
     ImDrawList *drawList = ImGui::GetWindowDrawList();
     ImVec2 size = ImVec2(600, 600);
@@ -170,39 +176,54 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     if (!ItemAdd(winbb, NULL))
         return changed;
 
+    // draw grid
     auto halfx = (size.x - curveEditorSize.x) / 2;
     auto halfy = (size.y - curveEditorSize.y) / 2;
     ImRect bb(
         ImVec2(winbb.Min.x + halfx, winbb.Min.y + halfy),
         ImVec2(winbb.Max.x - halfx, winbb.Max.y - halfy));
+    RenderFrame(bb.Min, bb.Max, gridSquareColor, true, 0.0f);
 
-    RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_TabActive), true, 0.0f);
+    float gridStepX = curveEditorSize.x / 4;
+    float gridStepY = curveEditorSize.y / 4;
 
-    for (int i = 0; i <= curveEditorSize.x; i += (curveEditorSize.x / 4))
+    // horizontal grid lines
+    for (int x = -gridStepX; x <= curveEditorSize.x + gridStepX; x += gridStepX)
     {
-        auto pos = screenPosTo01(ImVec2(bb.Min.x + i, bb.Min.y), bb, 3, true);
         drawList->AddLine(
-            ImVec2(bb.Min.x + i, bb.Min.y),
-            ImVec2(bb.Min.x + i, bb.Max.y),
-            GetColorU32(ImGuiCol_TextDisabled));
+            ImVec2(bb.Min.x + x, bb.Min.y - gridStepY),
+            ImVec2(bb.Min.x + x, bb.Max.y + gridStepY),
+            gridLineColor);
+    }
+    // vertical grid lines
+    for (int y = -gridStepY; y <= curveEditorSize.y + gridStepY; y += gridStepY)
+    {
+        drawList->AddLine(
+            ImVec2(bb.Min.x - gridStepX, bb.Min.y + y),
+            ImVec2(bb.Max.x + gridStepX, bb.Min.y + y),
+            gridLineColor);
+    }
+    // horizontal captions
+    for (int x = 0; x <= curveEditorSize.x; x += gridStepX)
+    {
+        auto pos = screenPosTo01(ImVec2(bb.Min.x + x, bb.Min.y), bb, 3, true);
         drawList->AddText(
-            ImVec2(bb.Min.x + i - 5, bb.Min.y - 20),
-            GetColorU32(ImGuiCol_TextDisabled),
+            ImVec2(bb.Min.x + x - 5, bb.Min.y - 20),
+            gridCaptionColor,
             fmt::format("{}", pos.x).c_str());
     }
-    for (int i = 0; i <= curveEditorSize.y; i += (curveEditorSize.y / 4))
+    // vertical captions
+    for (int y = 0; y <= curveEditorSize.y; y += gridStepY)
     {
-        auto pos = screenPosTo01(ImVec2(bb.Min.x, bb.Min.y + i), bb, 3, true);
-        drawList->AddLine(
-            ImVec2(bb.Min.x, bb.Min.y + i),
-            ImVec2(bb.Max.x, bb.Min.y + i),
-            GetColorU32(ImGuiCol_TextDisabled));
+        auto pos = screenPosTo01(ImVec2(bb.Min.x, bb.Min.y + y), bb, 3, true);
         drawList->AddText(
-            ImVec2(bb.Max.x + 5, bb.Min.y + i - 5),
-            GetColorU32(ImGuiCol_TextDisabled),
+            ImVec2(bb.Max.x + 5, bb.Min.y + y - 5),
+            gridCaptionColor,
             fmt::format("{}", pos.y).c_str());
     }
 
+    // NOTE: drawing curve can be improved by taking slopes into account
+    // and draw more dense lines where the slope is higher, but for now is fine
     float timeStep = curve.Time() / (resolution - 1);
     for (int i = 0; i <= resolution; ++i)
     {
@@ -210,7 +231,6 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         values[i].x = t;
         values[i].y = curve.Evaluate(t);
     }
-    ImColor color(0.0f, 1.0f, 0.0f);
 
     for (int i = 0; i < resolution; ++i)
     {
@@ -218,7 +238,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         ImVec2 q = {values[i + 1].x, 1 - values[i + 1].y};
         ImVec2 r(p.x * (bb.Max.x - bb.Min.x) + bb.Min.x, p.y * (bb.Max.y - bb.Min.y) + bb.Min.y);
         ImVec2 s(q.x * (bb.Max.x - bb.Min.x) + bb.Min.x, q.y * (bb.Max.y - bb.Min.y) + bb.Min.y);
-        drawList->AddLine(r, s, color, CURVE_WIDTH);
+        drawList->AddLine(r, s, curveColor, curveWidth);
     }
 
     // Ghost keyframe that could be added
@@ -244,7 +264,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             if (distance < 0.02f)
             {
                 auto screenPos = screenPosFrom01(ImVec2(mouse01.x, ghostY), bb, true);
-                drawList->AddCircleFilled(screenPos, 8, color);
+                drawList->AddCircleFilled(screenPos, 8, curveColor);
                 if (IsMouseClicked(ImGuiMouseButton_Left))
                 {
                     curve.AddKey(mouse01.x, mouse01.y);
@@ -254,8 +274,33 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         }
     }
 
+    // anchors and tangents with lines and text
     const auto points = curve.Points();
-    ImVec2 moved(0, 0);
+
+    // tangent lines
+    for (int i = 0; i < points.size(); ++i)
+    {
+        const auto &point = points[i];
+        const bool isInTangent = i % 3 == 2;
+        const bool isOutTangent = i % 3 == 1;
+        const float x = bb.Min.x + (point.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
+        const float y = bb.Max.y - (point.y * bb.GetHeight());
+
+        if (isOutTangent)
+        {
+            const Vec2 &prevAnchor = points[i - 1];
+            auto pos = screenPosFrom01(ImVec2(prevAnchor.x, prevAnchor.y), bb, true);
+            drawList->AddLine(ImVec2(x, y), pos, tangentLineColor, tangentWidth);
+        }
+        if (isInTangent)
+        {
+            const Vec2 &nextAnchor = points[i + 1];
+            auto pos = screenPosFrom01(ImVec2(nextAnchor.x, nextAnchor.y), bb, true);
+            drawList->AddLine(ImVec2(x, y), pos, tangentLineColor, tangentWidth);
+        }
+    }
+    // anchors and tangents
+    Vec2 moved(0, 0);
     Vec2 keyframe;
     int selected = -1;
     int deleted = -1;
@@ -264,10 +309,8 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         ImGui::PushID(i);
         const auto &point = points[i];
         const bool isAnchor = i % 3 == 0;
-        const auto color = isAnchor ? rgb(255, 102, 204) : rgb(0, 188, 227);
-        const bool isInTangent = i % 3 == 2;
-        const bool isOutTangent = i % 3 == 1;
-        const float x = bb.Min.x + (point.x - points.front().x) / (curve.Time()) * bb.GetWidth();
+        const auto color = isAnchor ? anchorColor : tangentColor;
+        const float x = bb.Min.x + (point.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
         const float y = bb.Max.y - (point.y * bb.GetHeight());
         const auto doubleClick = [i, isAnchor, &deleted]()
         {
@@ -275,41 +318,30 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
                 deleted = i;
         };
 
-        if (isOutTangent)
-        {
-            const Vec2 &prevAnchor = points[i - 1];
-            auto pos = screenPosFrom01(ImVec2(prevAnchor.x, prevAnchor.y), bb, true);
-            drawList->AddLine(ImVec2(x, y), pos, ImColor(0, 128, 0), 2.0f);
-        }
-        if (isInTangent)
-        {
-            const Vec2 &nextAnchor = points[i + 1];
-            auto pos = screenPosFrom01(ImVec2(nextAnchor.x, nextAnchor.y), bb, true);
-            drawList->AddLine(ImVec2(x, y), pos, ImColor(0, 128, 0), 2.0f);
-        }
-
         if (isAnchor)
             drawList->AddText(ImVec2(x - 10, y + 10),
-                              ImColor(1.0f, 1.0f, 1.0f),
+                              captionColor,
                               fmt::format("{},{}", point.x, point.y).c_str());
+
         if (DragHandle("AnimationCurveDrag",
-                       ImVec2(x, y),
+                       Vec2(x, y),
                        moved,
-                       color,
+                       Vec4(color.Value.x, color.Value.y, color.Value.z, color.Value.w),
                        doubleClick))
         {
             selected = i;
-            changed = true;
         }
-        drawList->AddText(ImVec2(x - 10, y - 8),
-                          ImColor(1.0f, 0.0f, 0.0f),
-                          fmt::format("[{}]", i).c_str());
+        // debug index
+        // drawList->AddText(ImVec2(x - 10, y - 8),
+        //                   ImColor(1.0f, 0.0f, 0.0f),
+        //                   fmt::format("[{}]", i).c_str());
         ImGui::PopID();
     }
     if (selected != -1)
     {
         auto keyframe = screenPosTo01(moved, bb, 3, true);
         curve.SetPoint(selected, keyframe.x, keyframe.y);
+        changed = true;
     }
     if (deleted != -1)
     {
@@ -320,7 +352,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     return changed;
 }
 
-bool UI::DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, const Vec3 &color, std::function<void()> onDoubleClick)
+bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const Vec4 &color, std::function<void()> onDoubleClick)
 {
     static const float GRAB_RADIUS = 5;
     static const float GRAB_BORDER = 2;
@@ -342,9 +374,9 @@ bool UI::DragHandle(const std::string &id, const ImVec2 &pos, ImVec2 &moved, con
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
         auto delta = ImGui::GetIO().MouseDelta;
-        moved = ImVec2(handlePos.x + delta.x, handlePos.y + delta.y);
+        moved = Vec2(handlePos.x + delta.x, handlePos.y + delta.y);
         changed = true;
-        drawList->AddText(ImVec2(moved.x - 10, moved.y - 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", moved.x, moved.y).c_str());
+        // drawList->AddText(ImVec2(moved.x - 10, moved.y - 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", moved.x, moved.y).c_str());
     }
     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
     {

@@ -20,7 +20,7 @@ const Vec3 GRAY = Vec3(0.5, 0.5, 0.5);
 const Vec3 LIGHT_GRAY = Vec3(0.75, 0.75, 0.75);
 const Vec3 DARK_GRAY = Vec3(0.25, 0.25, 0.25);
 
-inline Vec4 rgb(byte r, byte g, byte b, byte a = 1)
+inline Vec4 rgb(byte r, byte g, byte b, byte a = 255)
 {
 	return Vec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
 }

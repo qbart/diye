@@ -63,7 +63,8 @@ void AnimationCurve::SetPoint(int i, float t, float v)
     bool isAnchor = i % 3 == 0;
     if (isAnchor)
     {
-        float x = points[i].x;
+        float sx = points[i].x;
+        float sy = points[i].y;
         float lowerLimit = 0;
         float upperLimit = 1;
         if (i != 0)
@@ -71,8 +72,20 @@ void AnimationCurve::SetPoint(int i, float t, float v)
         if (i != points.size() - 1)
             upperLimit = points[i + 3].x;
 
-        x = Mathf::Clamp(t, lowerLimit, upperLimit);
+        float x = Mathf::Clamp(t, lowerLimit, upperLimit);
+        float y = v;
         points[i] = Vec2(x, v);
+
+        // move tangents
+        Vec2 d = Vec2(x - sx, y - sy);
+        if (i > 0)
+        {
+            points[i - 1] = points[i - 1] + d;
+        }
+        if (i < points.size() - 1)
+        {
+            points[i + 1] = points[i + 1] + d;
+        }
     }
     else
     {

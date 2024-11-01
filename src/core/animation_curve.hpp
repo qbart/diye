@@ -18,6 +18,14 @@ public:
     {
         return points.back().x - points.front().x;
     }
+    inline float StartTime() const
+    {
+        return points.front().x;
+    }
+    inline float EndTime() const
+    {
+        return points.back().x;
+    }
     const Vec2 &operator[](int anchor) const;
     int Anchors() const { return points.size() / 3 + 1; }
     inline int Segments() const { return points.size() / 3; }
