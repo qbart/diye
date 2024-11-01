@@ -250,10 +250,10 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         bool allowAdd = true;
         for (const auto &point : curve.Points())
         {
-            float distance2 = sqrt(pow((mouse01.x - point.x), 2) + pow((mouse01.y - point.y), 2));
+            float distance2 = sqrt(pow((mouse01.x - point.P.x), 2) + pow((mouse01.y - point.P.y), 2));
             if (distance2 < 0.05f)
             {
-                auto screenPos = screenPosFrom01(ImVec2(point.x, point.y), bb, true);
+                auto screenPos = screenPosFrom01(ImVec2(point.P.x, point.P.y), bb, true);
                 allowAdd = false;
                 break;
             }
@@ -283,18 +283,18 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         const auto &point = points[i];
         const bool isInTangent = i % 3 == 2;
         const bool isOutTangent = i % 3 == 1;
-        const float x = bb.Min.x + (point.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
-        const float y = bb.Max.y - (point.y * bb.GetHeight());
+        const float x = bb.Min.x + (point.P.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
+        const float y = bb.Max.y - (point.P.y * bb.GetHeight());
 
         if (isOutTangent)
         {
-            const Vec2 &prevAnchor = points[i - 1];
+            const Vec2 &prevAnchor = points[i - 1].P;
             auto pos = screenPosFrom01(ImVec2(prevAnchor.x, prevAnchor.y), bb, true);
             drawList->AddLine(ImVec2(x, y), pos, tangentLineColor, tangentWidth);
         }
         if (isInTangent)
         {
-            const Vec2 &nextAnchor = points[i + 1];
+            const Vec2 &nextAnchor = points[i + 1].P;
             auto pos = screenPosFrom01(ImVec2(nextAnchor.x, nextAnchor.y), bb, true);
             drawList->AddLine(ImVec2(x, y), pos, tangentLineColor, tangentWidth);
         }
@@ -310,8 +310,8 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         const auto &point = points[i];
         const bool isAnchor = i % 3 == 0;
         const auto color = isAnchor ? anchorColor : tangentColor;
-        const float x = bb.Min.x + (point.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
-        const float y = bb.Max.y - (point.y * bb.GetHeight());
+        const float x = bb.Min.x + (point.P.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
+        const float y = bb.Max.y - (point.P.y * bb.GetHeight());
         const auto doubleClick = [i, isAnchor, &deleted]()
         {
             if (isAnchor)
@@ -321,7 +321,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         if (isAnchor)
             drawList->AddText(ImVec2(x - 10, y + 10),
                               captionColor,
-                              fmt::format("{},{}", point.x, point.y).c_str());
+                              fmt::format("{},{}", point.P.x, point.P.y).c_str());
 
         if (DragHandle("AnimationCurveDrag",
                        Vec2(x, y),
