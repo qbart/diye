@@ -17,6 +17,14 @@ public:
         std::function<void()> OnDoubleClick = []() {};
     };
 
+    struct DragHandleStyle
+    {
+        float GrabRadius = 5;
+        float GrabBorder = 2;
+        Vec4 Color = rgb(96, 0, 255);
+        Vec4 BorderColor = rgb(255, 255, 255);
+    };
+
 public:
     UI(GLFWwindow *wnd);
     ~UI();
@@ -31,7 +39,7 @@ public:
     bool RotationGizmo(const Camera &camera, Transform &transform);
     bool ScaleGizmo(const Camera &camera, Transform &transform);
     bool AnimationCurveWidget(AnimationCurve &curve);
-    bool DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const Vec4 &color, const MouseCallback &callback = {});
+    bool DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const DragHandleStyle &style = {}, const MouseCallback &callback = {});
 
 private:
     ImVec2 screenPosTo01(const ImVec2 &pos, const ImRect &rect, int precision = 3, bool flipY = false) const;

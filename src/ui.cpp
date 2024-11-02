@@ -143,8 +143,6 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
     return changed;
 }
 
-// TODO:
-// - ensure C1 continuity when adding keyframes
 bool UI::AnimationCurveWidget(AnimationCurve &curve)
 {
     using namespace ImGui;
@@ -155,8 +153,8 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     static ImColor gridSquareColor(rgb(32, 32, 32));
     static ImColor gridLineColor(rgb(64, 64, 64));
     static ImColor curveColor(rgb(255, 255, 200));
-    static ImColor anchorColor(rgb(255, 102, 204));
-    static ImColor tangentColor(rgb(0, 188, 227));
+    static Vec4 anchorColor(rgb(255, 102, 204));
+    static Vec4 tangentColor(rgb(0, 188, 227));
     static ImColor tangentLineColor(rgb(255, 192, 0));
     static const float curveWidth = 3;
     static const float tangentWidth = 1.5f;
@@ -260,9 +258,9 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         }
         if (allowAdd)
         {
-            drawList->AddLine(ImVec2(mouse.x, bb.Min.y - gridStepY), ImVec2(mouse.x, bb.Max.y + gridStepY), anchorColor);
+            drawList->AddLine(ImVec2(mouse.x, bb.Min.y - gridStepY), ImVec2(mouse.x, bb.Max.y + gridStepY), ImColor(anchorColor));
             auto screenPos = screenPosFrom01(ImVec2(mouse01.x, mouse01.y), bb, true);
-            drawList->AddCircle(screenPos, 8, anchorColor);
+            drawList->AddCircle(screenPos, 8, ImColor(anchorColor));
             if (IsMouseClicked(ImGuiMouseButton_Left))
             {
                 curve.AddKey(mouse01.x, mouse01.y);
@@ -313,36 +311,69 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     int selected = -1;
     int deleted = -1;
     int tangentSplitJoin = -1;
+    int affectedAnchor = -1;
+
+    // tangents only
     for (int i = 0; i < points.size(); ++i)
     {
+        if (!curve.IsTangent(i))
+            continue;
+
         ImGui::PushID(i);
         const auto &point = points[i];
-        bool isAnchor = curve.IsAnchor(i);
         const float x = bb.Min.x + (point.P.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
         const float y = bb.Max.y - (point.P.y * bb.GetHeight());
 
         MouseCallback callback;
-        callback.OnHover = [isAnchor, &point = std::as_const(point), drawList, x, y]()
+        callback.OnDoubleClick = [i, &tangentSplitJoin, &deleted]()
         {
-            if (isAnchor)
-                drawList->AddText(ImVec2(x - 10, y - 25),
-                                  captionColor,
-                                  fmt::format("{},{}", point.P.x, point.P.y).c_str());
+            tangentSplitJoin = i;
         };
-        callback.OnDoubleClick = [i, isAnchor, &tangentSplitJoin, &deleted]()
+        callback.OnHover = [&affectedAnchor, i, &curve = std::as_const(curve)]()
         {
-            if (isAnchor)
-                deleted = i;
-            else
-                tangentSplitJoin = i;
+            affectedAnchor = curve.IsOutTangent(i) ? i - 1 : i + 1;
         };
 
-        const auto color = isAnchor ? anchorColor : tangentColor;
-        if (DragHandle("AnimationCurveDrag",
-                       Vec2(x, y),
-                       moved,
-                       Vec4(color.Value.x, color.Value.y, color.Value.z, color.Value.w),
-                       callback))
+        DragHandleStyle dragHandleStyle;
+        dragHandleStyle.Color = tangentColor;
+        dragHandleStyle.GrabRadius = 4;
+        dragHandleStyle.GrabBorder = 1;
+        if (DragHandle("AnimationCurveDrag", Vec2(x, y), moved, dragHandleStyle, callback))
+        {
+            selected = i;
+            affectedAnchor = curve.IsOutTangent(i) ? i - 1 : i + 1;
+        }
+        ImGui::PopID();
+    }
+
+    // anchors only
+    for (int i = 0; i < points.size(); ++i)
+    {
+        if (!curve.IsAnchor(i))
+            continue;
+
+        ImGui::PushID(i);
+        const auto &point = points[i];
+        const float x = bb.Min.x + (point.P.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
+        const float y = bb.Max.y - (point.P.y * bb.GetHeight());
+
+        MouseCallback callback;
+        callback.OnHover = [&point = std::as_const(point), drawList, x, y]()
+        {
+            drawList->AddText(ImVec2(x - 10, y - 25),
+                              captionColor,
+                              fmt::format("{},{}", point.P.x, point.P.y).c_str());
+        };
+        callback.OnDoubleClick = [i, &deleted]()
+        {
+            deleted = i;
+        };
+
+        DragHandleStyle dragHandleStyle;
+        dragHandleStyle.Color = anchorColor;
+        dragHandleStyle.GrabRadius = affectedAnchor == i ? 1 : 5;
+        dragHandleStyle.GrabBorder = affectedAnchor == i ? 0 : 2;
+        if (DragHandle("AnimationCurveDrag", Vec2(x, y), moved, dragHandleStyle, callback))
         {
             selected = i;
         }
@@ -372,30 +403,40 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     return changed;
 }
 
-bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const Vec4 &color, const MouseCallback &callback)
+bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const UI::DragHandleStyle &style, const MouseCallback &callback)
 {
-    static const float GRAB_RADIUS = 5;
-    static const float GRAB_BORDER = 2;
     bool changed = false;
     ImVec2 handlePos = ImVec2(pos.x, pos.y);
     ImDrawList *drawList = ImGui::GetWindowDrawList();
 
     auto buttonPos = ImVec2(
-        handlePos.x - GRAB_RADIUS,
-        handlePos.y - GRAB_RADIUS);
+        handlePos.x - style.GrabRadius,
+        handlePos.y - style.GrabRadius);
 
     auto cursor = ImGui::GetCursorScreenPos();
     bool triggeredHover = false;
     ImGui::SetCursorScreenPos(buttonPos);
-    ImGui::InvisibleButton(("@DragHandle__" + id).c_str(), ImVec2(GRAB_RADIUS * 2, GRAB_RADIUS * 2));
+    ImGui::InvisibleButton(("@DragHandle__" + id).c_str(), ImVec2(style.GrabRadius * 2, style.GrabRadius * 2));
     ImGui::SetCursorScreenPos(cursor);
 
     if (ImGui::IsItemHovered())
         triggeredHover = true;
 
-    float alpha = ImGui::IsItemActive() || ImGui::IsItemHovered() ? 0.5f : 1.0f;
-    drawList->AddCircleFilled(handlePos, GRAB_RADIUS * 2, ImColor(1.0f, 1.0f, 1.0f));
-    drawList->AddCircleFilled(handlePos, GRAB_RADIUS * 2 - GRAB_BORDER, ImColor(color.x, color.y, color.z, alpha));
+    float alpha = style.Color.w;
+    float borderAlpha = style.BorderColor.w;
+    if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+    {
+        alpha = style.Color.w * 0.8f;
+        borderAlpha = style.BorderColor.w * 0.8f;
+    }
+    if (style.GrabBorder > 0)
+        drawList->AddCircleFilled(handlePos,
+                                  style.GrabRadius * 2,
+                                  ImColor(style.BorderColor.x, style.BorderColor.y, style.BorderColor.z, borderAlpha));
+
+    drawList->AddCircleFilled(handlePos,
+                              style.GrabRadius * 2 - style.GrabBorder,
+                              ImColor(style.Color.x, style.Color.y, style.Color.z, alpha));
 
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {

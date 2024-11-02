@@ -5,13 +5,15 @@
 AnimationCurve::AnimationCurve()
 {
     points = {
-        {Vec2(0, 0), 0, true},                           // anchor 1
-        {Mathf::NormalizedVec2(0.2f, 0.2f)*0.2f, 0.2f, true}, // out tangent
-        {Mathf::NormalizedVec2(1.2f, 1.2f)*1.2f, 0.2f, true}, // in tangent
-        {Vec2(1, 1), 0, true},                           // anchor 2
+        {Vec2(0, 0), 0, true},                                  // anchor 1
+        {Mathf::NormalizedVec2(0.2f, 0.2f) * 0.2f, 0.2f, true}, // out tangent
+        {Mathf::NormalizedVec2(1.2f, 1.2f) * 1.2f, 0.2f, true}, // in tangent
+        {Vec2(1, 1), 0, true},                                  // anchor 2
     };
 }
 
+// NOTE: add better continuity without distorting the curve,
+// it does work ok, but it could be better
 void AnimationCurve::AddKey(float time, float value)
 {
     if (time < 0)
