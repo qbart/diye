@@ -19,7 +19,6 @@ public:
     float Evaluate(float t) const;
     Vec2 EvaluateVec2(float t) const;
     const std::vector<Point> &Points() const { return points; }
-    void SetKeyframe(int anchor, float t, float v);
     void RemoveKeyframe(int anchor);
     void SetPoint(int i, float t, float v);
     void ToggleTangentSplitJoin(int i);

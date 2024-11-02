@@ -52,11 +52,6 @@ void AnimationCurve::AddKey(float time, float value)
     }
 }
 
-void AnimationCurve::SetKeyframe(int anchor, float t, float v)
-{
-    points[anchor * 3].P = Vec2(t, v);
-}
-
 void AnimationCurve::RemoveKeyframe(int anchor)
 {
     // never delete first or last anchor
