@@ -20,6 +20,26 @@ public:
         return glm::cross(a, b);
     }
 
+    float static Distance(const Vec2 &a, const Vec2 &b)
+    {
+        return glm::distance(a, b);
+    }
+
+    Vec2 static NormalizedVec2(float x, float y)
+    {
+        return glm::normalize(Vec2(x, y));
+    }
+
+    Vec3 static NormalizedVec3(float x, float y, float z)
+    {
+        return glm::normalize(Vec3(x, y, z));
+    }
+
+    Vec2 static Normalize(const Vec2 &v)
+    {
+        return glm::normalize(v);
+    }
+
     Vec3 static Normalize(const Vec3 &v)
     {
         return glm::normalize(v);
@@ -61,8 +81,6 @@ public:
             glm::vec3(
                 glm::radians(angles.x),
                 glm::radians(angles.y),
-                glm::radians(angles.z)
-            )
-        );
+                glm::radians(angles.z)));
     }
 };
