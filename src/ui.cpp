@@ -147,9 +147,11 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
 // - ensure C1 continuity when adding keyframes
 bool UI::AnimationCurveWidget(AnimationCurve &curve)
 {
+    using namespace ImGui;
+
     // styles
     static ImColor gridCaptionColor(rgb(128, 128, 128));
-    static ImColor captionColor(rgb(255, 255, 255));
+    static ImColor captionColor(rgb(0, 255, 128));
     static ImColor gridSquareColor(rgb(32, 32, 32));
     static ImColor gridLineColor(rgb(64, 64, 64));
     static ImColor curveColor(rgb(255, 255, 200));
@@ -159,10 +161,19 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     static const float curveWidth = 3;
     static const float tangentWidth = 1.5f;
 
-    using namespace ImGui;
-    bool changed = false;
+    // config
     static const int resolution = 64;
-    Vec2 values[resolution + 1];
+    static const int precision = 3;
+    static const int TN = 10;
+    static float T[TN] = {0, 0.05f, 0.1f, 0.15f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f, 0.45f};
+    for (int i = 0; i < TN; ++i)
+    {
+        T[i] += GetIO().DeltaTime * 0.2f;
+        if (T[i] > 1.0f)
+            T[i] = 0.0f;
+    }
+
+    bool changed = false;
     ImDrawList *drawList = ImGui::GetWindowDrawList();
     ImVec2 size = ImVec2(600, 600);
     ImGuiWindow *win = ImGui::GetCurrentWindow();
@@ -205,7 +216,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     // horizontal captions
     for (int x = 0; x <= curveEditorSize.x; x += gridStepX)
     {
-        auto pos = screenPosTo01(ImVec2(bb.Min.x + x, bb.Min.y), bb, 3, true);
+        auto pos = screenPosTo01(ImVec2(bb.Min.x + x, bb.Min.y), bb, precision, true);
         drawList->AddText(
             ImVec2(bb.Min.x + x - 5, bb.Min.y - 20),
             gridCaptionColor,
@@ -214,43 +225,33 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     // vertical captions
     for (int y = 0; y <= curveEditorSize.y; y += gridStepY)
     {
-        auto pos = screenPosTo01(ImVec2(bb.Min.x, bb.Min.y + y), bb, 3, true);
+        auto pos = screenPosTo01(ImVec2(bb.Min.x, bb.Min.y + y), bb, precision, true);
         drawList->AddText(
             ImVec2(bb.Max.x + 5, bb.Min.y + y - 5),
             gridCaptionColor,
             fmt::format("{}", pos.y).c_str());
     }
 
-    // NOTE: drawing curve can be improved by taking slopes into account
-    // and draw more dense lines where the slope is higher, but for now is fine
-    float timeStep = curve.Time() / (resolution - 1);
-    for (int i = 0; i <= resolution; ++i)
-    {
-        float t = 0 + i * timeStep;
-        values[i].x = t;
-        values[i].y = curve.Evaluate(t);
-    }
+    // NOTE: drawing via recursive subdivision
+    // paper: https://www.cs.cmu.edu/afs/cs/academic/class/15462-s10/www/lec-slides/lec06.pdf
+    Vec2 startEval = curve.EvaluateVec2(0.0);
+    Vec2 endEval = curve.EvaluateVec2(1.0);
+    drawRecursive(curve, 0.0, 1.0, startEval, endEval, 0.01f, 50, [&](const Vec2 &p0, const Vec2 &p1)
+                  {
+                      ImVec2 r(p0.x * (bb.Max.x - bb.Min.x) + bb.Min.x, (1-p0.y) * (bb.Max.y - bb.Min.y) + bb.Min.y);
+                      ImVec2 s(p1.x * (bb.Max.x - bb.Min.x) + bb.Min.x, (1-p1.y) * (bb.Max.y - bb.Min.y) + bb.Min.y);
+                      drawList->AddLine(r, s, curveColor, curveWidth); });
 
-    for (int i = 0; i < resolution; ++i)
-    {
-        ImVec2 p = {values[i + 0].x, 1 - values[i + 0].y};
-        ImVec2 q = {values[i + 1].x, 1 - values[i + 1].y};
-        ImVec2 r(p.x * (bb.Max.x - bb.Min.x) + bb.Min.x, p.y * (bb.Max.y - bb.Min.y) + bb.Min.y);
-        ImVec2 s(q.x * (bb.Max.x - bb.Min.x) + bb.Min.x, q.y * (bb.Max.y - bb.Min.y) + bb.Min.y);
-        drawList->AddLine(r, s, curveColor, curveWidth);
-    }
-
-    // Ghost keyframe that could be added
+    // ghost anchor that could be added
     ImVec2 mouse = GetIO().MousePos;
-    auto mouse01 = screenPosTo01(mouse, bb, 3, true);
+    auto mouse01 = screenPosTo01(mouse, bb, precision, true);
     if (mouse01.x >= 0 && mouse01.x <= 1 && !ImGui::IsMouseDragging(0))
     {
-        float ghostY = curve.Evaluate(mouse01.x);
         bool allowAdd = true;
         for (const auto &point : curve.Points())
         {
-            float distance2 = sqrt(pow((mouse01.x - point.P.x), 2) + pow((mouse01.y - point.P.y), 2));
-            if (distance2 < 0.05f)
+            float distance = Mathf::Distance(Vec2(mouse01.x, mouse01.y), point.P);
+            if (distance < 0.05f)
             {
                 auto screenPos = screenPosFrom01(ImVec2(point.P.x, point.P.y), bb, true);
                 allowAdd = false;
@@ -259,18 +260,26 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         }
         if (allowAdd)
         {
-            float distance = (ghostY - mouse01.y) * (ghostY - mouse01.y);
-            if (distance < 0.02f)
+            drawList->AddLine(ImVec2(mouse.x, bb.Min.y - gridStepY), ImVec2(mouse.x, bb.Max.y + gridStepY), anchorColor);
+            auto screenPos = screenPosFrom01(ImVec2(mouse01.x, mouse01.y), bb, true);
+            drawList->AddCircle(screenPos, 8, anchorColor);
+            if (IsMouseClicked(ImGuiMouseButton_Left))
             {
-                auto screenPos = screenPosFrom01(ImVec2(mouse01.x, ghostY), bb, true);
-                drawList->AddCircleFilled(screenPos, 8, curveColor);
-                if (IsMouseClicked(ImGuiMouseButton_Left))
-                {
-                    curve.AddKey(mouse01.x, mouse01.y);
-                    changed = true;
-                }
+                curve.AddKey(mouse01.x, mouse01.y);
+                changed = true;
             }
         }
+    }
+
+    // moving animation
+    for (int i = 0; i < TN; ++i)
+    {
+        auto eval = curve.EvaluateVec2(T[i]);
+        drawList->AddCircleFilled(ImVec2(eval.x * (bb.Max.x - bb.Min.x) + bb.Min.x, (1 - eval.y) * (bb.Max.y - bb.Min.y) + bb.Min.y), 5, curveColor);
+        auto evalF = curve.Evaluate(T[i]);
+        ImColor wrongEvalColor = curveColor;
+        wrongEvalColor.Value.w = 0.5f;
+        drawList->AddCircleFilled(ImVec2(T[i] * (bb.Max.x - bb.Min.x) + bb.Min.x, (1 - evalF) * (bb.Max.y - bb.Min.y) + bb.Min.y), 5, wrongEvalColor);
     }
 
     // anchors and tangents with lines and text
@@ -308,11 +317,19 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     {
         ImGui::PushID(i);
         const auto &point = points[i];
-        const bool isAnchor = i % 3 == 0;
-        const auto color = isAnchor ? anchorColor : tangentColor;
+        bool isAnchor = curve.IsAnchor(i);
         const float x = bb.Min.x + (point.P.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
         const float y = bb.Max.y - (point.P.y * bb.GetHeight());
-        const auto doubleClick = [i, isAnchor, &tangentSplitJoin, &deleted]()
+
+        MouseCallback callback;
+        callback.OnHover = [isAnchor, &point = std::as_const(point), drawList, x, y]()
+        {
+            if (isAnchor)
+                drawList->AddText(ImVec2(x - 10, y - 25),
+                                  captionColor,
+                                  fmt::format("{},{}", point.P.x, point.P.y).c_str());
+        };
+        callback.OnDoubleClick = [i, isAnchor, &tangentSplitJoin, &deleted]()
         {
             if (isAnchor)
                 deleted = i;
@@ -320,16 +337,12 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
                 tangentSplitJoin = i;
         };
 
-        if (isAnchor)
-            drawList->AddText(ImVec2(x - 10, y + 10),
-                              captionColor,
-                              fmt::format("{},{}", point.P.x, point.P.y).c_str());
-
+        const auto color = isAnchor ? anchorColor : tangentColor;
         if (DragHandle("AnimationCurveDrag",
                        Vec2(x, y),
                        moved,
                        Vec4(color.Value.x, color.Value.y, color.Value.z, color.Value.w),
-                       doubleClick))
+                       callback))
         {
             selected = i;
         }
@@ -341,7 +354,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     }
     if (selected != -1)
     {
-        auto keyframe = screenPosTo01(moved, bb, 3, true);
+        auto keyframe = screenPosTo01(moved, bb, precision, true);
         curve.SetPoint(selected, keyframe.x, keyframe.y);
         changed = true;
     }
@@ -359,7 +372,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     return changed;
 }
 
-bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const Vec4 &color, std::function<void()> onDoubleClick)
+bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const Vec4 &color, const MouseCallback &callback)
 {
     static const float GRAB_RADIUS = 5;
     static const float GRAB_BORDER = 2;
@@ -372,23 +385,31 @@ bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const V
         handlePos.y - GRAB_RADIUS);
 
     auto cursor = ImGui::GetCursorScreenPos();
+    bool triggeredHover = false;
     ImGui::SetCursorScreenPos(buttonPos);
     ImGui::InvisibleButton(("@DragHandle__" + id).c_str(), ImVec2(GRAB_RADIUS * 2, GRAB_RADIUS * 2));
     ImGui::SetCursorScreenPos(cursor);
+
+    if (ImGui::IsItemHovered())
+        triggeredHover = true;
+
     float alpha = ImGui::IsItemActive() || ImGui::IsItemHovered() ? 0.5f : 1.0f;
     drawList->AddCircleFilled(handlePos, GRAB_RADIUS * 2, ImColor(1.0f, 1.0f, 1.0f));
     drawList->AddCircleFilled(handlePos, GRAB_RADIUS * 2 - GRAB_BORDER, ImColor(color.x, color.y, color.z, alpha));
+
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
         auto delta = ImGui::GetIO().MouseDelta;
         moved = Vec2(handlePos.x + delta.x, handlePos.y + delta.y);
         changed = true;
         // drawList->AddText(ImVec2(moved.x - 10, moved.y - 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", moved.x, moved.y).c_str());
+        triggeredHover = true;
     }
+    if (triggeredHover)
+        callback.OnHover();
     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-    {
-        onDoubleClick();
-    }
+        callback.OnDoubleClick();
+
     return changed;
 }
 
@@ -424,4 +445,20 @@ ImVec2 UI::screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &
     return ImVec2(
         mappedRect.Min.x + mappedX * (mappedRect.Max.x - mappedRect.Min.x),
         mappedRect.Min.y + mappedY * (mappedRect.Max.y - mappedRect.Min.y));
+}
+
+void UI::drawRecursive(const AnimationCurve &curve, float t0, float t1, Vec2 p0, Vec2 p1, float tolerance, int maxSteps, std::function<void(const Vec2 &, const Vec2 &)> drawFn)
+{
+    Vec2 midPoint = curve.EvaluateVec2((t0 + t1) / 2.0);
+    float distance = Mathf::Distance(p1, p0);
+
+    if (distance > tolerance && maxSteps > 0)
+    {
+        drawRecursive(curve, t0, (t0 + t1) / 2.0, p0, midPoint, tolerance, maxSteps - 1, drawFn);
+        drawRecursive(curve, (t0 + t1) / 2.0, t1, midPoint, p1, tolerance, maxSteps - 1, drawFn);
+    }
+    else
+    {
+        drawFn(p0, p1);
+    }
 }

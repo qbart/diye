@@ -5,10 +5,10 @@
 AnimationCurve::AnimationCurve()
 {
     points = {
-        {Vec2(0, 0), true},       // anchor 1
-        {Vec2(0.2f, 0.2f), true}, // out tangent
-        {Vec2(1.2f, 1.2f), true}, // in tangent
-        {Vec2(1, 1), true},       // anchor 2
+        {Vec2(0, 0), 0, true},                           // anchor 1
+        {Mathf::NormalizedVec2(0.2f, 0.2f)*0.2f, 0.2f, true}, // out tangent
+        {Mathf::NormalizedVec2(1.2f, 1.2f)*1.2f, 0.2f, true}, // in tangent
+        {Vec2(1, 1), 0, true},                           // anchor 2
     };
 }
 
@@ -29,10 +29,18 @@ void AnimationCurve::AddKey(float time, float value)
             // and we need to skip the out tangent of i
             int gap = 1;
 
-            auto inTangent = Point{Vec2(time - 0.1f, value + 0.1f), true};
-            auto anchorPoint = Point{Vec2(time, value), true};
-            auto outTangent = Point{Vec2(time + 0.1f, value + 0.1f), true};
-            auto smoothTangent = Point{(inTangent.P + outTangent.P) * 0.5f, true};
+            auto inTangent = Point{
+                Mathf::NormalizedVec2(time - 0.1f, value + 0.1f),
+                0.2f,
+                true};
+            auto anchorPoint = Point{Vec2(time, value), 0, true};
+            auto outTangent = Point{
+                Mathf::NormalizedVec2(time + 0.1f, value + 0.1f),
+                1, true};
+            auto smoothTangent = Point{
+                Mathf::Normalize((inTangent.P + outTangent.P) * 0.5f),
+                0.2f,
+                true};
 
             points.emplace(points.begin() + i + 1 + 1, smoothTangent);
             points.emplace(points.begin() + i + 2 + 1, anchorPoint);
@@ -132,12 +140,19 @@ void AnimationCurve::ToggleTangentSplitJoin(int i)
     }
 }
 
-const AnimationCurve::Point &AnimationCurve::operator[](int anchor) const
+float AnimationCurve::function(float t, float p0, float out, float in, float p1) const
 {
-    return points[anchor * 3];
+    float t2 = t * t;
+    float t3 = t2 * t;
+    float h00 = 2.0f * t3 - 3.0f * t2 + 1.0f;
+    float h10 = t3 - 2.0f * t2 + t;
+    float h01 = -2.0f * t3 + 3.0f * t2;
+    float h11 = t3 - t2;
+
+    return p0 * h00 + out * h10 + p1 * h01 + in * h11;
 }
 
-float AnimationCurve::function(float t, float p0, float out, float in, float p1) const
+Vec2 AnimationCurve::function(float t, const Vec2 &p0, const Vec2 &out, const Vec2 &in, const Vec2 &p1) const
 {
     float t2 = t * t;
     float t3 = t2 * t;
@@ -158,9 +173,19 @@ float AnimationCurve::interpolate(int anchorA, int anchorB, float t) const
     const auto &inTangent1 = points[anchorB - 1].P - points[anchorB].P; // p1in - p1
     const auto &p1 = points[anchorB];
 
-    // float x = function(t, p0.P.x, outTangent0.x, inTangent1.x, p1.P.x);
+    float x = function(t, p0.P.x, outTangent0.x, inTangent1.x, p1.P.x);
     float y = function(t, p0.P.y, outTangent0.y, inTangent1.y, p1.P.y);
     return y;
+}
+
+Vec2 AnimationCurve::interpolateVec2(int anchorA, int anchorB, float t) const
+{
+    const auto &p0 = points[anchorA];
+    const auto &outTangent0 = points[anchorA + 1].P - p0.P;             // p0out - p0
+    const auto &inTangent1 = points[anchorB - 1].P - points[anchorB].P; // p1in - p1
+    const auto &p1 = points[anchorB];
+
+    return function(t, p0.P, outTangent0, inTangent1, p1.P);
 }
 
 float AnimationCurve::Evaluate(float t) const
@@ -170,7 +195,7 @@ float AnimationCurve::Evaluate(float t) const
     if (t >= points.back().P.x)
         return points.back().P.y;
 
-    int segments = points.size() / 3;
+    int segments = Segments();
     for (int anchor = 0; anchor < segments; ++anchor)
     {
         int i = anchor * 3;
@@ -182,4 +207,25 @@ float AnimationCurve::Evaluate(float t) const
     }
 
     return 0.0f;
+}
+
+Vec2 AnimationCurve::EvaluateVec2(float t) const
+{
+    if (t <= points.front().P.x)
+        return points.front().P;
+    if (t >= points.back().P.x)
+        return points.back().P;
+
+    int segments = Segments();
+    for (int anchor = 0; anchor < segments; ++anchor)
+    {
+        int i = anchor * 3;
+        if (t <= points[i + 3].P.x)
+        {
+            float u = (t - points[i].P.x) / (points[i + 3].P.x - points[i].P.x);
+            return interpolateVec2(i, i + 3, u);
+        }
+    }
+
+    return Vec2(0, 0);
 }
