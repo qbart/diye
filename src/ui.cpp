@@ -77,6 +77,12 @@ void UI::PopFont()
     ImGui::PopFont();
 }
 
+void UI::Text(const Vec2 &pos, const std::string &text, const Vec4 &color)
+{
+    ImGui::SetCursorPos(ImVec2(pos.x, pos.y));
+    ImGui::TextColored(ImColor(color), text.c_str());
+}
+
 bool UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
 {
     auto skew = Vec3(0.f);
@@ -185,7 +191,6 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     ImRect winbb(win->DC.CursorPos, win->DC.CursorPos + size);
     if (!ItemAdd(winbb, NULL))
         return changed;
-
 
     ImGui::PushID("AnimationCurveWidget");
     // draw grid
@@ -306,28 +311,20 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         drawList->AddCircleFilled(ImVec2(time * (bb.Max.x - bb.Min.x) + bb.Min.x, (1 - value) * (bb.Max.y - bb.Min.y) + bb.Min.y), 5, curveColor);
     }
 
-    auto pointPosition = [&curve = std::as_const(curve), &bb = std::as_const(bb)](const Vec2 &pos) -> Vec2
-    {
-        const float x = bb.Min.x + (pos.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
-        const float y = bb.Max.y - (pos.y * bb.GetHeight());
-
-        return Vec2(x, y);
-    };
-
     // anchors and tangents with lines and text
     // tangent lines
     for (int i = 0; i < curve.PointCount(); ++i)
     {
         if (curve.HasOutTangent(i))
         {
-            const auto anchorPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
-            const auto tangentPos = pointPosition(curve.OutTangent(i));
+            const auto anchorPos = screenPosFrom01(Vec2(curve[i].Time, curve[i].Value), bb, true);
+            const auto tangentPos = screenPosFrom01(Vec2(curve.OutTangent(i)), bb, true);
             drawList->AddLine(ImVec2(anchorPos.x, anchorPos.y), ImVec2(tangentPos.x, tangentPos.y), tangentLineColor, tangentWidth);
         }
         if (curve.HasInTangent(i))
         {
-            const auto anchorPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
-            const auto outTangentPos = pointPosition(curve.InTangent(i));
+            const auto anchorPos = screenPosFrom01(Vec2(curve[i].Time, curve[i].Value), bb, true);
+            const auto outTangentPos = screenPosFrom01(curve.InTangent(i), bb, true);
             drawList->AddLine(ImVec2(anchorPos.x, anchorPos.y), ImVec2(outTangentPos.x, outTangentPos.y), tangentLineColor, tangentWidth);
         }
     }
@@ -348,8 +345,8 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     for (int i = 0; i < curve.PointCount(); ++i)
     {
         ImGui::PushID(i);
-        const auto outTangentPos = pointPosition(curve.OutTangent(i));
-        const auto inTangentPos = pointPosition(curve.InTangent(i));
+        const auto outTangentPos = screenPosFrom01(curve.OutTangent(i), bb, true);
+        const auto inTangentPos = screenPosFrom01(curve.InTangent(i), bb, true);
 
         MouseCallback callback;
         callback.OnDoubleClick = [i, &tangentSplitJoin]()
@@ -400,7 +397,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     for (int i = 0; i < curve.PointCount(); ++i)
     {
         ImGui::PushID(i);
-        auto pos = pointPosition(curve.Anchor(i));
+        auto pos = screenPosFrom01(curve.Anchor(i), bb, true);
 
         MouseCallback callback;
         callback.OnHover = [i, &pos, &curve, drawList]()
@@ -538,6 +535,11 @@ ImVec2 UI::screenPosFrom01(const ImVec2 &pos, const ImRect &rect, bool flipY) co
     return ImVec2(
         pos.x * (rect.Max.x - rect.Min.x) + rect.Min.x,
         y * (rect.Max.y - rect.Min.y) + rect.Min.y);
+}
+
+ImVec2 UI::screenPosFrom01(const Vec2 &pos, const ImRect &rect, bool flipY) const
+{
+    return screenPosFrom01(ImVec2(pos.x, pos.y), rect, flipY);
 }
 
 ImVec2 UI::screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &mappedRect) const

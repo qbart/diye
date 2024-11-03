@@ -2,23 +2,23 @@
 
 #include "types.hpp"
 
-const Vec3 RED = Vec3(1, 0, 0);
-const Vec3 GREEN = Vec3(0, 1, 0);
-const Vec3 BLUE = Vec3(0, 0, 1);
-const Vec3 WHITE = Vec3(1, 1, 1);
-const Vec3 BLACK = Vec3(0, 0, 0);
-const Vec3 YELLOW = Vec3(1, 1, 0);
-const Vec3 CYAN = Vec3(0, 1, 1);
-const Vec3 MAGENTA = Vec3(1, 0, 1);
-const Vec3 ORANGE = Vec3(1, 0.5, 0);
-const Vec3 PURPLE = Vec3(0.5, 0, 1);
-const Vec3 PINK = Vec3(1, 0, 0.5);
-const Vec3 LIME = Vec3(0.5, 1, 0);
-const Vec3 TEAL = Vec3(0, 1, 0.5);
-const Vec3 BROWN = Vec3(0.5, 0.25, 0);
-const Vec3 GRAY = Vec3(0.5, 0.5, 0.5);
-const Vec3 LIGHT_GRAY = Vec3(0.75, 0.75, 0.75);
-const Vec3 DARK_GRAY = Vec3(0.25, 0.25, 0.25);
+const Vec4 RED = Vec4(1, 0, 0, 1);
+const Vec4 GREEN = Vec4(0, 1, 0, 1);
+const Vec4 BLUE = Vec4(0, 0, 1, 1);
+const Vec4 WHITE = Vec4(1, 1, 1, 1);
+const Vec4 BLACK = Vec4(0, 0, 0, 1);
+const Vec4 YELLOW = Vec4(1, 1, 0, 1);
+const Vec4 CYAN = Vec4(0, 1, 1, 1);
+const Vec4 MAGENTA = Vec4(1, 0, 1, 1);
+const Vec4 ORANGE = Vec4(1, 0.5, 0, 1);
+const Vec4 PURPLE = Vec4(0.5, 0, 1, 1);
+const Vec4 PINK = Vec4(1, 0, 0.5, 1);
+const Vec4 LIME = Vec4(0.5, 1, 0, 1);
+const Vec4 TEAL = Vec4(0, 1, 0.5, 1);
+const Vec4 BROWN = Vec4(0.5, 0.25, 0, 1);
+const Vec4 GRAY = Vec4(0.5, 0.5, 0.5, 1);
+const Vec4 LIGHT_GRAY = Vec4(0.75, 0.75, 0.75, 1);
+const Vec4 DARK_GRAY = Vec4(0.25, 0.25, 0.25, 1);
 
 inline Vec4 rgb(byte r, byte g, byte b, byte a = 255)
 {

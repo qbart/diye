@@ -35,6 +35,7 @@ public:
     void Demo();
     void PushFont(uint size);
     void PopFont();
+    void Text(const Vec2 &pos, const std::string &text, const Vec4 &color = WHITE);
     bool TranslateGizmo(const Camera &camera, Transform &transform, bool local = false);
     bool RotationGizmo(const Camera &camera, Transform &transform);
     bool ScaleGizmo(const Camera &camera, Transform &transform);
@@ -44,6 +45,7 @@ public:
 private:
     ImVec2 screenPosTo01(const ImVec2 &pos, const ImRect &rect, int precision = 3, bool flipY = false) const;
     ImVec2 screenPosFrom01(const ImVec2 &pos, const ImRect &rect, bool flipY = false) const;
+    ImVec2 screenPosFrom01(const Vec2 &pos, const ImRect &rect, bool flipY = false) const;
     ImVec2 screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &mappedRect) const;
 
 private:
