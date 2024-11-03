@@ -11,7 +11,6 @@ AnimationCurve::AnimationCurve()
     p0.Value = 0;
     p0.OutTangent = 0;
     p0.InTangent = 0;
-    p0.Weight = 0;
     p0.Locked = true;
 
     Point p1;
@@ -19,7 +18,6 @@ AnimationCurve::AnimationCurve()
     p1.Value = 1;
     p1.OutTangent = 0;
     p1.InTangent = 0;
-    p1.Weight = 0;
     p1.Locked = true;
 
     points = {p0, p1};
@@ -43,7 +41,6 @@ void AnimationCurve::AddKey(float time, float value)
             p.Value = value;
             p.OutTangent = 0.f;
             p.InTangent = 0.f;
-            p.Weight = 0;
             p.Locked = true;
 
             points.emplace(points.begin() + i + 1, p);
@@ -114,13 +111,16 @@ void AnimationCurve::SetInTangent(int i, float t, float v)
     // fmt::println("InTangent: ({} , {}) -> {}", t, v, points[i].InTangent);
 }
 
-void AnimationCurve::ToggleTangentSplitJoin(int i)
+void AnimationCurve::ToggleTangentSplitJoin(int i, Tangent dominantTangnent)
 {
     if (i == 0 || i == points.size() - 1)
         return;
 
     points[i].Locked = !points[i].Locked;
-    points[i].InTangent = points[i].OutTangent;
+    if (dominantTangnent == Tangent::Out)
+        points[i].InTangent = points[i].OutTangent;
+    else
+        points[i].OutTangent = points[i].InTangent;
 }
 
 Vec2 AnimationCurve::Anchor(int i) const

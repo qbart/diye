@@ -242,17 +242,26 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     // draw curve
     float drawStep = 0;
     float drawStepSize = 0.001f;
+    float drawCurveP0;
+    float drawCurveP1;
+    Vec2 drawCurveStart;
+    Vec2 drawCurveEnd;
     while (drawStep + drawStepSize < 1.0)
     {
         float t0 = drawStep;
         float t1 = drawStep + drawStepSize;
-        float p0 = curve.Evaluate(t0);
-        float p1 = curve.Evaluate(t1);
-        auto start = screenPosFrom01(ImVec2(t0, p0), bb, true);
-        auto end = screenPosFrom01(ImVec2(t1, p1), bb, true);
-        drawList->AddLine(start, end, curveColor, curveWidth);
+        drawCurveP0 = curve.Evaluate(t0);
+        drawCurveP1 = curve.Evaluate(t1);
+        drawCurveStart = screenPosFrom01(ImVec2(t0, drawCurveP0), bb, true);
+        drawCurveEnd = screenPosFrom01(ImVec2(t1, drawCurveP1), bb, true);
+        drawList->AddLine(drawCurveStart, drawCurveEnd, curveColor, curveWidth);
         drawStep += drawStepSize;
     }
+    drawCurveP0 = drawCurveP1;
+    drawCurveP1 = curve.Evaluate(1.0f);
+    drawCurveStart = drawCurveEnd;
+    drawCurveEnd = screenPosFrom01(ImVec2(1.0f, drawCurveP1), bb, true);
+    drawList->AddLine(drawCurveStart, drawCurveEnd, curveColor, curveWidth);
 
     // ghost anchor that could be added
     ImVec2 mouse = GetIO().MousePos;
@@ -339,6 +348,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     int deleted = -1;
     int tangentSplitJoin = -1;
     int affectedAnchor = -1;
+    auto dominantTangent = AnimationCurve::Tangent::Out;
 
     // tangents only
     ImGui::PushID("tangents");
@@ -349,10 +359,6 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         const auto inTangentPos = screenPosFrom01(curve.InTangent(i), bb, true);
 
         MouseCallback callback;
-        callback.OnDoubleClick = [i, &tangentSplitJoin]()
-        {
-            tangentSplitJoin = i;
-        };
         callback.OnHover = [i, &affectedAnchor]()
         {
             affectedAnchor = i;
@@ -370,6 +376,11 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         dragHandleStyle.GrabBorder = 1;
         if (curve.HasOutTangent(i))
         {
+            callback.OnDoubleClick = [i, &tangentSplitJoin, &dominantTangent]()
+            {
+                tangentSplitJoin = i;
+                dominantTangent = AnimationCurve::Tangent::Out;
+            };
             if (!curve[i].Locked)
                 dragHandleStyle.Color = outTangentColor;
             if (DragHandle("AnimationCurveDragTangentOut", outTangentPos, movedOutTangent, dragHandleStyle, callback))
@@ -380,6 +391,11 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         }
         if (curve.HasInTangent(i))
         {
+            callback.OnDoubleClick = [i, &tangentSplitJoin, &dominantTangent]()
+            {
+                tangentSplitJoin = i;
+                dominantTangent = AnimationCurve::Tangent::In;
+            };
             if (!curve[i].Locked)
                 dragHandleStyle.Color = inTangentColor;
             if (DragHandle("AnimationCurveDragTangentIn", inTangentPos, movedInTangent, dragHandleStyle, callback))
@@ -455,7 +471,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     }
     if (tangentSplitJoin != -1)
     {
-        curve.ToggleTangentSplitJoin(tangentSplitJoin);
+        curve.ToggleTangentSplitJoin(tangentSplitJoin, dominantTangent);
         changed = true;
     }
 

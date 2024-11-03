@@ -14,8 +14,12 @@ public:
         float Value;
         float OutTangent;
         float InTangent;
-        float Weight;
         bool Locked;
+    };
+    enum class Tangent
+    {
+        In,
+        Out
     };
 
 public:
@@ -27,7 +31,7 @@ public:
     void SetPoint(int i, float t, float v);
     void SetOutTangent(int i, float t, float v);
     void SetInTangent(int i, float t, float v);
-    void ToggleTangentSplitJoin(int i);
+    void ToggleTangentSplitJoin(int i, Tangent dominantTangnent = Tangent::Out);
     Vec2 Anchor(int i) const;
     Vec2 OutTangent(int i) const;
     Vec2 InTangent(int i) const;
