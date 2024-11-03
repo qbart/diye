@@ -77,6 +77,23 @@ void UI::PopFont()
     ImGui::PopFont();
 }
 
+std::string UI::ContextMenu(const std::vector<std::string> &items)
+{
+    if (ImGui::BeginPopupContextWindow("ContextMenu", ImGuiMouseButton_Right))
+    {
+        for (const auto &item : items)
+        {
+            if (ImGui::MenuItem(item.c_str()))
+            {
+                ImGui::EndPopup();
+                return item;
+            }
+        }
+        ImGui::EndPopup();
+    }
+    return "";
+}
+
 void UI::Text(const Vec2 &pos, const std::string &text, const Vec4 &color)
 {
     ImGui::SetCursorPos(ImVec2(pos.x, pos.y));
@@ -442,10 +459,27 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         ImGui::PopID(); // i
     }
     ImGui::PopID(); // anchors
+
+    auto presetName = ContextMenu({"One", "Linear", "EaseIn", "EaseOut", "EaseInOut"});
     ImGui::PopID(); // AnimationCurveWidget
 
-    // non-imgui operations
-    if (selected != -1)
+    // only one operation at a time
+    if (presetName != "")
+    {
+        if (presetName == "One")
+            curve.ApplyPreset(AnimationCurve::Preset::One);
+        else if (presetName == "Linear")
+            curve.ApplyPreset(AnimationCurve::Preset::Linear);
+        else if (presetName == "EaseIn")
+            curve.ApplyPreset(AnimationCurve::Preset::EaseIn);
+        else if (presetName == "EaseOut")
+            curve.ApplyPreset(AnimationCurve::Preset::EaseOut);
+        else if (presetName == "EaseInOut")
+            curve.ApplyPreset(AnimationCurve::Preset::EaseInOut);
+
+        changed = true;
+    }
+    else if (selected != -1)
     {
         auto keyframe = screenPosTo01(moved, bb, precision, true);
         curve.SetPoint(selected, keyframe.x, keyframe.y);
@@ -463,13 +497,12 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         curve.SetOutTangent(selectedOutTangent, keyframe.x, keyframe.y);
         changed = true;
     }
-
-    if (deleted != -1)
+    else if (deleted != -1)
     {
         curve.RemoveKeyframe(deleted);
         changed = true;
     }
-    if (tangentSplitJoin != -1)
+    else if (tangentSplitJoin != -1)
     {
         curve.ToggleTangentSplitJoin(tangentSplitJoin, dominantTangent);
         changed = true;

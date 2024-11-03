@@ -6,21 +6,59 @@ float AnimationCurve::TangentLimit = 25;
 
 AnimationCurve::AnimationCurve()
 {
-    Point p0;
+    points.reserve(2);
+    ApplyPreset(Preset::Linear);
+}
+
+void AnimationCurve::ApplyPreset(Preset preset)
+{
+    Point p0, p1;
     p0.Time = 0;
     p0.Value = 0;
+    p0.Locked = true;
     p0.OutTangent = 0;
     p0.InTangent = 0;
-    p0.Locked = true;
-
-    Point p1;
     p1.Time = 1;
     p1.Value = 1;
-    p1.OutTangent = 0;
-    p1.InTangent = 0;
     p1.Locked = true;
+    p1.OutTangent = 1;
+    p1.InTangent = 1;
 
-    points = {p0, p1};
+    switch (preset)
+    {
+    case Preset::One:
+        p0.OutTangent = 0;
+        p0.Value = 1;
+        p1.InTangent = 0;
+        p1.Value = 1;
+        break;
+    case Preset::Linear:
+        p0.OutTangent = 1;
+        p1.InTangent = 1;
+        break;
+    
+    case Preset::EaseInOut:
+        p0.OutTangent = 0;
+        p1.InTangent = 0;
+        break;
+    
+    case Preset::EaseIn:
+        p0.OutTangent = 0;
+        p1.InTangent = 1;
+        break;
+
+    case Preset::EaseOut:
+        p0.OutTangent = 1;
+        p1.InTangent = 0;
+        break;
+    
+    default:
+        throw std::runtime_error("AnimationCurve :: Unknown preset");
+    }
+
+    points.clear();
+    points.emplace_back(p0);
+    points.emplace_back(p1);
 }
 
 // NOTE: add better continuity without distorting the curve,

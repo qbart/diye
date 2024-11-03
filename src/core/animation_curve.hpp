@@ -21,9 +21,18 @@ public:
         In,
         Out
     };
+    enum class Preset
+    {
+        One,
+        Linear,
+        EaseIn,
+        EaseOut,
+        EaseInOut,
+    };
 
 public:
     AnimationCurve();
+    void ApplyPreset(Preset preset);
     void AddKey(float time, float value);
     float Evaluate(float t) const;
     const std::vector<Point> &Points() const { return points; }

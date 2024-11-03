@@ -35,6 +35,7 @@ public:
     void Demo();
     void PushFont(uint size);
     void PopFont();
+    std::string ContextMenu(const std::vector<std::string> &items);
     void Text(const Vec2 &pos, const std::string &text, const Vec4 &color = WHITE);
     bool TranslateGizmo(const Camera &camera, Transform &transform, bool local = false);
     bool RotationGizmo(const Camera &camera, Transform &transform);
