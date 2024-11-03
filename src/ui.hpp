@@ -45,7 +45,6 @@ private:
     ImVec2 screenPosTo01(const ImVec2 &pos, const ImRect &rect, int precision = 3, bool flipY = false) const;
     ImVec2 screenPosFrom01(const ImVec2 &pos, const ImRect &rect, bool flipY = false) const;
     ImVec2 screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &mappedRect) const;
-    void drawRecursive(const AnimationCurve &curve, float t0, float t1, Vec2 p0, Vec2 p1, float tolerance, int maxSteps, std::function<void(const Vec2 &, const Vec2 &)> drawFn);
 
 private:
     GLFWwindow *wnd = nullptr;

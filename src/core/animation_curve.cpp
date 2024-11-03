@@ -4,12 +4,23 @@
 
 AnimationCurve::AnimationCurve()
 {
-    points = {
-        {Vec2(0, 0), 0, true},                                  // anchor 1
-        {Mathf::NormalizedVec2(0.2f, 0.2f) * 0.2f, 0.2f, true}, // out tangent
-        {Mathf::NormalizedVec2(1.2f, 1.2f) * 1.2f, 0.2f, true}, // in tangent
-        {Vec2(1, 1), 0, true},                                  // anchor 2
-    };
+    Point p0;
+    p0.Time = 0;
+    p0.Value = 0;
+    p0.OutTangent = 1;
+    p0.InTangent = 0;
+    p0.Weight = 0;
+    p0.Locked = true;
+
+    Point p1;
+    p1.Time = 1;
+    p1.Value = 1;
+    p1.OutTangent = 0;
+    p1.InTangent = 1;
+    p1.Weight = 0;
+    p1.Locked = true;
+
+    points = {p0, p1};
 }
 
 // NOTE: add better continuity without distorting the curve,
@@ -21,120 +32,124 @@ void AnimationCurve::AddKey(float time, float value)
     if (time > 1)
         time = 1;
 
-    for (int anchor = 0; anchor < Anchors() - 1; ++anchor)
+    for (int i = 0; i < points.size() - 1; ++i)
     {
-        int i = anchor * 3;
-        if (time > points[i].P.x && time < points[i + 3].P.x)
+        if (time > points[i].Time && time < points[i + 1].Time)
         {
-            // fmt::print("Adding key after anchor {}  [{}]\n", anchor, i);
-            // we are between anchor and anchor+1,
-            // and we need to skip the out tangent of i
-            int gap = 1;
+            Point p;
+            p.Time = time;
+            p.Value = value;
+            p.OutTangent = 0.5f;
+            p.InTangent = 0.5f;
+            p.Weight = 0;
+            p.Locked = false;
 
-            auto inTangent = Point{
-                Mathf::NormalizedVec2(time - 0.1f, value + 0.1f),
-                0.2f,
-                true};
-            auto anchorPoint = Point{Vec2(time, value), 0, true};
-            auto outTangent = Point{
-                Mathf::NormalizedVec2(time + 0.1f, value + 0.1f),
-                1, true};
-            auto smoothTangent = Point{
-                Mathf::Normalize((inTangent.P + outTangent.P) * 0.5f),
-                0.2f,
-                true};
-
-            points.emplace(points.begin() + i + 1 + 1, smoothTangent);
-            points.emplace(points.begin() + i + 2 + 1, anchorPoint);
-            points.emplace(points.begin() + i + 3 + 1, smoothTangent);
+            points.emplace(points.begin() + i + 1, p);
             return;
         }
     }
 }
 
-void AnimationCurve::RemoveKeyframe(int anchor)
+void AnimationCurve::RemoveKeyframe(int i)
 {
     // never delete first or last anchor
-    if (anchor == 0 || anchor == Anchors() - 1)
+    if (i == 0 || i == points.size() - 1)
         return;
 
-    points.erase(
-        points.begin() + anchor * 3 - 1,
-        points.begin() + anchor * 3 + 2);
+    points.erase(points.begin() + i);
 }
 
 void AnimationCurve::SetPoint(int i, float t, float v)
 {
-    if (IsAnchor(i))
-    {
-        float sx = points[i].P.x;
-        float sy = points[i].P.y;
-        float lowerLimit = 0;
-        float upperLimit = 1;
-        if (i != 0)
-            lowerLimit = points[i - 3].P.x;
-        if (i != points.size() - 1)
-            upperLimit = points[i + 3].P.x;
+    // if (IsAnchor(i))
+    // {
+    //     float sx = points[i].P.x;
+    //     float sy = points[i].P.y;
+    //     float lowerLimit = 0;
+    //     float upperLimit = 1;
+    //     if (i != 0)
+    //         lowerLimit = points[i - 3].P.x;
+    //     if (i != points.size() - 1)
+    //         upperLimit = points[i + 3].P.x;
 
-        float x = Mathf::Clamp(t, lowerLimit, upperLimit);
-        float y = v;
-        points[i].P = Vec2(x, v);
+    //     float x = Mathf::Clamp(t, lowerLimit, upperLimit);
+    //     float y = v;
+    //     points[i].P = Vec2(x, v);
 
-        // move tangents
-        Vec2 d = Vec2(x - sx, y - sy);
-        if (i > 0)
-        {
-            points[i - 1].P = points[i - 1].P + d;
-        }
-        if (i < points.size() - 1)
-        {
-            points[i + 1].P = points[i + 1].P + d;
-        }
-    }
-    else
-    {
-        points[i].P = Vec2(t, v);
-        if (points[i].Locked)
-        {
-            if (IsOutTangent(i) && i - 2 > 0)
-            {
-                points[i - 2].P = points[i].P;
-            }
-            if (IsInTangent(i) && i + 2 < points.size() - 1)
-            {
-                points[i + 2].P = points[i].P;
-            }
-        }
-    }
+    //     // move tangents
+    //     Vec2 d = Vec2(x - sx, y - sy);
+    //     if (i > 0)
+    //     {
+    //         points[i - 1].P = points[i - 1].P + d;
+    //     }
+    //     if (i < points.size() - 1)
+    //     {
+    //         points[i + 1].P = points[i + 1].P + d;
+    //     }
+    // }
+    // else
+    // {
+    //     points[i].P = Vec2(t, v);
+    //     if (points[i].Locked)
+    //     {
+    //         if (IsOutTangent(i) && i - 2 > 0)
+    //         {
+    //             points[i - 2].P = points[i].P;
+    //         }
+    //         if (IsInTangent(i) && i + 2 < points.size() - 1)
+    //         {
+    //             points[i + 2].P = points[i].P;
+    //         }
+    //     }
+    // }
 }
 
 void AnimationCurve::ToggleTangentSplitJoin(int i)
 {
-    assert(IsTangent(i));
-    bool wasLocked = points[i].Locked;
-    bool nowLocked = !wasLocked;
-    points[i].Locked = nowLocked;
+    // assert(IsTangent(i));
+    // bool wasLocked = points[i].Locked;
+    // bool nowLocked = !wasLocked;
+    // points[i].Locked = nowLocked;
 
-    if (IsOutTangent(i))
-    {
-        points[i - 1].Locked = nowLocked;
-        if (i - 2 > 0) // if there is a corresponding in-tangent
-        {
-            points[i - 2].Locked = nowLocked;
-            if (nowLocked)
-                points[i - 2].P = points[i].P;
-        }
-    }
-    if (IsInTangent(i))
-    {
-        points[i + 1].Locked = nowLocked;
-        if (i + 2 < points.size() - 1) // if there is a corresponding out-tangent
-        {
-            points[i + 2].Locked = nowLocked;
-            if (nowLocked)
-                points[i + 2].P = points[i].P;
-        }
-    }
+    // if (IsOutTangent(i))
+    // {
+    //     points[i - 1].Locked = nowLocked;
+    //     if (i - 2 > 0) // if there is a corresponding in-tangent
+    //     {
+    //         points[i - 2].Locked = nowLocked;
+    //         if (nowLocked)
+    //             points[i - 2].P = points[i].P;
+    //     }
+    // }
+    // if (IsInTangent(i))
+    // {
+    //     points[i + 1].Locked = nowLocked;
+    //     if (i + 2 < points.size() - 1) // if there is a corresponding out-tangent
+    //     {
+    //         points[i + 2].Locked = nowLocked;
+    //         if (nowLocked)
+    //             points[i + 2].P = points[i].P;
+    //     }
+    // }
+}
+
+Vec2 AnimationCurve::Anchor(int i) const
+{
+    return Vec2(points[i].Time, points[i].Value);
+}
+
+Vec2 AnimationCurve::OutTangent(int i) const
+{
+    auto p0 = Anchor(i);
+    auto outTangentEnd = p0 + Vec2(1.0f, points[i].OutTangent) * 0.1f; // dx = 1, dy = OutTangent
+    return outTangentEnd;
+}
+
+Vec2 AnimationCurve::InTangent(int i) const
+{
+    auto p0 = Anchor(i);
+    auto inTangentEnd = p0 - Vec2(1.0f, points[i].InTangent) * 0.1f; // dx = 1, dy = InTangent
+    return inTangentEnd;
 }
 
 float AnimationCurve::function(float t, float p0, float out, float in, float p1) const
@@ -149,80 +164,27 @@ float AnimationCurve::function(float t, float p0, float out, float in, float p1)
     return p0 * h00 + out * h10 + p1 * h01 + in * h11;
 }
 
-Vec2 AnimationCurve::function(float t, const Vec2 &p0, const Vec2 &out, const Vec2 &in, const Vec2 &p1) const
+float AnimationCurve::interpolate(int a, int b, float t) const
 {
-    float t2 = t * t;
-    float t3 = t2 * t;
-    float h00 = 2.0f * t3 - 3.0f * t2 + 1.0f;
-    float h10 = t3 - 2.0f * t2 + t;
-    float h01 = -2.0f * t3 + 3.0f * t2;
-    float h11 = t3 - t2;
-
-    return p0 * h00 + out * h10 + p1 * h01 + in * h11;
-}
-
-float AnimationCurve::interpolate(int anchorA, int anchorB, float t) const
-{
-    assert(anchorA + 3 == anchorB);
-
-    const auto &p0 = points[anchorA];
-    const auto &outTangent0 = points[anchorA + 1].P - p0.P;             // p0out - p0
-    const auto &inTangent1 = points[anchorB - 1].P - points[anchorB].P; // p1in - p1
-    const auto &p1 = points[anchorB];
-
-    float x = function(t, p0.P.x, outTangent0.x, inTangent1.x, p1.P.x);
-    float y = function(t, p0.P.y, outTangent0.y, inTangent1.y, p1.P.y);
-    return y;
-}
-
-Vec2 AnimationCurve::interpolateVec2(int anchorA, int anchorB, float t) const
-{
-    const auto &p0 = points[anchorA];
-    const auto &outTangent0 = points[anchorA + 1].P - p0.P;             // p0out - p0
-    const auto &inTangent1 = points[anchorB - 1].P - points[anchorB].P; // p1in - p1
-    const auto &p1 = points[anchorB];
-
-    return function(t, p0.P, outTangent0, inTangent1, p1.P);
+    return function(t, points[a].Value, points[a].OutTangent, points[b].InTangent, points[b].Value);
 }
 
 float AnimationCurve::Evaluate(float t) const
 {
-    if (t <= points.front().P.x)
-        return points.front().P.y;
-    if (t >= points.back().P.x)
-        return points.back().P.y;
+    if (t <= StartTime())
+        return points.front().Value;
+    if (t >= EndTime())
+        return points.back().Value;
 
     int segments = Segments();
-    for (int anchor = 0; anchor < segments; ++anchor)
+    for (int i = 0; i < segments; ++i)
     {
-        int i = anchor * 3;
-        if (t <= points[i + 3].P.x)
+        if (t <= points[i + 1].Time)
         {
-            float u = (t - points[i].P.x) / (points[i + 3].P.x - points[i].P.x);
-            return interpolate(i, i + 3, u);
+            float u = (t - points[i].Time) / (points[i + 1].Time - points[i].Time);
+            return interpolate(i, i + 1, u);
         }
     }
 
     return 0.0f;
-}
-
-Vec2 AnimationCurve::EvaluateVec2(float t) const
-{
-    if (t <= points.front().P.x)
-        return points.front().P;
-    if (t >= points.back().P.x)
-        return points.back().P;
-
-    int segments = Segments();
-    for (int anchor = 0; anchor < segments; ++anchor)
-    {
-        int i = anchor * 3;
-        if (t <= points[i + 3].P.x)
-        {
-            float u = (t - points[i].P.x) / (points[i + 3].P.x - points[i].P.x);
-            return interpolateVec2(i, i + 3, u);
-        }
-    }
-
-    return Vec2(0, 0);
 }

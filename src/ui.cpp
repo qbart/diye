@@ -173,6 +173,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
 
     bool changed = false;
     ImDrawList *drawList = ImGui::GetWindowDrawList();
+    ImGui::PushID("AnimationCurveWidget");
     ImVec2 size = ImVec2(600, 600);
     ImGuiWindow *win = ImGui::GetCurrentWindow();
     if (win->SkipItems)
@@ -232,13 +233,18 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
 
     // NOTE: drawing via recursive subdivision
     // paper: https://www.cs.cmu.edu/afs/cs/academic/class/15462-s10/www/lec-slides/lec06.pdf
-    Vec2 startEval = curve.EvaluateVec2(0.0);
-    Vec2 endEval = curve.EvaluateVec2(1.0);
-    drawRecursive(curve, 0.0, 1.0, startEval, endEval, 0.01f, 50, [&](const Vec2 &p0, const Vec2 &p1)
-                  {
-                      ImVec2 r(p0.x * (bb.Max.x - bb.Min.x) + bb.Min.x, (1-p0.y) * (bb.Max.y - bb.Min.y) + bb.Min.y);
-                      ImVec2 s(p1.x * (bb.Max.x - bb.Min.x) + bb.Min.x, (1-p1.y) * (bb.Max.y - bb.Min.y) + bb.Min.y);
-                      drawList->AddLine(r, s, curveColor, curveWidth); });
+    float startEval = curve.Evaluate(0.0);
+    float endEval = curve.Evaluate(1.0);
+    float drawStep = 0.01f;
+    while (drawStep <= 1.0)
+    {
+        float p0 = curve.Evaluate(drawStep - 0.01f);
+        float p1 = curve.Evaluate(drawStep);
+        auto start = screenPosFrom01(ImVec2(drawStep - 0.01f, p0), bb, true);
+        auto end = screenPosFrom01(ImVec2(drawStep, p1), bb, true);
+        drawList->AddLine(start, end, curveColor, curveWidth);
+        drawStep += 0.005f;
+    }
 
     // ghost anchor that could be added
     ImVec2 mouse = GetIO().MousePos;
@@ -246,14 +252,34 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     if (mouse01.x >= 0 && mouse01.x <= 1 && !ImGui::IsMouseDragging(0))
     {
         bool allowAdd = true;
-        for (const auto &point : curve.Points())
+        for (int i = 0; i < curve.PointCount(); ++i)
         {
-            float distance = Mathf::Distance(Vec2(mouse01.x, mouse01.y), point.P);
+            float distance = Mathf::Distance(Vec2(mouse01.x, mouse01.y), curve.Anchor(i));
             if (distance < 0.05f)
             {
-                auto screenPos = screenPosFrom01(ImVec2(point.P.x, point.P.y), bb, true);
+                auto screenPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
                 allowAdd = false;
                 break;
+            }
+            if (curve.HasOutTangent(i))
+            {
+                float distance = Mathf::Distance(Vec2(mouse01.x, mouse01.y), curve.OutTangent(i));
+                if (distance < 0.05f)
+                {
+                    auto screenPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
+                    allowAdd = false;
+                    break;
+                }
+            }
+            if (curve.HasInTangent(i))
+            {
+                float distance = Mathf::Distance(Vec2(mouse01.x, mouse01.y), curve.InTangent(i));
+                if (distance < 0.05f)
+                {
+                    auto screenPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
+                    allowAdd = false;
+                    break;
+                }
             }
         }
         if (allowAdd)
@@ -272,97 +298,102 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     // moving animation
     for (int i = 0; i < TN; ++i)
     {
-        auto eval = curve.EvaluateVec2(T[i]);
-        drawList->AddCircleFilled(ImVec2(eval.x * (bb.Max.x - bb.Min.x) + bb.Min.x, (1 - eval.y) * (bb.Max.y - bb.Min.y) + bb.Min.y), 5, curveColor);
-        auto evalF = curve.Evaluate(T[i]);
-        ImColor wrongEvalColor = curveColor;
-        wrongEvalColor.Value.w = 0.5f;
-        drawList->AddCircleFilled(ImVec2(T[i] * (bb.Max.x - bb.Min.x) + bb.Min.x, (1 - evalF) * (bb.Max.y - bb.Min.y) + bb.Min.y), 5, wrongEvalColor);
+        float time = T[i];
+        auto value = curve.Evaluate(time);
+        drawList->AddCircleFilled(ImVec2(time * (bb.Max.x - bb.Min.x) + bb.Min.x, (1 - value) * (bb.Max.y - bb.Min.y) + bb.Min.y), 5, curveColor);
     }
+
+    auto pointPosition = [&curve = std::as_const(curve), &bb = std::as_const(bb)](const Vec2 &pos) -> Vec2
+    {
+        const float x = bb.Min.x + (pos.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
+        const float y = bb.Max.y - (pos.y * bb.GetHeight());
+
+        return Vec2(x, y);
+    };
 
     // anchors and tangents with lines and text
-    const auto points = curve.Points();
-
     // tangent lines
-    for (int i = 0; i < points.size(); ++i)
+    for (int i = 0; i < curve.PointCount(); ++i)
     {
-        const auto &point = points[i];
-        const bool isInTangent = i % 3 == 2;
-        const bool isOutTangent = i % 3 == 1;
-        const float x = bb.Min.x + (point.P.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
-        const float y = bb.Max.y - (point.P.y * bb.GetHeight());
-
-        if (isOutTangent)
+        if (curve.HasOutTangent(i))
         {
-            const Vec2 &prevAnchor = points[i - 1].P;
-            auto pos = screenPosFrom01(ImVec2(prevAnchor.x, prevAnchor.y), bb, true);
-            drawList->AddLine(ImVec2(x, y), pos, tangentLineColor, tangentWidth);
+            const auto anchorPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
+            const auto tangentPos = pointPosition(curve.OutTangent(i));
+            drawList->AddLine(ImVec2(anchorPos.x, anchorPos.y), ImVec2(tangentPos.x, tangentPos.y), tangentLineColor, tangentWidth);
         }
-        if (isInTangent)
+        if (curve.HasInTangent(i))
         {
-            const Vec2 &nextAnchor = points[i + 1].P;
-            auto pos = screenPosFrom01(ImVec2(nextAnchor.x, nextAnchor.y), bb, true);
-            drawList->AddLine(ImVec2(x, y), pos, tangentLineColor, tangentWidth);
+            const auto anchorPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
+            const auto outTangentPos = pointPosition(curve.InTangent(i));
+            drawList->AddLine(ImVec2(anchorPos.x, anchorPos.y), ImVec2(outTangentPos.x, outTangentPos.y), tangentLineColor, tangentWidth);
         }
     }
+
     // anchors and tangents
     Vec2 moved(0, 0);
-    Vec2 keyframe;
     int selected = -1;
     int deleted = -1;
     int tangentSplitJoin = -1;
     int affectedAnchor = -1;
 
     // tangents only
-    for (int i = 0; i < points.size(); ++i)
+    ImGui::PushID("tangents");
+    for (int i = 0; i < curve.PointCount(); ++i)
     {
-        if (!curve.IsTangent(i))
-            continue;
-
         ImGui::PushID(i);
-        const auto &point = points[i];
-        const float x = bb.Min.x + (point.P.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
-        const float y = bb.Max.y - (point.P.y * bb.GetHeight());
+        const auto anchorPos = pointPosition(curve.Anchor(i));
+        const auto outTangentPos = pointPosition(curve.OutTangent(i));
+        const auto inTangentPos = pointPosition(curve.InTangent(i));
 
         MouseCallback callback;
-        callback.OnDoubleClick = [i, &tangentSplitJoin, &deleted]()
+        callback.OnDoubleClick = [i, &tangentSplitJoin]()
         {
             tangentSplitJoin = i;
         };
-        callback.OnHover = [&affectedAnchor, i, &curve = std::as_const(curve)]()
+        callback.OnHover = [i, &affectedAnchor]()
         {
-            affectedAnchor = curve.IsOutTangent(i) ? i - 1 : i + 1;
+            affectedAnchor = i;
         };
 
         DragHandleStyle dragHandleStyle;
         dragHandleStyle.Color = tangentColor;
         dragHandleStyle.GrabRadius = 4;
         dragHandleStyle.GrabBorder = 1;
-        if (DragHandle("AnimationCurveDrag", Vec2(x, y), moved, dragHandleStyle, callback))
+        if (curve.HasOutTangent(i))
         {
-            selected = i;
-            affectedAnchor = curve.IsOutTangent(i) ? i - 1 : i + 1;
+            // dragHandleStyle.Color = rgb(255, 0, 0);
+            if (DragHandle("AnimationCurveDragTangentOut", outTangentPos, moved, dragHandleStyle, callback))
+            {
+                selected = i;
+                affectedAnchor = i;
+            }
         }
-        ImGui::PopID();
+        if (curve.HasInTangent(i))
+        {
+            // dragHandleStyle.Color = rgb(0, 0, 250);
+            if (DragHandle("AnimationCurveDragTangentIn", inTangentPos, moved, dragHandleStyle, callback))
+            {
+                selected = i;
+                affectedAnchor = i;
+            }
+        }
+        ImGui::PopID(); // i
     }
+    ImGui::PopID(); // tangents
 
     // anchors only
-    for (int i = 0; i < points.size(); ++i)
+    ImGui::PushID("anchors");
+    for (int i = 0; i < curve.PointCount(); ++i)
     {
-        if (!curve.IsAnchor(i))
-            continue;
-
         ImGui::PushID(i);
-        const auto &point = points[i];
-        const float x = bb.Min.x + (point.P.x - curve.StartTime()) / (curve.Time()) * bb.GetWidth();
-        const float y = bb.Max.y - (point.P.y * bb.GetHeight());
+        auto pos = pointPosition(curve.Anchor(i));
 
         MouseCallback callback;
-        callback.OnHover = [&point = std::as_const(point), drawList, x, y]()
+        callback.OnHover = [i, &pos, &curve, drawList]()
         {
-            drawList->AddText(ImVec2(x - 10, y - 25),
+            drawList->AddText(ImVec2(pos.x - 10, pos.y - 25),
                               captionColor,
-                              fmt::format("{},{}", point.P.x, point.P.y).c_str());
+                              fmt::format("{},{}", curve[i].Time, curve[i].Value).c_str());
         };
         callback.OnDoubleClick = [i, &deleted]()
         {
@@ -373,7 +404,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         dragHandleStyle.Color = anchorColor;
         dragHandleStyle.GrabRadius = affectedAnchor == i ? 1 : 5;
         dragHandleStyle.GrabBorder = affectedAnchor == i ? 0 : 2;
-        if (DragHandle("AnimationCurveDrag", Vec2(x, y), moved, dragHandleStyle, callback))
+        if (DragHandle("AnimationCurveDrag", pos, moved, dragHandleStyle, callback))
         {
             selected = i;
         }
@@ -381,8 +412,12 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         // drawList->AddText(ImVec2(x - 10, y - 8),
         //                   ImColor(1.0f, 0.0f, 0.0f),
         //                   fmt::format("[{}]", i).c_str());
-        ImGui::PopID();
+        ImGui::PopID(); // i
     }
+    ImGui::PopID(); // anchors
+    ImGui::PopID(); // AnimationCurveWidget
+
+    // non-imgui operations
     if (selected != -1)
     {
         auto keyframe = screenPosTo01(moved, bb, precision, true);
@@ -391,7 +426,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     }
     if (deleted != -1)
     {
-        curve.RemoveKeyframe(deleted / 3);
+        curve.RemoveKeyframe(deleted);
         changed = true;
     }
     if (tangentSplitJoin != -1)
@@ -486,20 +521,4 @@ ImVec2 UI::screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &
     return ImVec2(
         mappedRect.Min.x + mappedX * (mappedRect.Max.x - mappedRect.Min.x),
         mappedRect.Min.y + mappedY * (mappedRect.Max.y - mappedRect.Min.y));
-}
-
-void UI::drawRecursive(const AnimationCurve &curve, float t0, float t1, Vec2 p0, Vec2 p1, float tolerance, int maxSteps, std::function<void(const Vec2 &, const Vec2 &)> drawFn)
-{
-    Vec2 midPoint = curve.EvaluateVec2((t0 + t1) / 2.0);
-    float distance = Mathf::Distance(p1, p0);
-
-    if (distance > tolerance && maxSteps > 0)
-    {
-        drawRecursive(curve, t0, (t0 + t1) / 2.0, p0, midPoint, tolerance, maxSteps - 1, drawFn);
-        drawRecursive(curve, (t0 + t1) / 2.0, t1, midPoint, p1, tolerance, maxSteps - 1, drawFn);
-    }
-    else
-    {
-        drawFn(p0, p1);
-    }
 }
