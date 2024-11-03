@@ -332,6 +332,8 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     // anchors and tangents
     Vec2 moved(0, 0);
     int selected = -1;
+    int selectedInTangent = -1;
+    int selectedOutTangent = -1;
     int deleted = -1;
     int tangentSplitJoin = -1;
     int affectedAnchor = -1;
@@ -364,7 +366,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             // dragHandleStyle.Color = rgb(255, 0, 0);
             if (DragHandle("AnimationCurveDragTangentOut", outTangentPos, moved, dragHandleStyle, callback))
             {
-                selected = i;
+                selectedOutTangent = i;
                 affectedAnchor = i;
             }
         }
@@ -373,7 +375,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             // dragHandleStyle.Color = rgb(0, 0, 250);
             if (DragHandle("AnimationCurveDragTangentIn", inTangentPos, moved, dragHandleStyle, callback))
             {
-                selected = i;
+                selectedInTangent = i;
                 affectedAnchor = i;
             }
         }
@@ -424,6 +426,19 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         curve.SetPoint(selected, keyframe.x, keyframe.y);
         changed = true;
     }
+    else if (selectedInTangent != -1)
+    {
+        auto keyframe = screenPosTo01(moved, bb, precision, true);
+        curve.SetInTangent(selectedInTangent, keyframe.x, keyframe.y);
+        changed = true;
+    }
+    else if (selectedOutTangent != -1)
+    {
+        auto keyframe = screenPosTo01(moved, bb, precision, true);
+        curve.SetOutTangent(selectedOutTangent, keyframe.x, keyframe.y);
+        changed = true;
+    }
+
     if (deleted != -1)
     {
         curve.RemoveKeyframe(deleted);

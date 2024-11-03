@@ -61,32 +61,22 @@ void AnimationCurve::RemoveKeyframe(int i)
 
 void AnimationCurve::SetPoint(int i, float t, float v)
 {
-    // if (IsAnchor(i))
-    // {
-    //     float sx = points[i].P.x;
-    //     float sy = points[i].P.y;
-    //     float lowerLimit = 0;
-    //     float upperLimit = 1;
-    //     if (i != 0)
-    //         lowerLimit = points[i - 3].P.x;
-    //     if (i != points.size() - 1)
-    //         upperLimit = points[i + 3].P.x;
+    float lowerLimit = 0;
+    float upperLimit = 1;
+    float gapLimit = 0.001;
+    if (i == 0 || i == points.size() - 1)
+        gapLimit = 0;
 
-    //     float x = Mathf::Clamp(t, lowerLimit, upperLimit);
-    //     float y = v;
-    //     points[i].P = Vec2(x, v);
-
-    //     // move tangents
-    //     Vec2 d = Vec2(x - sx, y - sy);
-    //     if (i > 0)
-    //     {
-    //         points[i - 1].P = points[i - 1].P + d;
-    //     }
-    //     if (i < points.size() - 1)
-    //     {
-    //         points[i + 1].P = points[i + 1].P + d;
-    //     }
-    // }
+    if (i != 0)
+        lowerLimit = points[i - 1].Time;
+    if (i != points.size() - 1)
+        upperLimit = points[i + 1].Time;
+    
+    
+    float x = Mathf::Clamp(t, lowerLimit + gapLimit, upperLimit - gapLimit);
+    float y = v;
+    points[i].Time = x;
+    points[i].Value = y;
     // else
     // {
     //     points[i].P = Vec2(t, v);
@@ -102,6 +92,14 @@ void AnimationCurve::SetPoint(int i, float t, float v)
     //         }
     //     }
     // }
+}
+
+void AnimationCurve::SetOutTangent(int i, float t, float v)
+{
+}
+
+void AnimationCurve::SetInTangent(int i, float t, float v)
+{
 }
 
 void AnimationCurve::ToggleTangentSplitJoin(int i)

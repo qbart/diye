@@ -23,6 +23,8 @@ public:
     const std::vector<Point> &Points() const { return points; }
     void RemoveKeyframe(int i);
     void SetPoint(int i, float t, float v);
+    void SetOutTangent(int i, float t, float v);
+    void SetInTangent(int i, float t, float v);
     void ToggleTangentSplitJoin(int i);
     Vec2 Anchor(int i) const;
     Vec2 OutTangent(int i) const;
