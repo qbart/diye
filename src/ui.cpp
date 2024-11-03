@@ -519,6 +519,7 @@ bool UI::AnimationCurvePreview(const AnimationCurve &curve)
     static const ImColor curveColor(rgb(255, 255, 200));
     static ImColor gridSquareColor(rgb(32, 32, 32));
     static const float curveWidth = 1;
+    bool changed = false;
 
     ImGuiWindow *win = ImGui::GetCurrentWindow();
     if (win->SkipItems)
@@ -559,9 +560,11 @@ bool UI::AnimationCurvePreview(const AnimationCurve &curve)
     drawCurveStart = drawCurveEnd;
     drawCurveEnd = screenPosFrom01(ImVec2(1.0f, drawCurveP1), bb, true);
     drawList->AddLine(drawCurveStart, drawCurveEnd, curveColor, curveWidth);
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        changed = true;
     ImGui::PopClipRect();
 
-    return false;
+    return changed;
 }
 
 bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const UI::DragHandleStyle &style, const MouseCallback &callback)

@@ -83,4 +83,9 @@ public:
                 glm::radians(angles.y),
                 glm::radians(angles.z)));
     }
+
+    Quat static Rotate(const Quat &q, float deg, const Vec3 &axes = UP)
+    {
+        return glm::rotate(q, glm::radians(deg), axes);
+    }
 };
