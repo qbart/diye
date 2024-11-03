@@ -41,6 +41,7 @@ public:
     bool RotationGizmo(const Camera &camera, Transform &transform);
     bool ScaleGizmo(const Camera &camera, Transform &transform);
     bool AnimationCurveWidget(AnimationCurve &curve);
+    bool AnimationCurvePreview(const AnimationCurve &curve);
     bool DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const DragHandleStyle &style = {}, const MouseCallback &callback = {});
 
 private:
