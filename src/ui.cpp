@@ -175,7 +175,6 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
 
     bool changed = false;
     ImDrawList *drawList = ImGui::GetWindowDrawList();
-    ImGui::PushID("AnimationCurveWidget");
     ImVec2 size = ImVec2(600, 600);
     ImGuiWindow *win = ImGui::GetCurrentWindow();
     if (win->SkipItems)
@@ -187,6 +186,8 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     if (!ItemAdd(winbb, NULL))
         return changed;
 
+
+    ImGui::PushID("AnimationCurveWidget");
     // draw grid
     auto halfx = (size.x - curveEditorSize.x) / 2;
     auto halfy = (size.y - curveEditorSize.y) / 2;
@@ -198,7 +199,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     float gridStepX = curveEditorSize.x / 4;
     float gridStepY = curveEditorSize.y / 4;
 
-    // horizontal grid lines
+    // draw horizontal grid lines
     for (int x = -gridStepX; x <= curveEditorSize.x + gridStepX; x += gridStepX)
     {
         drawList->AddLine(
@@ -206,7 +207,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             ImVec2(bb.Min.x + x, bb.Max.y + gridStepY),
             gridLineColor);
     }
-    // vertical grid lines
+    // draw vertical grid lines
     for (int y = -gridStepY; y <= curveEditorSize.y + gridStepY; y += gridStepY)
     {
         drawList->AddLine(
@@ -214,7 +215,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             ImVec2(bb.Max.x + gridStepX, bb.Min.y + y),
             gridLineColor);
     }
-    // horizontal captions
+    // draw horizontal captions
     for (int x = 0; x <= curveEditorSize.x; x += gridStepX)
     {
         auto pos = screenPosTo01(ImVec2(bb.Min.x + x, bb.Min.y), bb, precision, true);
@@ -223,7 +224,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             gridCaptionColor,
             fmt::format("{}", pos.x).c_str());
     }
-    // vertical captions
+    // draw vertical captions
     for (int y = 0; y <= curveEditorSize.y; y += gridStepY)
     {
         auto pos = screenPosTo01(ImVec2(bb.Min.x, bb.Min.y + y), bb, precision, true);
@@ -233,15 +234,19 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             fmt::format("{}", pos.y).c_str());
     }
 
-    float drawStep = 0.01f;
-    while (drawStep <= 1.0)
+    // draw curve
+    float drawStep = 0;
+    float drawStepSize = 0.001f;
+    while (drawStep + drawStepSize < 1.0)
     {
-        float p0 = curve.Evaluate(drawStep - 0.01f);
-        float p1 = curve.Evaluate(drawStep);
-        auto start = screenPosFrom01(ImVec2(drawStep - 0.01f, p0), bb, true);
-        auto end = screenPosFrom01(ImVec2(drawStep, p1), bb, true);
+        float t0 = drawStep;
+        float t1 = drawStep + drawStepSize;
+        float p0 = curve.Evaluate(t0);
+        float p1 = curve.Evaluate(t1);
+        auto start = screenPosFrom01(ImVec2(t0, p0), bb, true);
+        auto end = screenPosFrom01(ImVec2(t1, p1), bb, true);
         drawList->AddLine(start, end, curveColor, curveWidth);
-        drawStep += 0.005f;
+        drawStep += drawStepSize;
     }
 
     // ghost anchor that could be added
@@ -343,7 +348,6 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     for (int i = 0; i < curve.PointCount(); ++i)
     {
         ImGui::PushID(i);
-        const auto anchorPos = pointPosition(curve.Anchor(i));
         const auto outTangentPos = pointPosition(curve.OutTangent(i));
         const auto inTangentPos = pointPosition(curve.InTangent(i));
 
@@ -355,6 +359,12 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         callback.OnHover = [i, &affectedAnchor]()
         {
             affectedAnchor = i;
+            // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 25),
+            //                   captionColor,
+            //                   fmt::format("OutTangent: {}", curve[i].OutTangent).c_str());
+            // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 45),
+            //                   captionColor,
+            //                   fmt::format("InTangent: {}", curve[i].InTangent).c_str());
         };
 
         DragHandleStyle dragHandleStyle;

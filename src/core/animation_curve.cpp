@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <fmt/core.h>
 
+float AnimationCurve::TangentLimit = 25;
+
 AnimationCurve::AnimationCurve()
 {
     Point p0;
@@ -152,14 +154,11 @@ float AnimationCurve::function(float t, float p0, float out, float in, float p1)
     return p0 * h00 + out * h10 + p1 * h01 + in * h11;
 }
 
-float AnimationCurve::interpolate(int a, int b, float t) const
-{
-    return function(t, points[a].Value, points[a].OutTangent, points[b].InTangent, points[b].Value);
-}
-
 float AnimationCurve::clampTangent(float tan) const
 {
-    return Mathf::Clamp(tan, -100, 100);
+    float linearThreshold = TangentLimit;
+    return Mathf::Clamp(tan, -TangentLimit - linearThreshold, TangentLimit + linearThreshold);
+    // return tan;
 }
 
 float AnimationCurve::Evaluate(float t) const
@@ -174,8 +173,27 @@ float AnimationCurve::Evaluate(float t) const
     {
         if (t <= points[i + 1].Time)
         {
-            float u = (t - points[i].Time) / (points[i + 1].Time - points[i].Time);
-            return interpolate(i, i + 1, u);
+            float tMax = points[i + 1].Time - points[i].Time;
+            float tCurrent = (t - points[i].Time);
+            float u = tCurrent / tMax;
+
+            // clamp to avoid extreme values, this assumes
+            // that allowed tangent values are between (-TangetLimit, TangentLimit),
+            // anything outside will cause to switch to fixed value
+            if (points[i].OutTangent >= TangentLimit)
+                return points[i + 1].Value;
+            if (points[i].OutTangent <= -TangentLimit)
+                return points[i].Value;
+            if (points[i + 1].InTangent >= TangentLimit)
+                return points[i + 1].Value;
+            if (points[i + 1].InTangent <= -TangentLimit)
+                return points[i].Value;
+
+            return function(u,
+                            points[i].Value,
+                            points[i].OutTangent * tMax,
+                            points[i + 1].InTangent * tMax,
+                            points[i + 1].Value);
         }
     }
 

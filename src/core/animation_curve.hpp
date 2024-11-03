@@ -6,6 +6,8 @@
 class AnimationCurve
 {
 public:
+    static float TangentLimit;
+
     struct Point
     {
         float Time;
@@ -50,7 +52,6 @@ public:
 
 private:
     float function(float t, float p0, float out, float in, float p1) const;
-    float interpolate(int anchorA, int anchorB, float t) const;
     float clampTangent(float tan) const;
 
 private:
