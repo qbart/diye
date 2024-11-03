@@ -153,8 +153,10 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     static ImColor gridSquareColor(rgb(32, 32, 32));
     static ImColor gridLineColor(rgb(64, 64, 64));
     static ImColor curveColor(rgb(255, 255, 200));
-    static Vec4 anchorColor(rgb(255, 102, 204));
-    static Vec4 tangentColor(rgb(0, 188, 227));
+    static Vec4 anchorColor(rgb(255, 192, 0));
+    static Vec4 tangentColor(rgb(144, 0, 144));
+    static Vec4 inTangentColor(rgb(48, 0, 255));
+    static Vec4 outTangentColor(rgb(250, 0, 64));
     static ImColor tangentLineColor(rgb(255, 192, 0));
     static const float curveWidth = 3;
     static const float tangentWidth = 1.5f;
@@ -231,10 +233,6 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
             fmt::format("{}", pos.y).c_str());
     }
 
-    // NOTE: drawing via recursive subdivision
-    // paper: https://www.cs.cmu.edu/afs/cs/academic/class/15462-s10/www/lec-slides/lec06.pdf
-    float startEval = curve.Evaluate(0.0);
-    float endEval = curve.Evaluate(1.0);
     float drawStep = 0.01f;
     while (drawStep <= 1.0)
     {
@@ -332,7 +330,9 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     // anchors and tangents
     Vec2 moved(0, 0);
     int selected = -1;
+    Vec2 movedInTangent(0, 0);
     int selectedInTangent = -1;
+    Vec2 movedOutTangent(0, 0);
     int selectedOutTangent = -1;
     int deleted = -1;
     int tangentSplitJoin = -1;
@@ -363,8 +363,9 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         dragHandleStyle.GrabBorder = 1;
         if (curve.HasOutTangent(i))
         {
-            // dragHandleStyle.Color = rgb(255, 0, 0);
-            if (DragHandle("AnimationCurveDragTangentOut", outTangentPos, moved, dragHandleStyle, callback))
+            if (!curve[i].Locked)
+                dragHandleStyle.Color = outTangentColor;
+            if (DragHandle("AnimationCurveDragTangentOut", outTangentPos, movedOutTangent, dragHandleStyle, callback))
             {
                 selectedOutTangent = i;
                 affectedAnchor = i;
@@ -372,8 +373,9 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         }
         if (curve.HasInTangent(i))
         {
-            // dragHandleStyle.Color = rgb(0, 0, 250);
-            if (DragHandle("AnimationCurveDragTangentIn", inTangentPos, moved, dragHandleStyle, callback))
+            if (!curve[i].Locked)
+                dragHandleStyle.Color = inTangentColor;
+            if (DragHandle("AnimationCurveDragTangentIn", inTangentPos, movedInTangent, dragHandleStyle, callback))
             {
                 selectedInTangent = i;
                 affectedAnchor = i;
@@ -428,13 +430,13 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     }
     else if (selectedInTangent != -1)
     {
-        auto keyframe = screenPosTo01(moved, bb, precision, true);
+        auto keyframe = screenPosTo01(movedInTangent, bb, precision, true);
         curve.SetInTangent(selectedInTangent, keyframe.x, keyframe.y);
         changed = true;
     }
     else if (selectedOutTangent != -1)
     {
-        auto keyframe = screenPosTo01(moved, bb, precision, true);
+        auto keyframe = screenPosTo01(movedOutTangent, bb, precision, true);
         curve.SetOutTangent(selectedOutTangent, keyframe.x, keyframe.y);
         changed = true;
     }
