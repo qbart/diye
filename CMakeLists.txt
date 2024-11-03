@@ -23,7 +23,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
             )
 
 find_package(fmt CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(GLEW CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
@@ -48,7 +47,6 @@ if(APPLE)
         ${CARBON_LIBRARY}
         fmt::fmt
         GLEW::GLEW
-        glfw
         glm::glm
         imgui::imgui
         imguizmo::imguizmo
@@ -61,7 +59,6 @@ else()
     target_link_libraries(${PROJECT_NAME} PRIVATE
         fmt::fmt
         GLEW::GLEW
-        glfw
         glm::glm
         imgui::imgui
         imguizmo::imguizmo

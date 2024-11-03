@@ -1,25 +1,27 @@
 #pragma once
-#include "glfw.hpp"
+#include "deps/sdl.hpp"
 #include "input.hpp"
 
 class Window
 {
 public:
     static std::unique_ptr<Window> New(int w, int h, const std::string &title);
-    Window() {};
+    Window() {}
     ~Window();
 
-    bool IsOpen() const { return !glfw.WindowShouldClose(wnd); }
-    GLFWwindow *Get() const { return wnd; }
-    void Close() { glfw.WindowShouldClose(wnd, true); }
-    void Swap() { glfw.SwapBuffers(wnd); }
-    void PollEvents() { glfw.PollEvents(); }
-    Input GetInput() const { return Input(wnd); }
+    SDL_Window *Get() const { return wnd; }
+    void Swap();
+    void PollEvents();
+    void Close();
     void Debug();
-    const Dimension& Size() const { return size; }
+    inline bool IsOpen() const { return isOpen; }
+    inline const Dimension &Size() const { return size; }
 
 private:
+    bool isOpen = false;
     Dimension size;
-    GLFWwindow *wnd = nullptr;
-    GLFW glfw;
+    SDL_Window *wnd = nullptr;
+    SDL_Event event;
+    SDL_GLContext glContext = nullptr;
+    // std::unordered_map<int32, KeyCounter> keyReleaseCount;
 };

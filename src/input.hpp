@@ -2,7 +2,7 @@
 
 #include "core/all.hpp"
 #include <unordered_map>
-#include <GLFW/glfw3.h>
+#include "deps/sdl.hpp"
 
 class Input
 {
@@ -17,21 +17,23 @@ class Input
     };
 
 public:
-    Input(GLFWwindow *wnd) : wnd(wnd) {};
+    Input(SDL_Window *wnd) : wnd(wnd) {};
 
     bool KeyReleasedOnce(int key);
 
     bool KeyPress(int key) const
     {
-        return glfwGetKey(wnd, key) == GLFW_PRESS;
+        return false;
+        // return glfwGetKey(wnd, key) == GLFW_PRESS;
     }
 
     bool KeyRelease(int key) const
     {
-        return glfwGetKey(wnd, key) == GLFW_RELEASE;
+        return false;
+        // return glfwGetKey(wnd, key) == GLFW_RELEASE;
     }
 
 private:
     std::unordered_map<int, KeyCounter> keyReleaseCount;
-    GLFWwindow *wnd = nullptr;
+    SDL_Window *wnd = nullptr;
 };

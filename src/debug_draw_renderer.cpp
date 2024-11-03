@@ -229,7 +229,8 @@ void DebugDrawRenderer::Cylinder(const Vec3 &origin, const Vec3 &dir, const Vec3
 
 void DebugDrawRenderer::End()
 {
-    dd::flush(glfwGetTime());
+    ticks.Update();
+    dd::flush(ticks.TotalMilliseconds());
 }
 
 dd::GlyphTextureHandle DebugDrawRenderer::createGlyphTexture(int width, int height, const void *pixels)

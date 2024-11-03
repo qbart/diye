@@ -2,36 +2,76 @@
 
 #include "core/all.hpp"
 #include <memory>
+#include "gl.hpp"
 #include "deps/sdl.hpp"
+#include "deps/imgui.hpp"
 
 std::unique_ptr<Window> Window::New(int w, int h, const std::string &title)
 {
     IMG_Init(IMG_INIT_PNG);
-    auto ptr = std::make_unique<Window>();
-    if (!ptr->glfw.Init())
+    // if (IMG_Init(IMG_INIT_PNG) != 0)
+    // {
+    //     fmt::println("Failed to init SDL_image");
+    //     return nullptr;
+    // }
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) != 0)
     {
-        std::cerr << "Failed to initialize GLFW";
+        fmt::println("Failed to init SDL");
         return nullptr;
     }
+
 #ifdef __APPLE__
-    ptr->glfw.WindowHintContextVersion(4, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #else
-    ptr->glfw.WindowHintContextVersion(4, 5);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
 #endif
-    ptr->glfw.WindowHintCoreProfileForwardCompat();
-    ptr->glfw.WindowHintResizable(true);
-    ptr->wnd = ptr->glfw.WindowCreate(w, h, title);
-    if (!ptr->wnd)
+
+    uint8 contextFlags = SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
+#ifdef _DEBUG
+    contextFlags |= SDL_GL_CONTEXT_DEBUG_FLAG;
+#endif
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, contextFlags);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+    auto flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
+    flags |= SDL_WINDOW_RESIZABLE;
+
+    auto wnd = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
+    if (wnd == nullptr)
     {
-        std::cerr << "Failed to create Window";
+        fmt::println("Failed to create window");
         return nullptr;
     }
+    auto glContext = SDL_GL_CreateContext(wnd);
+    if (glContext == nullptr)
+    {
+        fmt::println("Failed to create GL context");
+        return nullptr;
+    }
+
+    auto ptr = std::make_unique<Window>();
+    ptr->wnd = wnd;
+    ptr->glContext = glContext;
     ptr->size.w = w;
     ptr->size.h = h;
-    ptr->glfw.MakeContextCurrent(ptr->wnd);
-    if (!ptr->glfw.InitGLEW())
+    ptr->isOpen = true;
+    SDL_GL_MakeCurrent(ptr->wnd, ptr->glContext);
+
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK)
     {
-        std::cerr << "Failed to init GLEW";
+        fmt::println("Failed to init GLEW");
         return nullptr;
     }
     return ptr;
@@ -39,18 +79,57 @@ std::unique_ptr<Window> Window::New(int w, int h, const std::string &title)
 
 Window::~Window()
 {
+    if (glContext != nullptr)
+    {
+        SDL_GL_MakeCurrent(wnd, nullptr);
+        SDL_GL_DeleteContext(glContext);
+        glContext = nullptr;
+    }
     if (wnd != nullptr)
     {
-        glfw.WindowDestroy(wnd);
+        SDL_DestroyWindow(wnd);
         wnd = nullptr;
     }
-    glfw.Terminate();
+    SDL_Quit();
     IMG_Quit();
+}
+
+void Window::Swap()
+{
+    SDL_GL_SwapWindow(wnd);
+}
+
+void Window::PollEvents()
+{
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
+    {
+        switch (event.type)
+        {
+        case SDL_QUIT:
+            isOpen = false;
+            break;
+
+        case SDL_KEYUP:
+            // event.key.keysym.sym;
+            break;
+
+        case SDL_KEYDOWN:
+            break;
+        }
+
+        ImGui_ImplSDL2_ProcessEvent(&event);
+    }
+}
+
+void Window::Close()
+{
+    isOpen = false;
 }
 
 void Window::Debug()
 {
-	glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT);
     gl_printInfo();
     gl_bindDebugCallback();
 }

@@ -1,6 +1,5 @@
 #include <fmt/core.h>
 
-#include "glfw.hpp"
 #include "input.hpp"
 #include "window.hpp"
 #include "geometry.hpp"
@@ -51,10 +50,9 @@ int main()
         fmt::print("Failed to create window\n");
         return -1;
     }
-
     UI ui(window->Get());
 
-    Input input = window->GetInput();
+    // Input input = window->GetInput();
     window->Debug();
 
     auto mesh = std::move(TiledMesh(3, 3));
@@ -110,8 +108,7 @@ int main()
     auto viewLoc = gl.GetUniformLocation(program, "view");
     auto projLoc = gl.GetUniformLocation(program, "projection");
 
-    double lastTime = glfwGetTime();
-    float dt = 0;
+    SDLTicks ticks;
 
     fmt::println("Loading textures");
     Image tileset;
@@ -128,31 +125,37 @@ int main()
 
     fmt::println("Entering main loop");
     Mat4 model(1);
+    float dt = 0;
+    //  debug testing
+    gl.Disable(GL::Capability::CullFace);
+    AnimationCurve curve;
+    auto timer = 1000_ms;
+    //
+
     while (window->IsOpen())
     {
         // inputs
         window->PollEvents();
-        if (input.KeyReleasedOnce(GLFW_KEY_ESCAPE))
-            window->Close();
+        // if (input.KeyReleasedOnce(GLFW_KEY_ESCAPE))
+        //     window->Close();
 
-        if (input.KeyPress(GLFW_KEY_W))
-            camera.MoveForward(2 * dt);
+        // if (input.KeyPress(GLFW_KEY_W))
+        //     camera.MoveForward(2 * dt);
 
-        if (input.KeyPress(GLFW_KEY_S))
-            camera.MoveBackward(2 * dt);
+        // if (input.KeyPress(GLFW_KEY_S))
+        //     camera.MoveBackward(2 * dt);
 
-        if (input.KeyPress(GLFW_KEY_A))
-            camera.MoveLeft(2 * dt);
+        // if (input.KeyPress(GLFW_KEY_A))
+        //     camera.MoveLeft(2 * dt);
 
-        if (input.KeyPress(GLFW_KEY_D))
-            camera.MoveRight(2 * dt);
+        // if (input.KeyPress(GLFW_KEY_D))
+        //     camera.MoveRight(2 * dt);
 
-        if (input.KeyPress(GLFW_KEY_Q))
-            camera.LookAround(0, -30 * dt);
+        // if (input.KeyPress(GLFW_KEY_Q))
+        //     camera.LookAround(0, -30 * dt);
 
-        if (input.KeyPress(GLFW_KEY_E))
-            camera.LookAround(0, 30 * dt);
-        
+        // if (input.KeyPress(GLFW_KEY_E))
+        //     camera.LookAround(0, 30 * dt);
 
         // render
         auto size = window->Size();
@@ -160,8 +163,7 @@ int main()
         gl.ClearDepthBuffer();
         gl.ColorColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
         camera.UpdatePerspective(size);
-
-        transform.rotation = glm::rotate(transform.rotation, glm::radians(5.0f) * dt, UP);
+        timer.Update(dt);
         transform.Update();
 
         // for each ( render target )			// frame buffer
@@ -217,8 +219,8 @@ int main()
 
         // swap
         window->Swap();
-        dt = glfwGetTime() - lastTime;
-        lastTime = glfwGetTime();
+        ticks.Update();
+        dt = ticks.DeltaTime();
     }
 
     gl.BindTexture(GL::TextureType::Texture2D, 0);

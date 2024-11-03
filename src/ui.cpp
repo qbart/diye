@@ -1,6 +1,6 @@
 #include "ui.hpp"
 
-UI::UI(GLFWwindow *wnd) : wnd(wnd)
+UI::UI(SDL_Window *wnd) : wnd(wnd)
 {
     ptr = ImGui::CreateContext();
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -18,7 +18,7 @@ UI::UI(GLFWwindow *wnd) : wnd(wnd)
     // ctx.fonts[24] = 0;
     // ctx.fonts[16] = 1;
 
-    ImGui_ImplGlfw_InitForOpenGL(wnd, true);
+    ImGui_ImplSDL2_InitForOpenGL(wnd, nullptr);
 #ifdef __APPLE__
     ImGui_ImplOpenGL3_Init("#version 410");
 #else
@@ -32,7 +32,7 @@ UI::~UI()
     if (ptr != nullptr)
     {
         ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
         ptr = nullptr;
     }
@@ -41,7 +41,7 @@ UI::~UI()
 void UI::BeginFrame(const Dimension &size)
 {
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
     ImGuizmo::SetRect(0, 0, size.w, size.h);

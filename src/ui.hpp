@@ -5,7 +5,6 @@
 #include <functional>
 
 #include "core/all.hpp"
-#include "glfw.hpp"
 #include "deps/imgui.hpp"
 
 class UI
@@ -26,7 +25,7 @@ public:
     };
 
 public:
-    UI(GLFWwindow *wnd);
+    UI(SDL_Window *wnd);
     ~UI();
     void BeginFrame(const Dimension &size);
     void EndFrame();
@@ -51,7 +50,7 @@ private:
     ImVec2 screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &mappedRect) const;
 
 private:
-    GLFWwindow *wnd = nullptr;
+    SDL_Window *wnd = nullptr;
     ImGuiContext *ptr = nullptr;
     std::unordered_map<uint, uint> fonts;
 };
