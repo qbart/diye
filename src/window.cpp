@@ -109,12 +109,13 @@ void Window::PollEvents()
         case SDL_QUIT:
             isOpen = false;
             break;
-
-        case SDL_KEYUP:
-            // event.key.keysym.sym;
+        
+        case SDL_KEYDOWN:
+            inputs[event.key.keysym.sym] = true;
             break;
 
-        case SDL_KEYDOWN:
+        case SDL_KEYUP:
+            inputs[event.key.keysym.sym] = false;
             break;
         }
 

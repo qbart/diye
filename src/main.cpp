@@ -109,6 +109,7 @@ int main()
     auto projLoc = gl.GetUniformLocation(program, "projection");
 
     SDLTicks ticks;
+    Input input = window->GetInput();
 
     fmt::println("Loading textures");
     Image tileset;
@@ -129,33 +130,33 @@ int main()
     //  debug testing
     gl.Disable(GL::Capability::CullFace);
     AnimationCurve curve;
-    auto timer = 1000_ms;
+    auto timer = 2000_ms;
     //
 
     while (window->IsOpen())
     {
         // inputs
         window->PollEvents();
-        // if (input.KeyReleasedOnce(GLFW_KEY_ESCAPE))
-        //     window->Close();
+        if (input.KeyJustReleased(SDLK_ESCAPE))
+            window->Close();
 
-        // if (input.KeyPress(GLFW_KEY_W))
-        //     camera.MoveForward(2 * dt);
+        if (input.KeyDown(SDLK_w))
+            camera.MoveForward(5 * dt);
 
-        // if (input.KeyPress(GLFW_KEY_S))
-        //     camera.MoveBackward(2 * dt);
+        if (input.KeyDown(SDLK_s))
+            camera.MoveBackward(5 * dt);
 
-        // if (input.KeyPress(GLFW_KEY_A))
-        //     camera.MoveLeft(2 * dt);
+        if (input.KeyDown(SDLK_a))
+            camera.MoveLeft(5 * dt);
 
-        // if (input.KeyPress(GLFW_KEY_D))
-        //     camera.MoveRight(2 * dt);
+        if (input.KeyDown(SDLK_d))
+            camera.MoveRight(5 * dt);
 
-        // if (input.KeyPress(GLFW_KEY_Q))
-        //     camera.LookAround(0, -30 * dt);
+        if (input.KeyDown(SDLK_q))
+            camera.LookAround(0, -60 * dt);
 
-        // if (input.KeyPress(GLFW_KEY_E))
-        //     camera.LookAround(0, 30 * dt);
+        if (input.KeyDown(SDLK_e))
+            camera.LookAround(0, 60 * dt);
 
         // render
         auto size = window->Size();
@@ -214,6 +215,7 @@ int main()
 
         // ui
         ui.BeginFrame(size);
+        // ui.AnimationCurveWidget(curve);
         ui.EndFrame();
         ui.Draw();
 

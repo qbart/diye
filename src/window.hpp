@@ -16,6 +16,7 @@ public:
     void Debug();
     inline bool IsOpen() const { return isOpen; }
     inline const Dimension &Size() const { return size; }
+    inline Input GetInput() { return Input(inputs); }
 
 private:
     bool isOpen = false;
@@ -23,5 +24,5 @@ private:
     SDL_Window *wnd = nullptr;
     SDL_Event event;
     SDL_GLContext glContext = nullptr;
-    // std::unordered_map<int32, KeyCounter> keyReleaseCount;
+    std::unordered_map<int32, bool> inputs;
 };

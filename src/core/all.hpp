@@ -8,3 +8,4 @@
 #include "camera.hpp"
 #include "animation_curve.hpp"
 #include "timer.hpp"
+#include "map.hpp"

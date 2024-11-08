@@ -6,34 +6,12 @@
 
 class Input
 {
-    struct KeyCounter
-    {
-        void Reset();
-        void Inc();
-        bool One();
-
-    private:
-        uint value{2};
-    };
-
 public:
-    Input(SDL_Window *wnd) : wnd(wnd) {};
-
-    bool KeyReleasedOnce(int key);
-
-    bool KeyPress(int key) const
-    {
-        return false;
-        // return glfwGetKey(wnd, key) == GLFW_PRESS;
-    }
-
-    bool KeyRelease(int key) const
-    {
-        return false;
-        // return glfwGetKey(wnd, key) == GLFW_RELEASE;
-    }
+    Input(const HashMap<int32, bool> &keys) : inputs(keys) {};
+    bool KeyJustReleased(int key);
+    bool KeyDown(int key);
 
 private:
-    std::unordered_map<int, KeyCounter> keyReleaseCount;
-    SDL_Window *wnd = nullptr;
+    HashMap<int32, bool> wasDown;
+    const HashMap<int32, bool> &inputs;
 };
