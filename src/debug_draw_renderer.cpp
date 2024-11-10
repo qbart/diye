@@ -167,62 +167,62 @@ void DebugDrawRenderer::Begin(const Dimension &size, const Camera &camera)
     mvpMatrix = camera.MVP(glm::mat4(1.0f));
 }
 
-void DebugDrawRenderer::Point(const Vec3 &p, const Vec3 &color, float size)
+void DebugDrawRenderer::Point(const Vec3 &p, const Vec3 &color, float size) const
 {
     dd::point(glm::value_ptr(p), glm::value_ptr(color), size);
 }
 
-void DebugDrawRenderer::Sphere(const Vec3 &p, float radius, const Vec3 &color)
+void DebugDrawRenderer::Sphere(const Vec3 &p, float radius, const Vec3 &color) const
 {
     dd::sphere(glm::value_ptr(p), glm::value_ptr(color), radius);
 }
 
-void DebugDrawRenderer::Arrow(const Vec3 &from, const Vec3 &to, const Vec3 &color)
+void DebugDrawRenderer::Arrow(const Vec3 &from, const Vec3 &to, const Vec3 &color) const
 {
     dd::arrow(glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color), 0.1f, 0.01f);
 }
 
-void DebugDrawRenderer::Line(const Vec3 &from, const Vec3 &to, const Vec3 &color)
+void DebugDrawRenderer::Line(const Vec3 &from, const Vec3 &to, const Vec3 &color) const
 {
     dd::line(glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color), 0.01f);
 }
 
-void DebugDrawRenderer::Box(const Vec3 &center, const Vec3 &size, const Vec3 &color)
+void DebugDrawRenderer::Box(const Vec3 &center, const Vec3 &size, const Vec3 &color) const
 {
     dd::box(glm::value_ptr(center), glm::value_ptr(color), size.x, size.y, size.z);
 }
 
-void DebugDrawRenderer::AxisTriad(const Mat4 &transform)
+void DebugDrawRenderer::AxisTriad(const Mat4 &transform) const
 {
     dd::axisTriad(glm::value_ptr(transform), 0.1f, 1.0f);
 }
 
-void DebugDrawRenderer::Frustum(const Camera &camera, const Vec3 &color)
+void DebugDrawRenderer::Frustum(const Camera &camera, const Vec3 &color) const
 {
     dd::frustum(glm::value_ptr(camera.Clip()), glm::value_ptr(color));
 }
 
-void DebugDrawRenderer::Grid(float from, float to, float y, float step, const Vec3 &color)
+void DebugDrawRenderer::Grid(float from, float to, float y, float step, const Vec3 &color) const
 {
     dd::xzSquareGrid(from, to, y, step, glm::value_ptr(color));
 }
 
-void DebugDrawRenderer::Circle(const Vec3 &center, const Vec3 &planeNormal, float radius, const Vec3 &color, float segments)
+void DebugDrawRenderer::Circle(const Vec3 &center, const Vec3 &planeNormal, float radius, const Vec3 &color, float segments) const
 {
     dd::circle(glm::value_ptr(center), glm::value_ptr(planeNormal), glm::value_ptr(color), radius, segments);
 }
 
-void DebugDrawRenderer::Plane(const Vec3 &origin, const Vec3 &normal, float size, const Vec3 &color, float normalSize, const Vec3 &normalColor)
+void DebugDrawRenderer::Plane(const Vec3 &origin, const Vec3 &normal, float size, const Vec3 &color, float normalSize, const Vec3 &normalColor) const
 {
     dd::plane(glm::value_ptr(origin), glm::value_ptr(normal), glm::value_ptr(color), glm::value_ptr(normalColor), size * 0.5f, normalSize);
 }
 
-void DebugDrawRenderer::Cone(const Vec3 &origin, const Vec3 &dir, const Vec3 &color, float radius, float length)
+void DebugDrawRenderer::Cone(const Vec3 &origin, const Vec3 &dir, const Vec3 &color, float radius, float length) const
 {
     dd::cone(glm::value_ptr(origin), glm::value_ptr(dir*length), glm::value_ptr(color), 0, radius);
 }
 
-void DebugDrawRenderer::Cylinder(const Vec3 &origin, const Vec3 &dir, const Vec3 &color, float radius, float length)
+void DebugDrawRenderer::Cylinder(const Vec3 &origin, const Vec3 &dir, const Vec3 &color, float radius, float length) const
 {
     dd::cone(glm::value_ptr(origin), glm::value_ptr(dir*length), glm::value_ptr(color), radius, radius);
 }

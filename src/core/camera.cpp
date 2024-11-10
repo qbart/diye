@@ -70,7 +70,7 @@ void Camera::LookAt(const Vec3 &targetPosition)
     UpdateMatrix();
 }
 
-void Camera::Orbit(const Vec3 &axis, const Vec3& around, float angle)
+void Camera::Orbit(const Vec3 &axis, const Vec3 &around, float angle)
 {
     Quat quat = transform.rotation;
     Vec3 direction = glm::conjugate(quat) * FORWARD;
@@ -128,6 +128,13 @@ void Camera::MoveRight(float speed)
     direction = glm::cross(direction, UP);
     transform.position += direction * speed;
     UpdateMatrix();
+}
+
+Vec3 Camera::ScreenToWorld(const Vec2 &screenPos, const Vec2 &screenSize)
+{
+    Vec3 pos(screenPos.x, screenSize.y - screenPos.y, 1.0f); // OpenGL flip-Y
+    Vec4 viewport(0.0f, 0.0f, screenSize.x, screenSize.y);
+    return glm::unProject(pos, view, projection, viewport);
 }
 
 void Camera::UpdateMatrix()

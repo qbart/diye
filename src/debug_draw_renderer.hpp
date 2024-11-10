@@ -10,18 +10,18 @@ public:
     DebugDrawRenderer();
 
     void Begin(const Dimension &size, const Camera &camera);
-    void Point(const Vec3 &p, const Vec3 &color = WHITE, float size = 15.0f);
-    void Sphere(const Vec3 &p, float radius = 1.0f, const Vec3 &color = GREEN);
-    void Arrow(const Vec3 &from, const Vec3 &to, const Vec3 &color = RED);
-    void Line(const Vec3 &from, const Vec3 &to, const Vec3 &color = WHITE);
-    void Box(const Vec3 &center, const Vec3 &size, const Vec3 &color = CYAN);
-    void AxisTriad(const Mat4 &transform);
-    void Frustum(const Camera &camera, const Vec3 &color = PURPLE);
-    void Grid(float from = -50.f, float to = 50.f, float y = 0, float step = 1.f, const Vec3 &color = GRAY);
-    void Circle(const Vec3 &center, const Vec3 &planeNormal = UP, float radius = 0.5f, const Vec3 &color = ORANGE, float segments = 16.0f);
-    void Plane(const Vec3 &origin, const Vec3 &normal = UP, float size = 1.0f, const Vec3 &color = YELLOW, float normalSize = 0, const Vec3 &normalColor = CYAN);
-    void Cone(const Vec3 &origin, const Vec3 &dir, const Vec3 &color = MAGENTA, float radius = 0.5f, float length = 1.0f);
-    void Cylinder(const Vec3 &origin, const Vec3 &dir, const Vec3 &color = LIME, float radius = 0.5f, float length = 1.0f);
+    void Point(const Vec3 &p, const Vec3 &color = WHITE, float size = 15.0f) const;
+    void Sphere(const Vec3 &p, float radius = 1.0f, const Vec3 &color = GREEN) const;
+    void Arrow(const Vec3 &from, const Vec3 &to, const Vec3 &color = RED) const;
+    void Line(const Vec3 &from, const Vec3 &to, const Vec3 &color = WHITE) const;
+    void Box(const Vec3 &center, const Vec3 &size, const Vec3 &color = CYAN) const;
+    void AxisTriad(const Mat4 &transform) const;
+    void Frustum(const Camera &camera, const Vec3 &color = PURPLE) const;
+    void Grid(float from = -50.f, float to = 50.f, float y = 0, float step = 1.f, const Vec3 &color = GRAY) const;
+    void Circle(const Vec3 &center, const Vec3 &planeNormal = UP, float radius = 0.5f, const Vec3 &color = ORANGE, float segments = 16.0f) const;
+    void Plane(const Vec3 &origin, const Vec3 &normal = UP, float size = 1.0f, const Vec3 &color = YELLOW, float normalSize = 0, const Vec3 &normalColor = CYAN) const;
+    void Cone(const Vec3 &origin, const Vec3 &dir, const Vec3 &color = MAGENTA, float radius = 0.5f, float length = 1.0f) const;
+    void Cylinder(const Vec3 &origin, const Vec3 &dir, const Vec3 &color = LIME, float radius = 0.5f, float length = 1.0f) const;
     void End();
     //
     // These are called by dd::flush() before any drawing and after drawing is finished.

@@ -1,0 +1,30 @@
+#pragma once
+
+#include "core/all.hpp"
+#include "ui.hpp"
+#include "debug_draw_renderer.hpp"
+
+class Experiment
+{
+public:
+    Experiment() = default;
+    Experiment(const Experiment &) = default;
+    Experiment &operator=(const Experiment &) = default;
+    Experiment(Experiment &&) = default;
+    virtual ~Experiment() = default;
+    virtual int Init() = 0;
+    virtual void Update(float dt) = 0;
+    virtual void Render(const Camera &camera, const DebugDrawRenderer &g) = 0;
+    virtual void RenderUI(UI &ui) = 0;
+    virtual void Shutdown() = 0;
+};
+
+class EmptyExperiment : public Experiment
+{
+public:
+    int Init() override;
+    void Update(float dt) override;
+    void Render(const Camera &camera, const DebugDrawRenderer &g) override;
+    void RenderUI(UI &ui) override;
+    void Shutdown() override;
+};

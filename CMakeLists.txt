@@ -8,6 +8,7 @@ add_executable(${PROJECT_NAME}
     src/core/animation_curve.cpp
 
     src/debug_draw_renderer.cpp
+    src/experiment.cpp
     src/gl.cpp
     src/image.cpp
     src/input.cpp

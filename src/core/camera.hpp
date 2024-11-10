@@ -37,6 +37,7 @@ public:
 	void MoveBackward(float speed);
 	void MoveLeft(float speed);
 	void MoveRight(float speed);
+	Vec3 ScreenToWorld(const Vec2 &screenPos, const Vec2 &screenSize);
 	inline const Mat4 &GetProjection() const { return projection; }
 	inline const Vec3 &GetPosition() const { return transform.position; }
 	inline const Quat &GetOrientation() const { return transform.rotation; }
