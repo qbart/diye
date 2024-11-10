@@ -83,6 +83,7 @@ int main()
         dt = ticks.DeltaTime();
         auto size = window->Size();
         camera.UpdatePerspective(size);
+        experiment->Update(dt);
 
         // ---------- render -----------
         gl.Viewport(size.w, size.h);
