@@ -57,11 +57,27 @@ void Camera::SetOrientation(const Quat &quat)
     UpdateMatrix();
 }
 
+void Camera::RotateAround(const Vec3 &axis, float angle)
+{
+    transform.rotation = glm::normalize(glm::angleAxis(angle, axis) * transform.rotation);
+    UpdateMatrix();
+}
+
 void Camera::LookAt(const Vec3 &targetPosition)
 {
     Mat4 view(glm::lookAt(transform.position, targetPosition, UP));
     transform.rotation = glm::normalize(glm::quat_cast(view));
     UpdateMatrix();
+}
+
+void Camera::Orbit(const Vec3 &axis, const Vec3& around, float angle)
+{
+    Quat quat = transform.rotation;
+    Vec3 direction = glm::conjugate(quat) * FORWARD;
+    direction = glm::cross(direction, axis);
+    transform.position -= direction * angle;
+
+    LookAt(around); // this will update matrix
 }
 
 void Camera::MoveAndLookAt(const Vec3 &position, const Vec3 &targetPosition)

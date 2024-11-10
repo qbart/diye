@@ -101,7 +101,9 @@ void Window::Swap()
 
 void Window::PollEvents()
 {
+    resized = false;
     SDL_Event event;
+
     while (SDL_PollEvent(&event))
     {
         switch (event.type)
@@ -109,13 +111,40 @@ void Window::PollEvents()
         case SDL_QUIT:
             isOpen = false;
             break;
-        
+
         case SDL_KEYDOWN:
             inputs[event.key.keysym.sym] = true;
             break;
 
         case SDL_KEYUP:
             inputs[event.key.keysym.sym] = false;
+            break;
+
+        case SDL_MOUSEMOTION:
+            mousePos.x = event.motion.x;
+            mousePos.y = event.motion.y;
+            mouseRelPos.x = event.motion.xrel;
+            mouseRelPos.y = event.motion.yrel;
+            break;
+        
+        case SDL_MOUSEBUTTONDOWN:
+            mouseInputs[event.button.button] = true;
+            break;
+
+        case SDL_MOUSEBUTTONUP:
+            mouseInputs[event.button.button] = false;
+            break;
+        
+        case SDL_MOUSEWHEEL:
+            mouseWheel.x = event.wheel.preciseX;
+            mouseWheel.y = event.wheel.preciseY;
+            lastTimeWheeled = SDL_GetTicks();
+            break;
+        
+        case SDL_WINDOWEVENT_RESIZED:
+            size.w = event.window.data1;
+            size.h = event.window.data2;
+            resized = true;
             break;
         }
 

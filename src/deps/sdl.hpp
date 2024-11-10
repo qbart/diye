@@ -10,7 +10,7 @@ struct SDLTicks
 public:
     inline void Update()
     {
-        ticks = SDL_GetTicks();
+        ticks = SDL_GetTicks64();
         last = now;
         now = ticks;
         dt = (now - last) / 1000.0;

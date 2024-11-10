@@ -166,7 +166,7 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
     return changed;
 }
 
-bool UI::AnimationCurveWidget(AnimationCurve &curve)
+bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget &widget)
 {
     // styles
     static ImColor gridCaptionColor(rgb(128, 128, 128));
@@ -209,8 +209,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     std::string presetName;
     // ui state
     ImRect bb;
-
-    if (ImGui::Begin("AnimationCurveWidget", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
+    if (ImGui::Begin(widget.Name.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
     {
         ImVec2 size = ImVec2(600, 600);
         ImGuiWindow *win = ImGui::GetCurrentWindowRead();
@@ -297,7 +296,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         // ghost anchor that could be added
         ImVec2 mouse = ImGui::GetIO().MousePos;
         auto mouse01 = screenPosTo01(mouse, bb, precision, true);
-        if (mouse01.x >= 0 && mouse01.x <= 1 && !ImGui::IsMouseDragging(0))
+        if (mouse01.x >= 0 && mouse01.x <= 1 && mouse01.y >= -0.25 && mouse01.y <= 1.25 && !ImGui::IsMouseDragging(0))
         {
             bool allowAdd = true;
             for (int i = 0; i < curve.PointCount(); ++i)
@@ -400,6 +399,11 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
                     tangentSplitJoin = i;
                     dominantTangent = AnimationCurve::Tangent::Out;
                 };
+                callback.OnHover = [&]()
+                {
+                    auto pos = screenPosFrom01(curve.OutTangent(i), bb, true);
+                    drawList->AddText(ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str());
+                };
                 if (!curve[i].Locked)
                     dragHandleStyle.Color = outTangentColor;
                 if (DragHandle("AnimationCurveDragTangentOut", outTangentPos, movedOutTangent, dragHandleStyle, callback))
@@ -414,6 +418,11 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
                 {
                     tangentSplitJoin = i;
                     dominantTangent = AnimationCurve::Tangent::In;
+                };
+                callback.OnHover = [&]()
+                {
+                    auto pos = screenPosFrom01(curve.InTangent(i), bb, true);
+                    drawList->AddText(ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str());
                 };
                 if (!curve[i].Locked)
                     dragHandleStyle.Color = inTangentColor;
@@ -462,7 +471,7 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
         }
         ImGui::PopID(); // anchors
 
-        presetName = ContextMenu({"One", "Linear", "EaseIn", "EaseOut", "EaseInOut"});
+        presetName = ContextMenu({"Zero", "One", "Linear", "EaseIn", "EaseOut", "EaseInOut"});
     }
 
     ImGui::End(); // win
@@ -470,7 +479,9 @@ bool UI::AnimationCurveWidget(AnimationCurve &curve)
     // only one operation at a time
     if (presetName != "")
     {
-        if (presetName == "One")
+        if (presetName == "Zero")
+            curve.ApplyPreset(AnimationCurve::Preset::Zero);
+        else if (presetName == "One")
             curve.ApplyPreset(AnimationCurve::Preset::One);
         else if (presetName == "Linear")
             curve.ApplyPreset(AnimationCurve::Preset::Linear);

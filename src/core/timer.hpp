@@ -28,6 +28,11 @@ public:
         return Mathf::Clamp01(accumulatedTime / alert);
     }
 
+    inline float EvaluateReversed() const
+    {
+        return Mathf::Clamp01((1*alert - accumulatedTime) / alert);
+    }
+
     inline void Reset()
     {
         accumulatedTime = 0;

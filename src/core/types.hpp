@@ -37,6 +37,7 @@ using uint64 = std::uint64_t;
 
 const Vec3 UP = Vec3(0, 1, 0);
 const Vec3 FORWARD = Vec3(0, 0, -1);
+const Vec3 LEFT = Vec3(-1, 0, 0);
 
 using Dimension = struct
 {

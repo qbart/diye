@@ -7,6 +7,12 @@
 #include "core/all.hpp"
 #include "deps/imgui.hpp"
 
+class AnimationCurveWidget
+{
+public:
+    std::string Name;
+};
+
 class UI
 {
 public:
@@ -39,7 +45,7 @@ public:
     bool TranslateGizmo(const Camera &camera, Transform &transform, bool local = false);
     bool RotationGizmo(const Camera &camera, Transform &transform);
     bool ScaleGizmo(const Camera &camera, Transform &transform);
-    bool AnimationCurveWidget(AnimationCurve &curve);
+    bool AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget &widget = {"AnimationCurve"});
     bool AnimationCurvePreview(const AnimationCurve &curve);
     bool DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const DragHandleStyle &style = {}, const MouseCallback &callback = {});
 

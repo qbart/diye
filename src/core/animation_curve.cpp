@@ -4,7 +4,7 @@
 
 float AnimationCurve::TangentLimit = 25;
 
-AnimationCurve::AnimationCurve()
+AnimationCurve::AnimationCurve() : linear(true)
 {
     points.reserve(2);
     ApplyPreset(Preset::Linear);
@@ -26,22 +26,30 @@ void AnimationCurve::ApplyPreset(Preset preset)
 
     switch (preset)
     {
+    case Preset::Zero:
+        p0.OutTangent = 0;
+        p0.Value = 0;
+        p1.InTangent = 0;
+        p1.Value = 0;
+        break;
+
     case Preset::One:
         p0.OutTangent = 0;
         p0.Value = 1;
         p1.InTangent = 0;
         p1.Value = 1;
         break;
+
     case Preset::Linear:
         p0.OutTangent = 1;
         p1.InTangent = 1;
         break;
-    
+
     case Preset::EaseInOut:
         p0.OutTangent = 0;
         p1.InTangent = 0;
         break;
-    
+
     case Preset::EaseIn:
         p0.OutTangent = 0;
         p1.InTangent = 1;
@@ -51,7 +59,7 @@ void AnimationCurve::ApplyPreset(Preset preset)
         p0.OutTangent = 1;
         p1.InTangent = 0;
         break;
-    
+
     default:
         throw std::runtime_error("AnimationCurve :: Unknown preset");
     }
@@ -59,6 +67,11 @@ void AnimationCurve::ApplyPreset(Preset preset)
     points.clear();
     points.emplace_back(p0);
     points.emplace_back(p1);
+}
+
+void AnimationCurve::EnableLinearInterpolation(bool value)
+{
+    linear = value;
 }
 
 // NOTE: add better continuity without distorting the curve,
@@ -149,6 +162,20 @@ void AnimationCurve::SetInTangent(int i, float t, float v)
     // fmt::println("InTangent: ({} , {}) -> {}", t, v, points[i].InTangent);
 }
 
+void AnimationCurve::SetOutTangentValue(int i, float v)
+{
+    points[i].OutTangent = v;
+    if (points[i].Locked)
+        points[i].InTangent = v;
+}
+
+void AnimationCurve::SetInTangentValue(int i, float v)
+{
+    points[i].InTangent = v;
+    if (points[i].Locked)
+        points[i].OutTangent = v;
+}
+
 void AnimationCurve::ToggleTangentSplitJoin(int i, Tangent dominantTangnent)
 {
     if (i == 0 || i == points.size() - 1)
@@ -194,9 +221,13 @@ float AnimationCurve::function(float t, float p0, float out, float in, float p1)
 
 float AnimationCurve::clampTangent(float tan) const
 {
-    float linearThreshold = TangentLimit;
-    return Mathf::Clamp(tan, -TangentLimit - linearThreshold, TangentLimit + linearThreshold);
-    // return tan;
+    if (linear)
+    {
+        float linearThreshold = TangentLimit;
+        return Mathf::Clamp(tan, -TangentLimit - linearThreshold, TangentLimit + linearThreshold);
+    }
+
+    return tan;
 }
 
 float AnimationCurve::Evaluate(float t) const
@@ -215,17 +246,20 @@ float AnimationCurve::Evaluate(float t) const
             float tCurrent = (t - points[i].Time);
             float u = tCurrent / tMax;
 
-            // clamp to avoid extreme values, this assumes
-            // that allowed tangent values are between (-TangetLimit, TangentLimit),
-            // anything outside will cause to switch to fixed value
-            if (points[i].OutTangent >= TangentLimit)
-                return points[i + 1].Value;
-            if (points[i].OutTangent <= -TangentLimit)
-                return points[i].Value;
-            if (points[i + 1].InTangent >= TangentLimit)
-                return points[i + 1].Value;
-            if (points[i + 1].InTangent <= -TangentLimit)
-                return points[i].Value;
+            if (linear)
+            {
+                // clamp to avoid extreme values, this assumes
+                // that allowed tangent values are between (-TangetLimit, TangentLimit),
+                // anything outside will cause to switch to fixed value
+                if (points[i].OutTangent >= TangentLimit)
+                    return points[i + 1].Value;
+                if (points[i].OutTangent <= -TangentLimit)
+                    return points[i].Value;
+                if (points[i + 1].InTangent >= TangentLimit)
+                    return points[i + 1].Value;
+                if (points[i + 1].InTangent <= -TangentLimit)
+                    return points[i].Value;
+            }
 
             return function(u,
                             points[i].Value,
@@ -236,4 +270,9 @@ float AnimationCurve::Evaluate(float t) const
     }
 
     return 0.0f;
+}
+
+float AnimationCurve::Evaluate(const Timer &timer) const
+{
+    return Evaluate(timer.Evaluate());
 }

@@ -2,6 +2,7 @@
 
 #include "types.hpp"
 #include "math.hpp"
+#include "timer.hpp"
 
 class AnimationCurve
 {
@@ -23,6 +24,7 @@ public:
     };
     enum class Preset
     {
+        Zero,
         One,
         Linear,
         EaseIn,
@@ -33,13 +35,17 @@ public:
 public:
     AnimationCurve();
     void ApplyPreset(Preset preset);
+    void EnableLinearInterpolation(bool value);
     void AddKey(float time, float value);
     float Evaluate(float t) const;
+    float Evaluate(const Timer& timer) const;
     const std::vector<Point> &Points() const { return points; }
     void RemoveKeyframe(int i);
     void SetPoint(int i, float t, float v);
     void SetOutTangent(int i, float t, float v);
     void SetInTangent(int i, float t, float v);
+    void SetOutTangentValue(int i, float v);
+    void SetInTangentValue(int i, float v);
     void ToggleTangentSplitJoin(int i, Tangent dominantTangnent = Tangent::Out);
     Vec2 Anchor(int i) const;
     Vec2 OutTangent(int i) const;
@@ -69,4 +75,5 @@ private:
 
 private:
     std::vector<Point> points;
+    bool linear;
 };

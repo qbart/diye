@@ -158,6 +158,18 @@ int main()
         if (input.KeyDown(SDLK_e))
             camera.LookAround(0, 60 * dt);
 
+        if (window->MouseButtonDown(SDL_BUTTON_RIGHT))
+        {
+            auto md = window->MouseRelativePosition();
+            camera.Orbit(UP, orbitPoint, md.x * dt);
+            camera.Orbit(LEFT, orbitPoint, -md.y * 2 * dt);
+        }
+        if (window->MouseWheelScrolled())
+        {
+            auto mw = window->MouseWheel();
+            camera.MoveForward(window->MouseWheel().y * dt * 5);
+        }
+
         // render
         auto size = window->Size();
         gl.Viewport(size.w, size.h);
