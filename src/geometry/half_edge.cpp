@@ -1,19 +1,25 @@
 #include "half_edge.hpp"
+#include <set>
+#include <queue>
+#include <map>
 
-HalfEdge::HalfEdge(HalfEdge::InitType type)
+HalfEdge::HalfEdge() : Origin(nullptr),
+                       Twin(nullptr),
+                       IncidentFace(nullptr),
+                       Prev(nullptr),
+                       Next(nullptr)
 {
-    switch (type)
-    {
-    case InitType::PLANE:
-        
-        break;
-    case InitType::CUBE:
-        break;
-    default:
-        break;
-    }
 }
 
-HalfEdge::~HalfEdge()
+Vec3 HalfEdge::Face::Center() const
 {
+    Vec3 sum(0);
+    auto e = Edge;
+    do
+    {
+        sum += e->Origin->P;
+        e = e->Next;
+    } while (e != Edge);
+
+    return sum / 3.0f;
 }

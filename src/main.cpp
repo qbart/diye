@@ -5,7 +5,7 @@
 #include "renderer.hpp"
 #include "ui.hpp"
 #include "debug_draw_renderer.hpp"
-#include "experiment.hpp"
+#include "experiments/half_edge.hpp"
 
 int main()
 {
@@ -33,7 +33,7 @@ int main()
     float dt = 0;
 
     fmt::println("Entering main loop");
-    auto experiment = std::make_unique<EmptyExperiment>();
+    auto experiment = std::make_unique<HalfEdgeExperiment>();
     if (experiment->Init() != 0)
     {
         fmt::print("Failed to init experiment\n");
