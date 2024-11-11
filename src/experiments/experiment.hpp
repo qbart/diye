@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/all.hpp"
-#include "ui.hpp"
-#include "debug_draw_renderer.hpp"
+#include "../core/all.hpp"
+#include "../ui.hpp"
+#include "../debug_draw_renderer.hpp"
 
 class Experiment
 {

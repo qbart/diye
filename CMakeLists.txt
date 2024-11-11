@@ -6,9 +6,11 @@ add_executable(${PROJECT_NAME}
     src/core/transform.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp
+    src/geometry/half_edge.cpp
+
+    src/experiments/experiment.cpp
 
     src/debug_draw_renderer.cpp
-    src/experiment.cpp
     src/gl.cpp
     src/image.cpp
     src/input.cpp
