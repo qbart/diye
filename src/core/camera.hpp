@@ -21,6 +21,7 @@ public:
 	Camera &operator=(Camera &&) = delete;
 	~Camera();
 
+	Vec3 ViewDir() const;
 	void SetPerspective(float fov, uint32 width, uint32 height, float zNear = 0.01f, float zFar = 100.f);
 	void UpdatePerspective(const Dimension &size);
 	void SetOrtho(float left, float right, float bottom, float top, float zNear, float zFar);

@@ -19,6 +19,11 @@ public:
         HalfEdge::Ptr Edge;
 
         Vec3 Center() const;
+        Vec3 Normal() const;
+        inline bool IsTriangle() const;  // 3
+        inline bool IsQuad() const;      // 4
+        inline bool IsPolygon() const;   // >= 4
+        inline bool IsNgon(int n) const; // == n
     };
 
     struct Vertex

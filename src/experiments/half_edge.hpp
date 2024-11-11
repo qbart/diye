@@ -28,7 +28,7 @@ public:
     int Init() override
     {
         fmt::println("Initializing HalfEdgeExperiment");
-        editableMesh = HalfEdgeMesh::New(HalfEdgeMesh::Preset::PLANE);
+        editableMesh = HalfEdgeMesh::NewPlane();
 
         // fmt::println("Generating mesh");
         // mesh = std::move(halfEdge->GenerateMesh());
@@ -92,7 +92,9 @@ public:
         auto eachFace = [&](const HalfEdge::Face::Ptr &f)
         {
             auto center = f->Center();
-            g.Point(center, BLACK, 5);
+            auto dot = Mathf::Dot(-camera.ViewDir(), f->Normal());
+            if (dot > 0)
+                g.Point(center, BLACK, 5);
             auto e = f->Edge;
             do
             {

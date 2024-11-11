@@ -8,6 +8,11 @@ Camera::Camera() : zNear(0.1f),
 
 Camera::~Camera() {}
 
+Vec3 Camera::ViewDir() const
+{
+    return Mathf::Normalize(glm::conjugate(transform.rotation) * FORWARD);
+}
+
 void Camera::SetPerspective(float fov, uint32 width, uint32 height, float zNear, float zFar)
 {
     this->fov = fov;

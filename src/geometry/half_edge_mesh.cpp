@@ -1,6 +1,7 @@
 #include "half_edge_mesh.hpp"
+#include <map>
 
-HalfEdgeMesh::Ptr HalfEdgeMesh::New(Preset preset)
+HalfEdgeMesh::Ptr HalfEdgeMesh::NewPlane()
 {
     using Vertex = HalfEdge::Vertex;
     using Face = HalfEdge::Face;
@@ -120,6 +121,175 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::New(Preset preset)
 
     for (int i = 0; i < 10; ++i)
         mesh->Edges.emplace_back(e[i]);
+    
+    mesh->generateMissingTwins();
+
+    return std::move(mesh);
+}
+
+HalfEdgeMesh::Ptr HalfEdgeMesh::NewCube()
+{
+    using Vertex = HalfEdge::Vertex;
+    using Face = HalfEdge::Face;
+
+    HalfEdge::Ptr e[24]; // 24 half-edges for a cube
+    Face::Ptr f[6];      // 6 faces for a cube
+    Vertex::Ptr v[8];    // 8 vertices for a cube
+
+    // Define 8 vertices (positions for a unit cube)
+    v[0] = Vertex::New({0, 0, 1});
+    v[1] = Vertex::New({1, 0, 1});
+    v[2] = Vertex::New({1, 1, 1});
+    v[3] = Vertex::New({0, 1, 1});
+    v[4] = Vertex::New({0, 0, 0});
+    v[5] = Vertex::New({1, 0, 0});
+    v[6] = Vertex::New({1, 1, 0});
+    v[7] = Vertex::New({0, 1, 0});
+
+    // Create 6 faces
+    for (int i = 0; i < 6; ++i)
+        f[i] = Face::New();
+
+    // Create 24 half-edges
+    for (int i = 0; i < 24; ++i)
+        e[i] = HalfEdge::New();
+
+    // Front face (f0)
+    f[0]->Edge = e[0];
+    e[0]->IncidentFace = f[0];
+    e[1]->IncidentFace = f[0];
+    e[2]->IncidentFace = f[0];
+    e[3]->IncidentFace = f[0];
+    e[0]->Origin = v[0];
+    e[1]->Origin = v[1];
+    e[2]->Origin = v[2];
+    e[3]->Origin = v[3];
+    e[0]->Next = e[1];
+    e[1]->Next = e[2];
+    e[2]->Next = e[3];
+    e[3]->Next = e[0];
+    e[0]->Prev = e[3];
+    e[1]->Prev = e[0];
+    e[2]->Prev = e[1];
+    e[3]->Prev = e[2];
+
+    // left face (f1)
+    f[1]->Edge = e[4];
+    e[4]->IncidentFace = f[1];
+    e[5]->IncidentFace = f[1];
+    e[6]->IncidentFace = f[1];
+    e[7]->IncidentFace = f[1];
+    e[4]->Origin = v[0];
+    e[5]->Origin = v[3];
+    e[6]->Origin = v[7];
+    e[7]->Origin = v[4];
+    e[4]->Next = e[5];
+    e[5]->Next = e[6];
+    e[6]->Next = e[7];
+    e[7]->Next = e[4];
+    e[4]->Prev = e[7];
+    e[5]->Prev = e[4];
+    e[6]->Prev = e[5];
+    e[7]->Prev = e[6];
+
+    // right face (f2)
+    f[2]->Edge = e[8];
+    e[8]->IncidentFace = f[2];
+    e[9]->IncidentFace = f[2];
+    e[10]->IncidentFace = f[2];
+    e[11]->IncidentFace = f[2];
+    e[8]->Origin = v[1];
+    e[9]->Origin = v[5];
+    e[10]->Origin = v[6];
+    e[11]->Origin = v[2];
+    e[8]->Next = e[9];
+    e[9]->Next = e[10];
+    e[10]->Next = e[11];
+    e[11]->Next = e[8];
+    e[8]->Prev = e[11];
+    e[9]->Prev = e[8];
+    e[10]->Prev = e[9];
+    e[11]->Prev = e[10];
+
+    // back face (f3)
+    f[3]->Edge = e[12];
+    e[12]->IncidentFace = f[3];
+    e[13]->IncidentFace = f[3];
+    e[14]->IncidentFace = f[3];
+    e[15]->IncidentFace = f[3];
+    e[12]->Origin = v[5];
+    e[13]->Origin = v[4];
+    e[14]->Origin = v[7];
+    e[15]->Origin = v[6];
+    e[12]->Next = e[13];
+    e[13]->Next = e[14];
+    e[14]->Next = e[15];
+    e[15]->Next = e[12];
+    e[12]->Prev = e[15];
+    e[13]->Prev = e[12];
+    e[14]->Prev = e[13];
+    e[15]->Prev = e[14];
+
+    // top face (f4)
+    f[4]->Edge = e[16];
+    e[16]->IncidentFace = f[4];
+    e[17]->IncidentFace = f[4];
+    e[18]->IncidentFace = f[4];
+    e[19]->IncidentFace = f[4];
+    e[16]->Origin = v[3];
+    e[17]->Origin = v[2];
+    e[18]->Origin = v[6];
+    e[19]->Origin = v[7];
+    e[16]->Next = e[17];
+    e[17]->Next = e[18];
+    e[18]->Next = e[19];
+    e[19]->Next = e[16];
+    e[16]->Prev = e[19];
+    e[17]->Prev = e[16];
+    e[18]->Prev = e[17];
+    e[19]->Prev = e[18];
+
+    // bottom face (f5)
+    f[5]->Edge = e[20];
+    e[20]->IncidentFace = f[5];
+    e[21]->IncidentFace = f[5];
+    e[22]->IncidentFace = f[5];
+    e[23]->IncidentFace = f[5];
+    e[20]->Origin = v[0];
+    e[21]->Origin = v[4];
+    e[22]->Origin = v[5];
+    e[23]->Origin = v[1];
+    e[20]->Next = e[21];
+    e[21]->Next = e[22];
+    e[22]->Next = e[23];
+    e[23]->Next = e[20];
+    e[20]->Prev = e[23];
+    e[21]->Prev = e[20];
+    e[22]->Prev = e[21];
+    e[23]->Prev = e[22];
+
+    // Set the incident edges for vertices
+    v[0]->IncidentEdge = e[0];
+    v[1]->IncidentEdge = e[1];
+    v[2]->IncidentEdge = e[2];
+    v[3]->IncidentEdge = e[3];
+    v[4]->IncidentEdge = e[12];
+    v[5]->IncidentEdge = e[13];
+    v[6]->IncidentEdge = e[14];
+    v[7]->IncidentEdge = e[15];
+
+    // Create the mesh
+    auto mesh = std::make_unique<HalfEdgeMesh>();
+    for (int i = 0; i < 8; ++i)
+        mesh->Vertices.emplace_back(v[i]);
+
+    for (int i = 0; i < 6; ++i)
+        mesh->Faces.emplace_back(f[i]);
+
+    for (int i = 0; i < 24; ++i)
+        mesh->Edges.emplace_back(e[i]);
+    
+    mesh->generateMissingTwins();
 
     return std::move(mesh);
 }
@@ -145,73 +315,44 @@ void HalfEdgeMesh::EachHalfEdge(const std::function<void(const HalfEdge::Ptr &)>
 Mesh &&HalfEdgeMesh::GenerateMesh() const
 {
     Mesh mesh;
-    // if (!Origin)
-    //     return std::move(mesh);
+    if (Vertices.empty())
+        return std::move(mesh);
 
-    // // Collect vertices and build index map
-    // std::map<Vertex::Ptr, size_t> vertexToIndex;
-    // std::set<Face::Ptr> processedFaces;
-    // std::queue<HalfEdge *> queue;
-    // queue.push(const_cast<HalfEdge *>(this));
+    std::map<HalfEdge::Vertex::Ptr, int> vertexMap;
+    for (const auto &v : Vertices)
+    {
+        vertexMap[v] = mesh.Vertices.size();
+        mesh.Vertices.emplace_back(v->P);
+    }
 
-    // // First pass: collect vertices
-    // while (!queue.empty())
-    // {
-    //     HalfEdge *current = queue.front();
-    //     queue.pop();
-
-    //     // Add vertex if not already added
-    //     if (vertexToIndex.find(current->Origin) == vertexToIndex.end())
-    //     {
-    //         vertexToIndex(current->Origin) = mesh.Vertices.size();
-    //         mesh.Vertices.push_back(current->Origin->P);
-
-    //         // Cycle through red, green, blue for vertex colors
-    //         switch (mesh.Vertices.size() % 3)
-    //         {
-    //         case 0:
-    //             mesh.Colors.push_back({0.0f, 0.0f, 1.0f});
-    //             break; // Blue
-    //         case 1:
-    //             mesh.Colors.push_back({1.0f, 0.0f, 0.0f});
-    //             break; // Red
-    //         case 2:
-    //             mesh.Colors.push_back({0.0f, 1.0f, 0.0f});
-    //             break; // Green
-    //         }
-    //     }
-
-    //     // Add face to process if not already processed
-    //     if (current->incidentFace && processedFaces.find(current->incidentFace) == processedFaces.end())
-    //     {
-    //         processedFaces.insert(current->incidentFace);
-
-    //         // Generate triangular face indices
-    //         HalfEdge *edge = current;
-    //         Vertex *v0 = edge->Origin;
-    //         edge = edge->next;
-    //         Vertex *v1 = edge->Origin;
-    //         edge = edge->next;
-
-    //         while (edge != current)
-    //         {
-    //             Vertex *v2 = edge->Origin;
-    //             // Add triangle indices
-    //             mesh.Indices.push_back(vertexToIndex[v0]);
-    //             mesh.Indices.push_back(vertexToIndex[v1]);
-    //             mesh.Indices.push_back(vertexToIndex[v2]);
-
-    //             v1 = v2;
-    //             edge = edge->next;
-    //         }
-    //     }
-
-    //     // Queue up connected edges if not processed
-    //     if (current->twin && processedFaces.find(current->twin->incidentFace) == processedFaces.end())
-    //     {
-    //         queue.push(current->twin);
-    //     }
-    // }
+    for (const auto &f : Faces)
+    {
+        auto e = f->Edge;
+        do
+        {
+            mesh.Indices.push_back(vertexMap[e->Origin]);
+            e = e->Next;
+        } while (e != f->Edge);
+    }
 
     return std::move(mesh);
+}
+
+void HalfEdgeMesh::generateMissingTwins()
+{
+    std::map<std::pair<HalfEdge::Vertex::Ptr, HalfEdge::Vertex::Ptr>, HalfEdge::Ptr> edgeMap;
+    for (const auto &e : Edges)
+    {
+        auto key = std::make_pair(e->Origin, e->Next->Origin);
+        auto it = edgeMap.find(key);
+        if (it != edgeMap.end())
+        {
+            e->Twin = it->second;
+            it->second->Twin = e;
+        }
+        else
+        {
+            edgeMap[key] = e;
+        }
+    }    
 }
