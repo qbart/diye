@@ -22,8 +22,7 @@ int main()
 
     Camera camera;
     camera.SetPosition(Vec3(0.0f, 5.0f, 5.0f));
-    Vec3 orbitPoint(0, 2.5, 0);
-    camera.LookAt(orbitPoint);
+    camera.LookAt(ZERO);
 
     GL gl;
     gl.Defaults();
@@ -60,17 +59,16 @@ int main()
         if (input.KeyDown(SDLK_d))
             camera.MoveRight(5 * dt);
 
-        if (input.KeyDown(SDLK_q))
-            camera.LookAround(0, -60 * dt);
-
-        if (input.KeyDown(SDLK_e))
-            camera.LookAround(0, 60 * dt);
-
-        if (window->MouseButtonDown(SDL_BUTTON_RIGHT))
+        if (window->MouseButtonDown(SDL_BUTTON_RIGHT) && input.KeyDown(SDLK_LALT))
         {
             auto md = window->MouseRelativePosition();
-            camera.Orbit(UP, orbitPoint, md.x * dt);
-            camera.Orbit(LEFT, orbitPoint, -md.y * 2 * dt);
+            camera.OrbitAround(UP, ZERO, md.x * 2 * dt);
+            camera.OrbitAround(LEFT, ZERO, -md.y * 2 * dt);
+        }
+        else if (window->MouseButtonDown(SDL_BUTTON_RIGHT))
+        {
+            auto md = window->MouseRelativePosition();
+            camera.LookAround(md.y * 10 * dt, md.x * 10 * dt);
         }
         if (window->MouseWheelScrolled())
         {

@@ -70,7 +70,7 @@ void Camera::LookAt(const Vec3 &targetPosition)
     UpdateMatrix();
 }
 
-void Camera::Orbit(const Vec3 &axis, const Vec3 &around, float angle)
+void Camera::OrbitAround(const Vec3 &axis, const Vec3 &around, float angle)
 {
     Quat quat = transform.rotation;
     Vec3 direction = glm::conjugate(quat) * FORWARD;

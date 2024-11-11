@@ -30,7 +30,7 @@ public:
 	void SetOrientation(const Quat &quat);
 	void RotateAround(const Vec3 &axis, float angle);
 	void LookAt(const Vec3 &targetPosition);
-	void Orbit(const Vec3 &axis, const Vec3& around, float angle);
+	void OrbitAround(const Vec3 &axis, const Vec3& around, float angle);
 	void MoveAndLookAt(const Vec3 &position, const Vec3 &targetPosition);
 	void LookAround(float pitch, float yaw);
 	void MoveForward(float speed);
