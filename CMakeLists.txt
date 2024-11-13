@@ -7,6 +7,7 @@ add_executable(${PROJECT_NAME}
     src/core/camera.cpp
     src/core/animation_curve.cpp
     src/geometry/half_edge.cpp
+    src/geometry/half_edge_mesh.cpp
 
     src/experiments/experiment.cpp
 

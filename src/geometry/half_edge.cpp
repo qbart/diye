@@ -35,15 +35,15 @@ Vec3 HalfEdge::Face::Normal() const
 
 inline bool HalfEdge::Face::IsTriangle() const
 {
-    return IsNgon(3);
+    return IsPolygon(3);
 }
 
 inline bool HalfEdge::Face::IsQuad() const
 {
-    return IsNgon(4);
+    return IsPolygon(4);
 }
 
-inline bool HalfEdge::Face::IsPolygon() const
+inline bool HalfEdge::Face::IsPolygon(int n) const
 {
     auto e = Edge;
     int count = 0;
@@ -51,22 +51,12 @@ inline bool HalfEdge::Face::IsPolygon() const
     {
         e = e->Next;
         ++count;
-        if (count > 4)
+        if (count == n)
             return true;
     } while (e != Edge);
 
+    if (n == -1)
+        return count >= 5;
+
     return false;
-}
-
-inline bool HalfEdge::Face::IsNgon(int n) const
-{
-    auto e = Edge;
-    int count = 0;
-    do
-    {
-        e = e->Next;
-        ++count;
-    } while (e != Edge);
-
-    return count == n;
 }

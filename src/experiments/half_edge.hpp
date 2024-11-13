@@ -28,7 +28,8 @@ public:
     int Init() override
     {
         fmt::println("Initializing HalfEdgeExperiment");
-        editableMesh = HalfEdgeMesh::NewPlane();
+        // editableMesh = HalfEdgeMesh::NewPlane();
+        editableMesh = HalfEdgeMesh::NewCube();
 
         // fmt::println("Generating mesh");
         // mesh = std::move(halfEdge->GenerateMesh());
@@ -83,38 +84,35 @@ public:
 
     void Debug(const Camera &camera, const DebugDrawRenderer &g)
     {
-        auto eachVertex = [&](const HalfEdge::Vertex::Ptr &v)
+        auto onDebugDrawLine = [&g](const HalfEdgeMesh::DrawLine &line)
         {
-            g.Point(v->P, RED);
-        };
-        editableMesh->EachVertex(eachVertex);
+            if (!line.Visible)
+                return;
 
-        auto eachFace = [&](const HalfEdge::Face::Ptr &f)
-        {
-            auto center = f->Center();
-            auto dot = Mathf::Dot(-camera.ViewDir(), f->Normal());
-            if (dot > 0)
-                g.Point(center, BLACK, 5);
-            auto e = f->Edge;
-            do
-            {
-                auto start = Mathf::Normalize(center - e->Origin->P) * 0.05f + e->Origin->P;
-                auto end = Mathf::Normalize(center - e->Next->Origin->P) * 0.05f + e->Next->Origin->P;
-                g.Line(start, end, BLUE);
-                e = e->Next;
-            } while (e != f->Edge);
+            g.Line(line.From, line.To, line.Boundary ? CYAN : BLUE);
         };
-        editableMesh->EachFace(eachFace);
-
-        auto eachHalfEdge = [&](const HalfEdge::Ptr &he)
+        auto onDebugDrawPoint = [&g](const HalfEdgeMesh::DrawPoint &point)
         {
-            if (he->IncidentFace == nullptr)
-            {
-                g.Line(he->Origin->P, he->Next->Origin->P, GREEN);
-            }
+            if (!point.Visible)
+                return;
+
+            if (point.Center)
+                g.Point(point.Position, BLACK, 5);
+            else
+                g.Point(point.Position, GREEN);
+        };
+        auto onDebugDrawNormal = [&g](const HalfEdgeMesh::DrawNormal &normal)
+        {
+            if (!normal.Visible)
+                return;
+
+            g.Line(normal.From, normal.From + normal.Direction * 0.05f, CYAN);
         };
 
-        editableMesh->EachHalfEdge(eachHalfEdge);
+        auto viewDir = camera.ViewDir();
+        editableMesh->OnDebugDrawLine(onDebugDrawLine, viewDir);
+        editableMesh->OnDebugDrawPoint(onDebugDrawPoint, viewDir);
+        editableMesh->OnDebugDrawNormal(onDebugDrawNormal, viewDir);
     }
 
     void Render(const Camera &camera, const DebugDrawRenderer &g) override

@@ -22,8 +22,7 @@ public:
         Vec3 Normal() const;
         inline bool IsTriangle() const;  // 3
         inline bool IsQuad() const;      // 4
-        inline bool IsPolygon() const;   // >= 4
-        inline bool IsNgon(int n) const; // == n
+        inline bool IsPolygon(int n = -1) const;   // >= 5
     };
 
     struct Vertex

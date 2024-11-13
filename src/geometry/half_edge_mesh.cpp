@@ -6,19 +6,19 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::NewPlane()
     using Vertex = HalfEdge::Vertex;
     using Face = HalfEdge::Face;
 
-    HalfEdge::Ptr e[10];
-    Face::Ptr f[2];
+    HalfEdge::Ptr e[8];
+    Face::Ptr f[1];
     Vertex::Ptr v[4];
 
     v[0] = Vertex::New({0, 0, 1});
     v[1] = Vertex::New({1, 0, 1});
-    v[2] = Vertex::New({0, 0, 0});
-    v[3] = Vertex::New({1, 0, 0});
+    v[2] = Vertex::New({1, 0, 0});
+    v[3] = Vertex::New({0, 0, 0});
 
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 1; ++i)
         f[i] = Face::New();
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 8; ++i)
         e[i] = HalfEdge::New();
 
     // https://jerryyin.info/geometry-processing-algorithms/half-edge/
@@ -40,88 +40,63 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::NewPlane()
     // v3	(0, 0, 0)	e1
     // v4	(1, 0, 0)	e2
 
-    // Face	Half-edge
-    // f0	e0
-    // f1	e3
-
     f[0]->Edge = e[0];
-    f[1]->Edge = e[3];
 
     v[0]->IncidentEdge = e[0];
-    v[1]->IncidentEdge = e[5];
-    v[2]->IncidentEdge = e[1];
-    v[3]->IncidentEdge = e[2];
+    v[1]->IncidentEdge = e[1];
+    v[2]->IncidentEdge = e[2];
+    v[3]->IncidentEdge = e[3];
 
     e[0]->Origin = v[0];
-    e[0]->Twin = e[6];
     e[0]->IncidentFace = f[0];
     e[0]->Next = e[1];
-    e[0]->Prev = e[2];
+    e[0]->Prev = e[3];
 
-    e[1]->Origin = v[2];
-    e[1]->Twin = e[7];
+    e[1]->Origin = v[1];
     e[1]->IncidentFace = f[0];
     e[1]->Next = e[2];
     e[1]->Prev = e[0];
 
-    e[2]->Origin = v[3];
-    e[2]->Twin = e[3];
+    e[2]->Origin = v[2];
     e[2]->IncidentFace = f[0];
-    e[2]->Next = e[0];
+    e[2]->Next = e[3];
     e[2]->Prev = e[1];
 
-    e[3]->Origin = v[0];
-    e[3]->Twin = e[2];
-    e[3]->IncidentFace = f[1];
-    e[3]->Next = e[4];
-    e[3]->Prev = e[5];
+    e[3]->Origin = v[3];
+    e[3]->IncidentFace = f[0];
+    e[3]->Next = e[0];
+    e[3]->Prev = e[2];
 
-    e[4]->Origin = v[3];
-    e[4]->Twin = e[8];
-    e[4]->IncidentFace = f[1];
+    e[4]->Origin = v[0];
+    e[4]->IncidentFace = nullptr;
     e[4]->Next = e[5];
-    e[4]->Prev = e[3];
+    e[4]->Prev = e[7];
 
-    e[5]->Origin = v[1];
-    e[5]->Twin = e[9];
-    e[5]->IncidentFace = f[1];
-    e[5]->Next = e[3];
+    e[5]->Origin = v[3];
+    e[5]->IncidentFace = nullptr;
+    e[5]->Next = e[6];
     e[5]->Prev = e[4];
 
     e[6]->Origin = v[2];
-    e[6]->Twin = e[0];
     e[6]->IncidentFace = nullptr;
-    e[6]->Next = e[9];
-    e[6]->Prev = e[7];
+    e[6]->Next = e[7];
+    e[6]->Prev = e[5];
 
-    e[7]->Origin = v[3];
-    e[7]->Twin = e[1];
+    e[7]->Origin = v[1];
     e[7]->IncidentFace = nullptr;
-    e[7]->Next = e[6];
-    e[7]->Prev = e[8];
-
-    e[8]->Origin = v[1];
-    e[8]->Twin = e[4];
-    e[8]->IncidentFace = nullptr;
-    e[8]->Next = e[7];
-    e[8]->Prev = e[9];
-
-    e[9]->Origin = v[0];
-    e[9]->Twin = e[5];
-    e[9]->IncidentFace = nullptr;
-    e[9]->Next = e[8];
-    e[9]->Prev = e[6];
+    e[7]->Next = e[4];
+    e[7]->Prev = e[6];
 
     auto mesh = std::make_unique<HalfEdgeMesh>();
     for (int i = 0; i < 4; ++i)
         mesh->Vertices.emplace_back(v[i]);
 
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 1; ++i)
         mesh->Faces.emplace_back(f[i]);
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 8; ++i)
         mesh->Edges.emplace_back(e[i]);
-    
+
     mesh->generateMissingTwins();
 
     return std::move(mesh);
@@ -288,7 +263,7 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::NewCube()
 
     for (int i = 0; i < 24; ++i)
         mesh->Edges.emplace_back(e[i]);
-    
+
     mesh->generateMissingTwins();
 
     return std::move(mesh);
@@ -323,6 +298,7 @@ Mesh &&HalfEdgeMesh::GenerateMesh() const
     {
         vertexMap[v] = mesh.Vertices.size();
         mesh.Vertices.emplace_back(v->P);
+        mesh.Colors.push_back(YELLOW);
     }
 
     for (const auto &f : Faces)
@@ -338,21 +314,85 @@ Mesh &&HalfEdgeMesh::GenerateMesh() const
     return std::move(mesh);
 }
 
+void HalfEdgeMesh::OnDebugDrawLine(const std::function<void(const DrawLine &)> &fn, const Vec3 &viewDir) const
+{
+    DrawLine draw;
+    for (const auto &e : Edges)
+    {
+        draw.Boundary = e->IncidentFace == nullptr;
+        if (draw.Boundary)
+        {
+            draw.From = e->Origin->P;
+            draw.To = e->Next->Origin->P;
+            draw.Boundary = true;
+            draw.Visible = true; // would be nice to have visibility check (twin face check)
+            fn(draw);
+        }
+        else
+        {
+            auto dot = Mathf::Dot(-viewDir, e->IncidentFace->Normal());
+            auto center = e->IncidentFace->Center();
+            draw.From = Mathf::Normalize(center - e->Origin->P) * 0.05f + e->Origin->P;
+            draw.To = Mathf::Normalize(center - e->Next->Origin->P) * 0.05f + e->Next->Origin->P;
+            draw.Visible = dot >= 0;
+            fn(draw);
+        }
+    }
+}
+
+void HalfEdgeMesh::OnDebugDrawPoint(const std::function<void(const DrawPoint &)> &fn, const Vec3 &viewDir) const
+{
+    DrawPoint draw;
+    for (const auto &v : Vertices)
+    {
+        draw.Position = v->P;
+        draw.Center = false;
+        draw.Visible = true; // would be nice to have visibility check (face check)
+        fn(draw);
+    }
+
+    for (const auto &f : Faces)
+    {
+        auto center = f->Center();
+        auto dot = Mathf::Dot(-viewDir, f->Normal());
+
+        draw.Position = center;
+        draw.Center = true;
+        draw.Visible = dot >= 0;
+        fn(draw);
+    }
+}
+
+void HalfEdgeMesh::OnDebugDrawNormal(const std::function<void(const DrawNormal &)> &fn, const Vec3 &viewDir) const
+{
+    DrawNormal draw;
+    for (const auto &f : Faces)
+    {
+        draw.From = f->Center();
+        draw.Direction = f->Normal();
+        auto dot = Mathf::Dot(-viewDir, draw.Direction);
+        draw.Visible = dot >= 0;
+        fn(draw);
+    }
+}
+
 void HalfEdgeMesh::generateMissingTwins()
 {
     std::map<std::pair<HalfEdge::Vertex::Ptr, HalfEdge::Vertex::Ptr>, HalfEdge::Ptr> edgeMap;
     for (const auto &e : Edges)
     {
         auto key = std::make_pair(e->Origin, e->Next->Origin);
-        auto it = edgeMap.find(key);
-        if (it != edgeMap.end())
+        edgeMap[key] = e;
+    }
+
+    for (const auto &e : Edges)
+    {
+        auto key = std::make_pair(e->Next->Origin, e->Origin);
+        if (edgeMap.find(key) != edgeMap.end())
         {
-            e->Twin = it->second;
-            it->second->Twin = e;
+            auto twin = edgeMap[key];
+            e->Twin = twin;
+            twin->Twin = e;
         }
-        else
-        {
-            edgeMap[key] = e;
-        }
-    }    
+    }
 }

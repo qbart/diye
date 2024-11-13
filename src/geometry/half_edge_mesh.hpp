@@ -5,6 +5,27 @@
 class HalfEdgeMesh
 {
 public:
+    struct DrawLine
+    {
+        Vec3 From;
+        Vec3 To;
+        bool Boundary;
+        bool Visible;
+    };
+    struct DrawPoint
+    {
+        Vec3 Position;
+        bool Center;
+        bool Visible;
+    };
+    struct DrawNormal
+    {
+        Vec3 From;
+        Vec3 Direction;
+        bool Visible;
+    };
+
+public:
     using Ptr = std::unique_ptr<HalfEdgeMesh>;
 
     static Ptr New() { return std::make_unique<HalfEdgeMesh>(); }
@@ -18,6 +39,9 @@ public:
     void EachHalfEdge(const std::function<void(const HalfEdge::Ptr &)> &fn) const;
 
     Mesh &&GenerateMesh() const;
+    void OnDebugDrawLine(const std::function<void(const DrawLine &)> &fn, const Vec3 &viewDir) const;
+    void OnDebugDrawPoint(const std::function<void(const DrawPoint &)> &fn, const Vec3 &viewDir) const;
+    void OnDebugDrawNormal(const std::function<void(const DrawNormal &)> &fn, const Vec3 &viewDir) const;
 
 private:
     void generateMissingTwins();
