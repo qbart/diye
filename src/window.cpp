@@ -6,7 +6,7 @@
 #include "deps/sdl.hpp"
 #include "deps/imgui.hpp"
 
-std::unique_ptr<Window> Window::New(int w, int h, const std::string &title)
+Window::Ptr Window::New(int w, int h, const std::string &title)
 {
     IMG_Init(IMG_INIT_PNG);
     // if (IMG_Init(IMG_INIT_PNG) != 0)
@@ -60,7 +60,7 @@ std::unique_ptr<Window> Window::New(int w, int h, const std::string &title)
         return nullptr;
     }
 
-    auto ptr = std::make_unique<Window>();
+    auto ptr = std::make_shared<Window>();
     ptr->wnd = wnd;
     ptr->glContext = glContext;
     ptr->size.w = w;

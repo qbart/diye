@@ -38,18 +38,19 @@ public:
 	void MoveBackward(float speed);
 	void MoveLeft(float speed);
 	void MoveRight(float speed);
-	Vec3 ScreenToWorld(const Vec2 &screenPos, const Vec2 &screenSize);
-	inline const Mat4 &GetProjection() const { return projection; }
-	inline const Vec3 &GetPosition() const { return transform.position; }
-	inline const Quat &GetOrientation() const { return transform.rotation; }
-	inline Mat4 GetViewMatrix() const { return view; }
+	Vec3 ScreenToWorld(const Vec2 &screenPos, const Vec2 &screenSize) const;
+	inline const Mat4 &Projection() const { return projection; }
+	inline const Vec3 &Position() const { return transform.position; }
+	inline const Quat &Orientation() const { return transform.rotation; }
+	inline Mat4 View() const { return view; }
 	inline Mat4 MVP(const Mat4 &model) const
 	{
 		// MVP = P * V * M
 		// P*V is cached to avoid unnecessary calculations
 		return viewProjection * model;
 	}
-	inline Mat4 Clip() const { return glm::inverse(viewProjection); }
+	inline Mat4 InverseViewProjection() const { return glm::inverse(viewProjection); }
+	inline const Mat4& ViewProjection() const { return viewProjection; }
 
 private:
 	void UpdateMatrix();

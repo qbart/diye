@@ -25,6 +25,11 @@ public:
         return glm::dot(a, b);
     }
 
+    float static Distance(const Vec3 &a, const Vec3 &b)
+    {
+        return glm::distance(a, b);
+    }
+
     float static Distance(const Vec2 &a, const Vec2 &b)
     {
         return glm::distance(a, b);

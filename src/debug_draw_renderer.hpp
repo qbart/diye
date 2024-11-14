@@ -22,6 +22,7 @@ public:
     void Plane(const Vec3 &origin, const Vec3 &normal = UP, float size = 1.0f, const Vec3 &color = YELLOW, float normalSize = 0, const Vec3 &normalColor = CYAN) const;
     void Cone(const Vec3 &origin, const Vec3 &dir, const Vec3 &color = MAGENTA, float radius = 0.5f, float length = 1.0f) const;
     void Cylinder(const Vec3 &origin, const Vec3 &dir, const Vec3 &color = LIME, float radius = 0.5f, float length = 1.0f) const;
+    void Text(const Camera &camera, const Vec3 &pos, const std::string &text, float scale = 1.0f, const Vec3 &color = WHITE, const Vec2 &offset = Vec2(0, 0)) const;
     void End();
     //
     // These are called by dd::flush() before any drawing and after drawing is finished.
@@ -84,7 +85,6 @@ private:
 
     GLuint textVAO;
     GLuint textVBO;
-
 
     static const char *linePointVertShaderSrc;
     static const char *linePointFragShaderSrc;

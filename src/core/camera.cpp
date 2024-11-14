@@ -96,7 +96,7 @@ void Camera::MoveAndLookAt(const Vec3 &position, const Vec3 &targetPosition)
 void Camera::LookAround(float pitch, float yaw)
 {
     Quat quat = Mathf::QuatAngles(Vec3(pitch, 0, 0)) * transform.rotation * Mathf::QuatAngles(Vec3(0, yaw, 0));
-    transform.rotation = quat;
+    transform.rotation = glm::normalize(quat);
 
     UpdateMatrix();
 }
@@ -135,7 +135,7 @@ void Camera::MoveRight(float speed)
     UpdateMatrix();
 }
 
-Vec3 Camera::ScreenToWorld(const Vec2 &screenPos, const Vec2 &screenSize)
+Vec3 Camera::ScreenToWorld(const Vec2 &screenPos, const Vec2 &screenSize) const
 {
     Vec3 pos(screenPos.x, screenSize.y - screenPos.y, 1.0f); // OpenGL flip-Y
     Vec4 viewport(0.0f, 0.0f, screenSize.x, screenSize.y);

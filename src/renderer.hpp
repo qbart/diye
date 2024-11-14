@@ -133,8 +133,8 @@ public:
         //			object->baseVertex
         //		);
         // }
-        auto view = camera.GetViewMatrix();
-        auto proj = camera.GetProjection();
+        auto view = camera.View();
+        auto proj = camera.Projection();
         auto mat = Mat4(1);
         gl.UseProgram(program);
         gl.ActiveTexture(GL::TextureUnit::Texture0);

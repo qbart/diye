@@ -10,21 +10,6 @@ class HalfEdge
 public:
     using Ptr = std::shared_ptr<HalfEdge>;
 
-    struct Face
-    {
-        using Ptr = std::shared_ptr<Face>;
-        static Ptr New() { return std::make_shared<Face>(); }
-        Face() : Edge(nullptr) {}
-
-        HalfEdge::Ptr Edge;
-
-        Vec3 Center() const;
-        Vec3 Normal() const;
-        inline bool IsTriangle() const;  // 3
-        inline bool IsQuad() const;      // 4
-        inline bool IsPolygon(int n = -1) const;   // >= 5
-    };
-
     struct Vertex
     {
         using Ptr = std::shared_ptr<Vertex>;
@@ -35,6 +20,22 @@ public:
 
         Vec3 P;
         HalfEdge::Ptr IncidentEdge;
+    };
+
+    struct Face
+    {
+        using Ptr = std::shared_ptr<Face>;
+        static Ptr New() { return std::make_shared<Face>(); }
+        Face() : Edge(nullptr) {}
+
+        HalfEdge::Ptr Edge;
+
+        Vec3 Center() const;
+        Vec3 Normal() const;
+        inline bool IsTriangle() const;          // 3
+        inline bool IsQuad() const;              // 4
+        inline bool IsPolygon(int n = -1) const; // >= 5
+        void EachTriangle(std::function<void(const Vertex::Ptr &a, const Vertex::Ptr &b, const Vertex::Ptr &c)> fn);
     };
 
 public:

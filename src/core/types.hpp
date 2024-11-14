@@ -44,3 +44,8 @@ using Dimension = struct
 {
     int w, h;
 };
+
+static std::string ToString(const Vec3 &v)
+{
+    return fmt::format("({},{},{})", v.x, v.y, v.z);
+}

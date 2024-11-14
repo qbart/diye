@@ -3,7 +3,7 @@
 
 Transform::Transform() : localPosition(Vec3(0, 0, 0)),
 						 position(Vec3(0, 0, 0)),
-						 rotation(Quat(0, 0, 0, 1)),
+						 rotation(Quat(1, 0, 0, 0)),
 						 scale(Vec3(1, 1, 1))
 {
 	Update();

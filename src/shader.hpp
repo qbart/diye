@@ -2,7 +2,7 @@
 
 #include "shader__apple.hpp"
 
-#ifdef WIN32
+#ifdef WIN32 
 
 const char *VertexShaderSource = R"glsl(
 #version 450 core

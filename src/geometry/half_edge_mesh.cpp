@@ -269,25 +269,7 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::NewCube()
     return std::move(mesh);
 }
 
-void HalfEdgeMesh::EachVertex(const std::function<void(const HalfEdge::Vertex::Ptr &)> &fn) const
-{
-    for (const auto &v : Vertices)
-        fn(v);
-}
-
-void HalfEdgeMesh::EachFace(const std::function<void(const HalfEdge::Face::Ptr &)> &fn) const
-{
-    for (const auto &f : Faces)
-        fn(f);
-}
-
-void HalfEdgeMesh::EachHalfEdge(const std::function<void(const HalfEdge::Ptr &)> &fn) const
-{
-    for (const auto &e : Edges)
-        fn(e);
-}
-
-Mesh &&HalfEdgeMesh::GenerateMesh() const
+Mesh HalfEdgeMesh::GenerateMesh() const
 {
     Mesh mesh;
     if (Vertices.empty())
@@ -298,23 +280,33 @@ Mesh &&HalfEdgeMesh::GenerateMesh() const
     {
         vertexMap[v] = mesh.Vertices.size();
         mesh.Vertices.emplace_back(v->P);
+        // fmt::println("Vertex: {}, {}, {}", v->P.x, v->P.y, v->P.z);
         mesh.Colors.push_back(YELLOW);
+        auto normal = v->IncidentEdge->IncidentFace->Normal();
+        mesh.Normals.emplace_back(normal);
     }
 
     for (const auto &f : Faces)
     {
-        auto e = f->Edge;
-        do
+        auto eachTriangle = [&](const HalfEdge::Vertex::Ptr &a, const HalfEdge::Vertex::Ptr &b, const HalfEdge::Vertex::Ptr &c)
         {
-            mesh.Indices.push_back(vertexMap[e->Origin]);
-            e = e->Next;
-        } while (e != f->Edge);
+            mesh.Indices.push_back(vertexMap[a]);
+            mesh.Indices.push_back(vertexMap[b]);
+            mesh.Indices.push_back(vertexMap[c]);
+            auto normals = a->IncidentEdge->IncidentFace->Normal() + b->IncidentEdge->IncidentFace->Normal() + c->IncidentEdge->IncidentFace->Normal();
+            normals = Mathf::Normalize(normals/3.0f);
+            mesh.Normals[vertexMap[a]] = normals;
+            mesh.Normals[vertexMap[b]] = normals;
+            mesh.Normals[vertexMap[c]] = normals;
+            // fmt::println("Triangle: {}, {}, {}", vertexMap[a], vertexMap[b], vertexMap[c]);
+        };
+        f->EachTriangle(eachTriangle);
     }
 
     return std::move(mesh);
 }
 
-void HalfEdgeMesh::OnDebugDrawLine(const std::function<void(const DrawLine &)> &fn, const Vec3 &viewDir) const
+void HalfEdgeMesh::DebugDrawLine(const std::function<void(const DrawLine &)> &fn, const Vec3 &cameraPosition) const
 {
     DrawLine draw;
     for (const auto &e : Edges)
@@ -330,8 +322,9 @@ void HalfEdgeMesh::OnDebugDrawLine(const std::function<void(const DrawLine &)> &
         }
         else
         {
-            auto dot = Mathf::Dot(-viewDir, e->IncidentFace->Normal());
             auto center = e->IncidentFace->Center();
+            auto dir = Mathf::Normalize(cameraPosition - center);
+            auto dot = Mathf::Dot(dir, e->IncidentFace->Normal());
             draw.From = Mathf::Normalize(center - e->Origin->P) * 0.05f + e->Origin->P;
             draw.To = Mathf::Normalize(center - e->Next->Origin->P) * 0.05f + e->Next->Origin->P;
             draw.Visible = dot >= 0;
@@ -340,7 +333,7 @@ void HalfEdgeMesh::OnDebugDrawLine(const std::function<void(const DrawLine &)> &
     }
 }
 
-void HalfEdgeMesh::OnDebugDrawPoint(const std::function<void(const DrawPoint &)> &fn, const Vec3 &viewDir) const
+void HalfEdgeMesh::DebugDrawPoint(const std::function<void(const DrawPoint &)> &fn, const Vec3 &cameraPosition) const
 {
     DrawPoint draw;
     for (const auto &v : Vertices)
@@ -354,7 +347,8 @@ void HalfEdgeMesh::OnDebugDrawPoint(const std::function<void(const DrawPoint &)>
     for (const auto &f : Faces)
     {
         auto center = f->Center();
-        auto dot = Mathf::Dot(-viewDir, f->Normal());
+        auto dir = Mathf::Normalize(cameraPosition - center);
+        auto dot = Mathf::Dot(dir, f->Normal());
 
         draw.Position = center;
         draw.Center = true;
@@ -363,14 +357,15 @@ void HalfEdgeMesh::OnDebugDrawPoint(const std::function<void(const DrawPoint &)>
     }
 }
 
-void HalfEdgeMesh::OnDebugDrawNormal(const std::function<void(const DrawNormal &)> &fn, const Vec3 &viewDir) const
+void HalfEdgeMesh::DebugDrawNormal(const std::function<void(const DrawNormal &)> &fn, const Vec3 &cameraPosition) const
 {
     DrawNormal draw;
     for (const auto &f : Faces)
     {
         draw.From = f->Center();
         draw.Direction = f->Normal();
-        auto dot = Mathf::Dot(-viewDir, draw.Direction);
+        auto dir = Mathf::Normalize(cameraPosition - draw.From);
+        auto dot = Mathf::Dot(dir, draw.Direction);
         draw.Visible = dot >= 0;
         fn(draw);
     }

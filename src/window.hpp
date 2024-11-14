@@ -5,7 +5,9 @@
 class Window
 {
 public:
-    static std::unique_ptr<Window> New(int w, int h, const std::string &title);
+    using Ptr = std::shared_ptr<Window>;
+
+    static Ptr New(int w, int h, const std::string &title);
     Window() {}
     ~Window();
 

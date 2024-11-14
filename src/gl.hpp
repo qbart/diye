@@ -211,7 +211,7 @@ struct GL
 		glClear((uint)mask);
 	}
 
-	void ColorColorBuffer(const Vec3 &floats, int drawBuffer = 0)
+	void ClearColorBuffer(const Vec3 &floats, int drawBuffer = 0)
 	{
 		Vec4 f(floats, 1);
 		glClearBufferfv(GL_COLOR, drawBuffer, &f[0]);
@@ -396,6 +396,11 @@ struct GL
 	void Uniform(uint loc, const Mat4 &mat)
 	{
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mat));
+	}
+
+	void Uniform(uint loc, float value)
+	{
+		glUniform1f(loc, value);
 	}
 
 	uint CreateVertexArray()

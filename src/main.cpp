@@ -34,7 +34,7 @@ int main()
 
     fmt::println("Entering main loop");
     auto experiment = std::make_unique<HalfEdgeExperiment>();
-    if (experiment->Init() != 0)
+    if (experiment->Init(window) != 0)
     {
         fmt::print("Failed to init experiment\n");
         return -1;
@@ -86,13 +86,14 @@ int main()
         // ---------- render -----------
         gl.Viewport(size.w, size.h);
         gl.ClearDepthBuffer();
-        gl.ColorColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
+        gl.ClearColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
+        experiment->Render(camera);
 
         // ---------- render:debug -----------
         debug.Begin(size, camera);
-        debug.Grid(-5.0f, 5.0f, -0.001f, 1.f, GRAY);
-        debug.Grid(-5.0f, 5.0f, -0.001f, 0.25f, BLACK);
-        experiment->Render(camera, debug);
+        debug.Grid(-5.0f, 5.0f, -0.005f, 1.f, GRAY);
+        debug.Grid(-5.0f, 5.0f, -0.005f, 0.25f, BLACK);
+        experiment->RenderDebug(camera, debug);
         debug.End();
 
         // ---------- render:ui -----------

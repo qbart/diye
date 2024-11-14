@@ -51,12 +51,40 @@ inline bool HalfEdge::Face::IsPolygon(int n) const
     {
         e = e->Next;
         ++count;
-        if (count == n)
-            return true;
     } while (e != Edge);
 
     if (n == -1)
         return count >= 5;
+    
+    if (n == count)
+        return true;
 
     return false;
+}
+
+void HalfEdge::Face::EachTriangle(std::function<void(const Vertex::Ptr &a, const Vertex::Ptr &b, const Vertex::Ptr &c)> fn)
+{
+    if (IsTriangle())
+    {
+        fn(Edge->Origin, Edge->Next->Origin, Edge->Next->Next->Origin);
+    }
+    else if (IsQuad())
+    {
+        auto a = Edge->Origin;
+        auto b = Edge->Next->Origin;
+        auto c = Edge->Next->Next->Origin;
+        auto d = Edge->Next->Next->Next->Origin;
+
+        fn(a, b, c);
+        fn(a, c, d);
+    }
+    else
+    {
+        auto e = Edge;
+        do
+        {
+            fn(e->Origin, e->Next->Origin, e->Next->Next->Origin);
+            e = e->Next->Next;
+        } while (e != Edge);
+    }
 }

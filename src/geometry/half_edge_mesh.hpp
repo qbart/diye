@@ -34,14 +34,12 @@ public:
     HalfEdgeMesh() = default;
     ~HalfEdgeMesh() = default;
 
-    void EachVertex(const std::function<void(const HalfEdge::Vertex::Ptr &)> &fn) const;
-    void EachFace(const std::function<void(const HalfEdge::Face::Ptr &)> &fn) const;
-    void EachHalfEdge(const std::function<void(const HalfEdge::Ptr &)> &fn) const;
+    const std::vector<HalfEdge::Face::Ptr> &GetFaces() const { return Faces; }
 
-    Mesh &&GenerateMesh() const;
-    void OnDebugDrawLine(const std::function<void(const DrawLine &)> &fn, const Vec3 &viewDir) const;
-    void OnDebugDrawPoint(const std::function<void(const DrawPoint &)> &fn, const Vec3 &viewDir) const;
-    void OnDebugDrawNormal(const std::function<void(const DrawNormal &)> &fn, const Vec3 &viewDir) const;
+    Mesh GenerateMesh() const;
+    void DebugDrawLine(const std::function<void(const DrawLine &)> &fn, const Vec3 &cameraPosition) const;
+    void DebugDrawPoint(const std::function<void(const DrawPoint &)> &fn, const Vec3 &cameraPosition) const;
+    void DebugDrawNormal(const std::function<void(const DrawNormal &)> &fn, const Vec3 &cameraPosition) const;
 
 private:
     void generateMissingTwins();

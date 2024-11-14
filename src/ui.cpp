@@ -59,7 +59,7 @@ void UI::Draw()
 
 void UI::Grid(const Camera &camera)
 {
-    ImGuizmo::DrawGrid(glm::value_ptr(camera.GetViewMatrix()), glm::value_ptr(camera.GetProjection()), glm::value_ptr(glm::mat4(1.f)), 100.f);
+    ImGuizmo::DrawGrid(glm::value_ptr(camera.View()), glm::value_ptr(camera.Projection()), glm::value_ptr(glm::mat4(1.f)), 100.f);
 }
 
 void UI::Demo()
@@ -116,8 +116,8 @@ bool UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
     }
 
     bool changed = ImGuizmo::Manipulate(
-        glm::value_ptr(camera.GetViewMatrix()),
-        glm::value_ptr(camera.GetProjection()),
+        glm::value_ptr(camera.View()),
+        glm::value_ptr(camera.Projection()),
         ImGuizmo::OPERATION::TRANSLATE,
         mode,
         glm::value_ptr(mat));
@@ -136,8 +136,8 @@ bool UI::RotationGizmo(const Camera &camera, Transform &transform)
     auto rotation = transform.rotation;
     auto scale = transform.scale;
     bool changed = ImGuizmo::Manipulate(
-        glm::value_ptr(camera.GetViewMatrix()),
-        glm::value_ptr(camera.GetProjection()),
+        glm::value_ptr(camera.View()),
+        glm::value_ptr(camera.Projection()),
         ImGuizmo::OPERATION::ROTATE,
         ImGuizmo::MODE::LOCAL,
         glm::value_ptr(mat));
@@ -155,8 +155,8 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
     auto rotation = transform.rotation;
     auto position = transform.position;
     bool changed = ImGuizmo::Manipulate(
-        glm::value_ptr(camera.GetViewMatrix()),
-        glm::value_ptr(camera.GetProjection()),
+        glm::value_ptr(camera.View()),
+        glm::value_ptr(camera.Projection()),
         ImGuizmo::OPERATION::SCALE,
         ImGuizmo::MODE::WORLD,
         glm::value_ptr(mat));

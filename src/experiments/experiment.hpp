@@ -3,6 +3,7 @@
 #include "../core/all.hpp"
 #include "../ui.hpp"
 #include "../debug_draw_renderer.hpp"
+#include "../window.hpp"
 
 class Experiment
 {
@@ -12,9 +13,10 @@ public:
     Experiment &operator=(const Experiment &) = default;
     Experiment(Experiment &&) = default;
     virtual ~Experiment() = default;
-    virtual int Init() = 0;
+    virtual int Init(Window::Ptr window) = 0;
     virtual void Update(float dt) = 0;
-    virtual void Render(const Camera &camera, const DebugDrawRenderer &g) = 0;
+    virtual void Render(const Camera &camera) = 0;
+    virtual void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) = 0;
     virtual void RenderUI(UI &ui) = 0;
     virtual void Shutdown() = 0;
 };
@@ -22,9 +24,10 @@ public:
 class EmptyExperiment : public Experiment
 {
 public:
-    int Init() override;
+    int Init(Window::Ptr window) override;
     void Update(float dt) override;
-    void Render(const Camera &camera, const DebugDrawRenderer &g) override;
+    void Render(const Camera &camera);
+    void RenderDebug(const Camera &camera, const DebugDrawRenderer &g);
     void RenderUI(UI &ui) override;
     void Shutdown() override;
 };

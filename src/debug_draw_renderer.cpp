@@ -199,7 +199,7 @@ void DebugDrawRenderer::AxisTriad(const Mat4 &transform) const
 
 void DebugDrawRenderer::Frustum(const Camera &camera, const Vec3 &color) const
 {
-    dd::frustum(glm::value_ptr(camera.Clip()), glm::value_ptr(color));
+    dd::frustum(glm::value_ptr(camera.InverseViewProjection()), glm::value_ptr(color));
 }
 
 void DebugDrawRenderer::Grid(float from, float to, float y, float step, const Vec3 &color) const
@@ -219,12 +219,18 @@ void DebugDrawRenderer::Plane(const Vec3 &origin, const Vec3 &normal, float size
 
 void DebugDrawRenderer::Cone(const Vec3 &origin, const Vec3 &dir, const Vec3 &color, float radius, float length) const
 {
-    dd::cone(glm::value_ptr(origin), glm::value_ptr(dir*length), glm::value_ptr(color), 0, radius);
+    dd::cone(glm::value_ptr(origin), glm::value_ptr(dir * length), glm::value_ptr(color), 0, radius);
 }
 
 void DebugDrawRenderer::Cylinder(const Vec3 &origin, const Vec3 &dir, const Vec3 &color, float radius, float length) const
 {
-    dd::cone(glm::value_ptr(origin), glm::value_ptr(dir*length), glm::value_ptr(color), radius, radius);
+    dd::cone(glm::value_ptr(origin), glm::value_ptr(dir * length), glm::value_ptr(color), radius, radius);
+}
+
+void DebugDrawRenderer::Text(const Camera &camera, const Vec3 &pos, const std::string &text, float scale, const Vec3 &color, const Vec2 &offset) const
+{
+    auto vp = glm::value_ptr(camera.ViewProjection());
+    dd::projectedText(text.c_str(), glm::value_ptr(pos), glm::value_ptr(color), vp, offset.x, offset.y, WindowWidth, WindowHeight, scale);
 }
 
 void DebugDrawRenderer::End()

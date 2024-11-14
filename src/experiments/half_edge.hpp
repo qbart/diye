@@ -3,8 +3,10 @@
 #include "../core/all.hpp"
 #include "../geometry/half_edge_mesh.hpp"
 #include "../gl.hpp"
-#include "../shader.hpp"
 #include "experiment.hpp"
+
+std::string HalfEdgeVertexShaderSource();
+std::string HalfEdgeFragmentShaderSource();
 
 class HalfEdgeExperiment : public Experiment
 {
@@ -14,32 +16,37 @@ public:
 
     uint vao;
     GL::Buffer vbo;
-    GL::Buffer uvbo;
+    GL::Buffer nbo;
     GL::Buffer ibo;
     GL::Buffer cbo;
     GL::Program program;
     GL gl;
     GL::Texture tilesetID;
+    GL::Location mvpLoc;
     GL::Location modelLoc;
-    GL::Location viewLoc;
-    GL::Location projLoc;
+    GL::Location viewDirLoc;
+    GL::Location camPositionLoc;
+    GL::Location camDistanceLoc;
+    Transform transform;
+    Window::Ptr window;
 
 public:
-    int Init() override
+    int Init(Window::Ptr window) override
     {
+        this->window = window;
         fmt::println("Initializing HalfEdgeExperiment");
         // editableMesh = HalfEdgeMesh::NewPlane();
         editableMesh = HalfEdgeMesh::NewCube();
 
-        // fmt::println("Generating mesh");
-        // mesh = std::move(halfEdge->GenerateMesh());
+        fmt::println("Generating mesh");
+        mesh = editableMesh->GenerateMesh();
 
         if (mesh.Vertices.size() > 0)
         {
             fmt::println("Init rendering");
             vao = gl.CreateVertexArray();
             vbo = gl.GenBuffer();
-            uvbo = gl.GenBuffer();
+            nbo = gl.GenBuffer();
             ibo = gl.GenBuffer();
             cbo = gl.GenBuffer();
 
@@ -56,6 +63,11 @@ public:
                 gl.BufferData(GL::BufferType::Array, mesh.Colors, GL::BufferUsage::Stream);
                 gl.VertexAttribPointer(1, 3);
 
+                gl.EnableVertexAttribArray(2);
+                gl.BindBuffer(GL::BufferType::Array, nbo);
+                gl.BufferData(GL::BufferType::Array, mesh.Normals, GL::BufferUsage::Stream);
+                gl.VertexAttribPointer(2, 3);
+
                 gl.BindBuffer(GL::BufferType::ElementArray, ibo);
                 gl.BufferData(GL::BufferType::ElementArray, mesh.Indices, GL::BufferUsage::Stream);
 
@@ -64,15 +76,17 @@ public:
                 gl.BindBuffer(GL::BufferType::ElementArray, 0);
             }
 
-            program = gl.CreateDefaultProgram(VertexShaderSource, FragmentShaderSource);
+            program = gl.CreateDefaultProgram(HalfEdgeVertexShaderSource(), HalfEdgeFragmentShaderSource());
             if (program == 0)
             {
                 fmt::print("Failed to create program\n");
                 return -1;
             }
+            mvpLoc = gl.GetUniformLocation(program, "MVP");
             modelLoc = gl.GetUniformLocation(program, "model");
-            viewLoc = gl.GetUniformLocation(program, "view");
-            projLoc = gl.GetUniformLocation(program, "projection");
+            viewDirLoc = gl.GetUniformLocation(program, "viewDir");
+            camPositionLoc = gl.GetUniformLocation(program, "camPosition");
+            camDistanceLoc = gl.GetUniformLocation(program, "camDistance");
         }
 
         return 0;
@@ -80,18 +94,21 @@ public:
 
     void Update(float dt) override
     {
+        transform.Update();
     }
 
-    void Debug(const Camera &camera, const DebugDrawRenderer &g)
+    void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) override
     {
-        auto onDebugDrawLine = [&g](const HalfEdgeMesh::DrawLine &line)
+        auto camPos = camera.Position();
+
+        auto onDebugDrawLine = [&](const HalfEdgeMesh::DrawLine &line)
         {
             if (!line.Visible)
                 return;
 
             g.Line(line.From, line.To, line.Boundary ? CYAN : BLUE);
         };
-        auto onDebugDrawPoint = [&g](const HalfEdgeMesh::DrawPoint &point)
+        auto onDebugDrawPoint = [&](const HalfEdgeMesh::DrawPoint &point)
         {
             if (!point.Visible)
                 return;
@@ -99,9 +116,12 @@ public:
             if (point.Center)
                 g.Point(point.Position, BLACK, 5);
             else
-                g.Point(point.Position, GREEN);
+            {
+                g.Point(point.Position, GREEN, 10);
+                // g.Text(camera, point.Position, ToString(point.Position), 0.5, GREEN, Vec2(0, 30));
+            }
         };
-        auto onDebugDrawNormal = [&g](const HalfEdgeMesh::DrawNormal &normal)
+        auto onDebugDrawNormal = [&](const HalfEdgeMesh::DrawNormal &normal)
         {
             if (!normal.Visible)
                 return;
@@ -109,30 +129,30 @@ public:
             g.Line(normal.From, normal.From + normal.Direction * 0.05f, CYAN);
         };
 
-        auto viewDir = camera.ViewDir();
-        editableMesh->OnDebugDrawLine(onDebugDrawLine, viewDir);
-        editableMesh->OnDebugDrawPoint(onDebugDrawPoint, viewDir);
-        editableMesh->OnDebugDrawNormal(onDebugDrawNormal, viewDir);
+        editableMesh->DebugDrawLine(onDebugDrawLine, camPos);
+        editableMesh->DebugDrawPoint(onDebugDrawPoint, camPos);
+        editableMesh->DebugDrawNormal(onDebugDrawNormal, camPos);
     }
 
-    void Render(const Camera &camera, const DebugDrawRenderer &g) override
+    void Render(const Camera &camera) override
     {
-        Debug(camera, g);
-
         if (mesh.Vertices.size() > 0)
         {
-            auto view = camera.GetViewMatrix();
-            auto proj = camera.GetProjection();
-            auto mat = Mat4(1);
+            auto model = transform.GetModelMatrix();
+            auto mvp = camera.MVP(model);
             gl.UseProgram(program);
-            gl.Uniform(modelLoc, mat);
-            gl.Uniform(viewLoc, view);
-            gl.Uniform(projLoc, proj);
+            gl.Uniform(mvpLoc, mvp);
+            gl.Uniform(viewDirLoc, camera.ViewDir());
+            gl.Uniform(camPositionLoc, camera.Position());
+            gl.Uniform(camDistanceLoc, Mathf::Distance(camera.Position(), transform.position));
+            gl.Uniform(modelLoc, model);
             gl.BindVertexArray(vao);
             gl.BindBuffer(GL::BufferType::Array, vbo);
             gl.BufferData(GL::BufferType::Array, mesh.Vertices, GL::BufferUsage::Stream);
             gl.BindBuffer(GL::BufferType::Array, cbo);
             gl.BufferData(GL::BufferType::Array, mesh.Colors, GL::BufferUsage::Stream);
+            gl.BindBuffer(GL::BufferType::Array, nbo);
+            gl.BufferData(GL::BufferType::Array, mesh.Normals, GL::BufferUsage::Stream);
             gl.BindBuffer(GL::BufferType::ElementArray, ibo);
             gl.BufferData(GL::BufferType::ElementArray, mesh.Indices, GL::BufferUsage::Stream);
             gl.DrawElements(GL::DrawMode::Triangles, mesh.Indices.size());
@@ -157,8 +177,85 @@ public:
             gl.DeleteBuffer(vbo);
             gl.DeleteBuffer(ibo);
             gl.DeleteBuffer(cbo);
+            gl.DeleteBuffer(nbo);
             gl.DeleteVertexArray(vao);
             gl.DeleteProgram(program);
         }
     }
 };
+
+std::string HalfEdgeVertexShaderSource()
+{
+    return R"glsl(
+
+#version 450 core
+
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 color;
+layout(location = 2) in vec3 normal;
+
+out vec3 vertColor;
+out vec3 vertPos;
+out vec3 normalDir;
+
+uniform vec3 viewDir;
+uniform vec3 camPosition;
+uniform float camDistance;
+uniform mat4 MVP;
+uniform mat4 model;
+
+void main(void) {
+  vec4 worldPos = model * vec4(position, 1.0);
+  gl_Position = MVP * vec4(position, 1.0);
+  vertColor = color;
+  normalDir = normal;
+  vertPos = worldPos.xyz;
+}
+
+)glsl";
+}
+
+std::string HalfEdgeFragmentShaderSource()
+{
+    return R"glsl(
+
+#version 450 core
+
+in vec3 vertColor;
+in vec3 vertPos;
+in vec3 normalDir;
+
+uniform vec3 viewDir;
+uniform vec3 camPosition;
+uniform float camDistance;
+
+out vec4 FragColor;
+
+float remap(float value, float min1, float max1, float min2, float max2) {
+  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
+void main(void)
+{
+  vec3 color = vertColor;
+  
+  // Distance-based shading
+  float dist = distance(camPosition, vertPos);
+  float distanceFactor = remap(camDistance-dist, 0.0, camDistance, 0,1);
+//   distanceFactor = remap(clamp(distanceFactor, 0.0, 1.0), 0.0, 1.0, 0.0, 0.4);
+  distanceFactor = clamp(distanceFactor, 0.0, 1.0);
+  distanceFactor = pow(distanceFactor, 2.0);
+  
+  // Apply distance effect to color
+  color *= distanceFactor;
+//   float viewFactor = dot(normalize(-viewDir), normalize(normalDir));
+//   viewFactor = remap(viewFactor, -1.0, 1.0, 0.0, 1.0);
+  float viewFactor = 1;
+
+  FragColor = vec4(clamp(color * viewFactor, 0.0, 1.0), 1.0);
+
+    // FragColor = vec4(vertPos, 1.0);
+}
+
+)glsl";
+}
