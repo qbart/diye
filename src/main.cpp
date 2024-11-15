@@ -24,16 +24,16 @@ int main()
     camera.SetPosition(Vec3(0.0f, 5.0f, 5.0f));
     camera.LookAt(ZERO);
 
-    GL gl;
-    gl.Defaults();
-    fmt::println("Initializing debug renderer");
-    DebugDrawRenderer debug;
+    // GL gl;
+    // gl.Defaults();
+    // fmt::println("Initializing debug renderer");
+    // DebugDrawRenderer debug;
 
     SDLTicks ticks;
     float dt = 0;
 
     fmt::println("Entering main loop");
-    auto experiment = std::make_unique<HalfEdgeExperiment>();
+    auto experiment = std::make_unique<EmptyExperiment>();
     if (experiment->Init(window) != 0)
     {
         fmt::print("Failed to init experiment\n");
@@ -84,23 +84,23 @@ int main()
         experiment->Update(dt);
 
         // ---------- render -----------
-        gl.Viewport(size.w, size.h);
-        gl.ClearDepthBuffer();
-        gl.ClearColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
+        // gl.Viewport(size.w, size.h);
+        // gl.ClearDepthBuffer();
+        // gl.ClearColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
         experiment->Render(camera);
 
         // ---------- render:debug -----------
-        debug.Begin(size, camera);
-        debug.Grid(-5.0f, 5.0f, -0.005f, 1.f, GRAY);
-        debug.Grid(-5.0f, 5.0f, -0.005f, 0.25f, BLACK);
-        experiment->RenderDebug(camera, debug);
-        debug.End();
+        // debug.Begin(size, camera);
+        // debug.Grid(-5.0f, 5.0f, -0.005f, 1.f, GRAY);
+        // debug.Grid(-5.0f, 5.0f, -0.005f, 0.25f, BLACK);
+        // experiment->RenderDebug(camera, debug);
+        // debug.End();
 
         // ---------- render:ui -----------
-        ui.BeginFrame(size);
-        experiment->RenderUI(ui);
-        ui.EndFrame();
-        ui.Draw();
+        // ui.BeginFrame(size);
+        // experiment->RenderUI(ui);
+        // ui.EndFrame();
+        // ui.Draw();
 
         // ---------- swap chain -----------
         window->Swap();

@@ -33,6 +33,7 @@ find_package(imgui CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image CONFIG REQUIRED)
+find_package(Vulkan REQUIRED)
 
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -40,14 +41,12 @@ if(APPLE)
     find_library(COCOA_LIBRARY Cocoa REQUIRED)
     find_library(IOKIT_LIBRARY IOKit REQUIRED)
     find_library(COREVIDEO_LIBRARY CoreVideo REQUIRED)
-    find_library(OPENGL_LIBRARY OpenGL REQUIRED)
     find_library(CARBON Carbon REQUIRED)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
         ${COCOA_LIBRARY}
         ${IOKIT_LIBRARY}
         ${COREVIDEO_LIBRARY}
-        ${OPENGL_LIBRARY}
         ${CARBON_LIBRARY}
         fmt::fmt
         GLEW::GLEW
@@ -57,6 +56,7 @@ if(APPLE)
         SDL2::SDL2
         SDL2::SDL2main
         $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
+        Vulkan::Vulkan
     )
 else()
     # For non-macOS systems, you can specify general linking here

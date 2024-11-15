@@ -5,93 +5,65 @@
 #include "gl.hpp"
 #include "deps/sdl.hpp"
 #include "deps/imgui.hpp"
+#include "deps/vulkan.hpp"
 
 Window::Ptr Window::New(int w, int h, const std::string &title)
 {
-    IMG_Init(IMG_INIT_PNG);
-    // if (IMG_Init(IMG_INIT_PNG) != 0)
-    // {
-    //     fmt::println("Failed to init SDL_image");
-    //     return nullptr;
-    // }
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) != 0)
+    if (sdl::Init() != 0)
     {
         fmt::println("Failed to init SDL");
         return nullptr;
     }
 
-#ifdef __APPLE__
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-#else
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
-#endif
-
-    uint8 contextFlags = SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
-#ifdef _DEBUG
-    contextFlags |= SDL_GL_CONTEXT_DEBUG_FLAG;
-#endif
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, contextFlags);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-
-    auto flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
-    flags |= SDL_WINDOW_RESIZABLE;
-
-    auto wnd = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
+    auto wnd = sdl::CreateWindow(title, w, h);
     if (wnd == nullptr)
     {
-        fmt::println("Failed to create window");
+        fmt::println(sdl::GetError());
         return nullptr;
     }
-    auto glContext = SDL_GL_CreateContext(wnd);
-    if (glContext == nullptr)
+    auto exts = sdl::GetVulkanExtensions(wnd);
+
+    // create instance
+    VkInstance instance;
+
+    VkApplicationInfo appInfo;
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = title.c_str();
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.pEngineName = "No Engine";
+    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.apiVersion = VK_API_VERSION_1_0;
+
+    VkInstanceCreateInfo createInfo;
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pApplicationInfo = &appInfo;
+    createInfo.enabledExtensionCount = exts.size();
+    createInfo.ppEnabledExtensionNames = exts.data();
+    createInfo.enabledLayerCount = 0; // later
+    createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+
+    VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
+    if (result != VK_SUCCESS)
     {
-        fmt::println("Failed to create GL context");
+        fmt::println("Failed to create Vulkan instance");
         return nullptr;
     }
 
     auto ptr = std::make_shared<Window>();
     ptr->wnd = wnd;
-    ptr->glContext = glContext;
+    ptr->instance = instance;
     ptr->size.w = w;
     ptr->size.h = h;
     ptr->isOpen = true;
-    SDL_GL_MakeCurrent(ptr->wnd, ptr->glContext);
 
-    glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK)
-    {
-        fmt::println("Failed to init GLEW");
-        return nullptr;
-    }
     return ptr;
 }
 
 Window::~Window()
 {
-    if (glContext != nullptr)
-    {
-        SDL_GL_MakeCurrent(wnd, nullptr);
-        SDL_GL_DeleteContext(glContext);
-        glContext = nullptr;
-    }
-    if (wnd != nullptr)
-    {
-        SDL_DestroyWindow(wnd);
-        wnd = nullptr;
-    }
-    SDL_Quit();
-    IMG_Quit();
+    vkDestroyInstance(instance, nullptr);
+    sdl::DestroyWindow(wnd);
+    sdl::Quit();
 }
 
 void Window::Swap()
@@ -126,7 +98,7 @@ void Window::PollEvents()
             mouseRelPos.x = event.motion.xrel;
             mouseRelPos.y = event.motion.yrel;
             break;
-        
+
         case SDL_MOUSEBUTTONDOWN:
             mouseInputs[event.button.button] = true;
             break;
@@ -134,13 +106,13 @@ void Window::PollEvents()
         case SDL_MOUSEBUTTONUP:
             mouseInputs[event.button.button] = false;
             break;
-        
+
         case SDL_MOUSEWHEEL:
             mouseWheel.x = event.wheel.preciseX;
             mouseWheel.y = event.wheel.preciseY;
             lastTimeWheeled = SDL_GetTicks();
             break;
-        
+
         case SDL_WINDOWEVENT_RESIZED:
             size.w = event.window.data1;
             size.h = event.window.data2;
@@ -159,7 +131,7 @@ void Window::Close()
 
 void Window::Debug()
 {
-    glEnable(GL_DEBUG_OUTPUT);
-    gl_printInfo();
-    gl_bindDebugCallback();
+    // glEnable(GL_DEBUG_OUTPUT);
+    // gl_printInfo();
+    // gl_bindDebugCallback();
 }

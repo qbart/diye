@@ -19,11 +19,7 @@ UI::UI(SDL_Window *wnd) : wnd(wnd)
     // ctx.fonts[16] = 1;
 
     ImGui_ImplSDL2_InitForOpenGL(wnd, nullptr);
-#ifdef __APPLE__
-    ImGui_ImplOpenGL3_Init("#version 410");
-#else
-    ImGui_ImplOpenGL3_Init("#version 450");
-#endif
+    // ImGui_ImplVulkan_Init()
 }
 
 UI::~UI()
@@ -31,7 +27,7 @@ UI::~UI()
     // Terminate
     if (ptr != nullptr)
     {
-        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplVulkan_Shutdown();
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
         ptr = nullptr;
@@ -40,7 +36,7 @@ UI::~UI()
 
 void UI::BeginFrame(const Dimension &size)
 {
-    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
@@ -54,7 +50,7 @@ void UI::EndFrame()
 
 void UI::Draw()
 {
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    // ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData());
 }
 
 void UI::Grid(const Camera &camera)

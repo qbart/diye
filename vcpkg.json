@@ -2,18 +2,23 @@
   "dependencies": [
     "fmt",
     "glew",
-    "glfw3",
     "glm",
-    "sdl2",
+    {
+      "name": "sdl2",
+      "features": [
+        "vulkan"
+      ]
+    },
     "sdl2-image",
     {
       "name": "imgui",
       "features": [
         "sdl2-binding",
-        "opengl3-binding"
+        "vulkan-binding"
       ]
     },
-    "imguizmo"
+    "imguizmo",
+    "vulkan-sdk-components"
   ]
 }
 
