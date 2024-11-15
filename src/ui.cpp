@@ -578,7 +578,7 @@ bool UI::AnimationCurvePreview(const AnimationCurve &curve)
     return changed;
 }
 
-bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const UI::DragHandleStyle &style, const MouseCallback &callback)
+bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const UI::DragHandleStyle &style, const UI::MouseCallback &callback)
 {
     bool changed = false;
     ImVec2 handlePos = ImVec2(pos.x, pos.y);

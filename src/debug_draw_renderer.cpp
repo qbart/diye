@@ -179,12 +179,12 @@ void DebugDrawRenderer::Sphere(const Vec3 &p, float radius, const Vec3 &color) c
 
 void DebugDrawRenderer::Arrow(const Vec3 &from, const Vec3 &to, const Vec3 &color) const
 {
-    dd::arrow(glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color), 0.1f, 0.01f);
+    dd::arrow(glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color), 0.1f);
 }
 
 void DebugDrawRenderer::Line(const Vec3 &from, const Vec3 &to, const Vec3 &color) const
 {
-    dd::line(glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color), 0.01f);
+    dd::line(glm::value_ptr(from), glm::value_ptr(to), glm::value_ptr(color));
 }
 
 void DebugDrawRenderer::Box(const Vec3 &center, const Vec3 &size, const Vec3 &color) const

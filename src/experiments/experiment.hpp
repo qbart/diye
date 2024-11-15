@@ -26,8 +26,8 @@ class EmptyExperiment : public Experiment
 public:
     int Init(Window::Ptr window) override;
     void Update(float dt) override;
-    void Render(const Camera &camera);
-    void RenderDebug(const Camera &camera, const DebugDrawRenderer &g);
+    void Render(const Camera &camera) override;
+    void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) override;
     void RenderUI(UI &ui) override;
     void Shutdown() override;
 };

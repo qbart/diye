@@ -18,16 +18,28 @@ class UI
 public:
     struct MouseCallback
     {
-        std::function<void()> OnHover = []() {};
-        std::function<void()> OnDoubleClick = []() {};
+        std::function<void()> OnHover;
+        std::function<void()> OnDoubleClick;
+
+        MouseCallback() : OnHover([]() {}),
+                          OnDoubleClick([]() {})
+        {
+        }
     };
 
     struct DragHandleStyle
     {
-        float GrabRadius = 5;
-        float GrabBorder = 2;
-        Vec4 Color = rgb(96, 0, 255);
-        Vec4 BorderColor = rgb(255, 255, 255);
+        float GrabRadius;
+        float GrabBorder;
+        Vec4 Color;
+        Vec4 BorderColor;
+
+        DragHandleStyle() : GrabRadius(5),
+                            GrabBorder(2),
+                            Color(rgb(96, 0, 255)),
+                            BorderColor(rgb(255, 255, 255))
+        {
+        }
     };
 
 public:

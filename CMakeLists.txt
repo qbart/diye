@@ -56,7 +56,7 @@ if(APPLE)
         imguizmo::imguizmo
         SDL2::SDL2
         SDL2::SDL2main
-        SDL2_image::SDL2_image
+        $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
     )
 else()
     # For non-macOS systems, you can specify general linking here
