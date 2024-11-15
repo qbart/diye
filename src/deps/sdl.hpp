@@ -10,32 +10,6 @@
 #include <fmt/format.h>
 #include <vector>
 
-struct SDLTicks
-{
-public:
-    inline void Update()
-    {
-        ticks = SDL_GetTicks64();
-        last = now;
-        now = ticks;
-        dt = (now - last) / 1000.0;
-    }
-    inline double DeltaTime()
-    {
-        return dt;
-    }
-    inline double TotalMilliseconds()
-    {
-        return ticks / 1000.0;
-    }
-
-private:
-    double dt = 0;
-    double last = 0;
-    double now = 0;
-    double ticks = 0;
-};
-
 namespace sdl
 {
     static std::string GetError()
@@ -117,4 +91,33 @@ namespace sdl
 
         return std::move(extensions);
     }
+};
+
+namespace sdl
+{
+    struct Ticks
+    {
+    public:
+        inline void Update()
+        {
+            ticks = SDL_GetTicks64();
+            last = now;
+            now = ticks;
+            dt = (now - last) / 1000.0;
+        }
+        inline double DeltaTime()
+        {
+            return dt;
+        }
+        inline double TotalMilliseconds()
+        {
+            return ticks / 1000.0;
+        }
+
+    private:
+        double dt = 0;
+        double last = 0;
+        double now = 0;
+        double ticks = 0;
+    };
 };
