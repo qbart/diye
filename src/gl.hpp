@@ -3,7 +3,6 @@
 #include "core/all.hpp"
 #include "image.hpp"
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <sstream>
 #include <iostream>
 #include <unordered_map>

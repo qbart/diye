@@ -31,7 +31,6 @@ private:
     Dimension size;
     SDL_Window *wnd = nullptr;
     SDL_Event event;
-    SDL_GLContext glContext = nullptr;
     HashMap<int32, bool> inputs;
     HashMap<uint8, bool> mouseInputs;
     Vec2 mousePos = Vec2(0, 0);
@@ -39,4 +38,6 @@ private:
     Vec2 mouseWheel = Vec2(0, 0);
     uint64 lastTimeWheeled = 0;
     bool resized = false;
+
+    VkInstance instance = nullptr;
 };
