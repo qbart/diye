@@ -93,5 +93,5 @@ private:
     static const char *textFragShaderSrc;
 
     GL gl;
-    SDLTicks ticks;
+    sdl::Ticks ticks;
 };

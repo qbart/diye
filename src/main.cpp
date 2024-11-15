@@ -29,7 +29,7 @@ int main()
     // fmt::println("Initializing debug renderer");
     // DebugDrawRenderer debug;
 
-    SDLTicks ticks;
+    sdl::Ticks ticks;
     float dt = 0;
 
     fmt::println("Entering main loop");
