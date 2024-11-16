@@ -60,6 +60,7 @@ private:
 class HalfEdgeMeshSelection
 {
 public:
+    bool IsSelected() const { return !SelectedFaces.empty(); }
     void Select(const HalfEdge::Face::Ptr &face);
     void Clear();
 

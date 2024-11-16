@@ -307,6 +307,7 @@ Mesh HalfEdgeMesh::GenerateMesh(bool shareVertices) const
     }
     else
     {
+        // TODO: this is temporary
         std::vector<Vec4> colors = {
             Vec4(0.0f, 0.0f, 0.0f, 1.0f),
             Vec4(1.0f, 0.0f, 0.0f, 1.0f),
