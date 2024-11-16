@@ -15,10 +15,10 @@ int main()
         fmt::print("Failed to create window\n");
         return -1;
     }
-    UI ui(window->Get());
+    // UI ui(window->Get());
 
     Input input = window->GetInput();
-    window->Debug();
+    // window->Debug();
 
     Camera camera;
     camera.SetPosition(Vec3(0.0f, 5.0f, 5.0f));
@@ -81,13 +81,13 @@ int main()
         dt = ticks.DeltaTime();
         auto size = window->Size();
         camera.UpdatePerspective(size);
-        experiment->Update(dt);
+        // experiment->Update(dt);
 
         // ---------- render -----------
         // gl.Viewport(size.w, size.h);
         // gl.ClearDepthBuffer();
         // gl.ClearColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
-        experiment->Render(camera);
+        // experiment->Render(camera);
 
         // ---------- render:debug -----------
         // debug.Begin(size, camera);

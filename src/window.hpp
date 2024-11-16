@@ -1,5 +1,6 @@
 #pragma once
 #include "deps/sdl.hpp"
+#include "deps/vulkan.hpp"
 #include "input.hpp"
 
 class Window
@@ -39,5 +40,5 @@ private:
     uint64 lastTimeWheeled = 0;
     bool resized = false;
 
-    VkInstance instance = nullptr;
+    vulkan::Instance instance;
 };
