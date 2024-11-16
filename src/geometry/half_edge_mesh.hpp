@@ -25,6 +25,14 @@ public:
         bool Visible;
     };
 
+    struct RaycastHit
+    {
+        HalfEdge::Face::Ptr Face;
+        Vec3 Center;
+
+        bool Hit() const { return Face != nullptr; }
+    };
+
 public:
     using Ptr = std::unique_ptr<HalfEdgeMesh>;
 
@@ -40,10 +48,23 @@ public:
     void DebugDrawLine(const std::function<void(const DrawLine &)> &fn, const Vec3 &cameraPosition) const;
     void DebugDrawPoint(const std::function<void(const DrawPoint &)> &fn, const Vec3 &cameraPosition) const;
     void DebugDrawNormal(const std::function<void(const DrawNormal &)> &fn, const Vec3 &cameraPosition) const;
+    RaycastHit Raycast(const Ray &ray) const;
 
 private:
     void generateMissingTwins();
     std::vector<HalfEdge::Vertex::Ptr> Vertices;
     std::vector<HalfEdge::Face::Ptr> Faces;
     std::vector<HalfEdge::Ptr> Edges;
+};
+
+class HalfEdgeMeshSelection
+{
+public:
+    void Select(const HalfEdge::Face::Ptr &face);
+    void Clear();
+
+    void DrawLine(const std::function<void(const HalfEdgeMesh::DrawLine &)> &fn, const Vec3 &cameraPosition) const;
+
+public:
+    std::vector<HalfEdge::Face::Ptr> SelectedFaces;
 };

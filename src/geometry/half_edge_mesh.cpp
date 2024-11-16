@@ -400,8 +400,8 @@ void HalfEdgeMesh::DebugDrawLine(const std::function<void(const DrawLine &)> &fn
             auto center = e->IncidentFace->Center();
             auto dir = Mathf::Normalize(cameraPosition - center);
             auto dot = Mathf::Dot(dir, e->IncidentFace->Normal());
-            draw.From = Mathf::Normalize(center - e->Origin->P) * 0.05f + e->Origin->P;
-            draw.To = Mathf::Normalize(center - e->Next->Origin->P) * 0.05f + e->Next->Origin->P;
+            draw.From = Mathf::Normalize(center - e->Origin->P) * 0.01f + e->Origin->P;
+            draw.To = Mathf::Normalize(center - e->Next->Origin->P) * 0.01f + e->Next->Origin->P;
             draw.Visible = dot >= 0;
             fn(draw);
         }
@@ -446,6 +446,39 @@ void HalfEdgeMesh::DebugDrawNormal(const std::function<void(const DrawNormal &)>
     }
 }
 
+HalfEdgeMesh::RaycastHit HalfEdgeMesh::Raycast(const Ray &ray) const
+{
+    RaycastHit hit;
+    float minDistance = 100;
+    for (const auto &f : Faces)
+    {
+        auto e = f->Edge;
+        do
+        {
+            auto a = e->Origin->P;
+            auto b = e->Next->Origin->P;
+            auto c = e->Next->Next->Origin->P;
+            auto normal = -Mathf::Normalize(Mathf::Cross(b - a, c - a));
+            if (Mathf::Dot(ray.Direction, normal) < 0)
+                continue;
+            auto intersection = Mathf::RayTriangleIntersection(ray, a, b, c, minDistance);
+
+            // if (d > 0 && d < minDistance)
+            if (intersection)
+            {
+                // minDistance = d;
+                fmt::println("Intersection: {}", intersection);
+                fmt::println("Distance: {}", minDistance);
+                hit.Center = f->Center();
+                hit.Face = f;
+                break;
+            }
+            e = e->Next;
+        } while (e != f->Edge);
+    }
+    return hit;
+}
+
 void HalfEdgeMesh::generateMissingTwins()
 {
     std::map<std::pair<HalfEdge::Vertex::Ptr, HalfEdge::Vertex::Ptr>, HalfEdge::Ptr> edgeMap;
@@ -464,5 +497,39 @@ void HalfEdgeMesh::generateMissingTwins()
             e->Twin = twin;
             twin->Twin = e;
         }
+    }
+}
+
+void HalfEdgeMeshSelection::Select(const HalfEdge::Face::Ptr &face)
+{
+    Clear();
+    SelectedFaces.emplace_back(face);
+}
+
+void HalfEdgeMeshSelection::Clear()
+{
+    SelectedFaces.clear();
+}
+
+void HalfEdgeMeshSelection::DrawLine(const std::function<void(const HalfEdgeMesh::DrawLine &)> &fn, const Vec3 &cameraPosition) const
+{
+    HalfEdgeMesh::DrawLine draw;
+
+    for (const auto &f : SelectedFaces)
+    {
+        auto center = f->Center();
+        auto dir = Mathf::Normalize(cameraPosition - center);
+        auto dot = Mathf::Dot(dir, f->Normal());
+
+        auto e = f->Edge;
+        do
+        {
+            draw.From = e->Origin->P;
+            draw.To = e->Next->Origin->P;
+            draw.Boundary = e->IncidentFace == nullptr;
+            draw.Visible = dot >= 0;
+            fn(draw);
+            e = e->Next;
+        } while (e != f->Edge);
     }
 }

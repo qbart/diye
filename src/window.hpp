@@ -19,7 +19,8 @@ public:
     Vec2 MousePosition() const { return mousePos; }
     Vec2 MouseRelativePosition() const { return mouseRelPos; }
     Vec2 MouseWheel() const { return mouseWheel; }
-    bool MouseButtonDown(uint8 button) const { return HashMapHasKey(mouseInputs, button) && mouseInputs.at(button); }
+    bool MouseButtonDown(uint8 button) const;
+    bool MouseButtonUp(uint8 button);
     bool MouseWheelScrolled() const { return SDL_GetTicks64() - lastTimeWheeled < 100; }
     bool KeyJustReleased(int key);
     bool KeyDown(int key);
@@ -39,6 +40,7 @@ private:
     HashMap<int32, bool> inputs;
     HashMap<int32, bool> wasDown;
     HashMap<uint8, bool> mouseInputs;
+    HashMap<uint8, bool> mouseWasDown;
     Vec2 mousePos;
     Vec2 mouseRelPos;
     Vec2 mouseWheel;

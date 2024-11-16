@@ -137,11 +137,21 @@ void Camera::MoveRight(float speed)
     UpdateMatrix();
 }
 
-Vec3 Camera::ScreenToWorld(const Vec2 &screenPos, const Vec2 &screenSize) const
+Ray Camera::ScreenToRay(const Vec2 &screenPos, const Vec2 &screenSize) const
 {
-    Vec3 pos(screenPos.x, screenSize.y - screenPos.y, 1.0f); // OpenGL flip-Y
-    Vec4 viewport(0.0f, 0.0f, screenSize.x, screenSize.y);
-    return glm::unProject(pos, view, projection, viewport);
+    Vec4 clipCoords = Vec4(
+        (2.0f * screenPos.x) / screenSize.x - 1.0f,
+        1.0f - (2.0f * screenPos.y) / screenSize.y,
+        -1.0f, 1.0f);
+
+    Vec4 eyeCoords = glm::inverse(projection) * clipCoords;
+    eyeCoords.z = FORWARD.z;
+    eyeCoords.w = 0.0f;
+
+    Ray ray;
+    ray.Origin = transform.position + transform.localPosition;
+    ray.Direction = glm::normalize(Vec3(glm::inverse(view) * eyeCoords));
+    return ray;
 }
 
 void Camera::UpdateMatrix()

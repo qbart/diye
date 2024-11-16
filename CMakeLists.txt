@@ -27,6 +27,7 @@ add_executable(${PROJECT_NAME}
     src/gl/descriptor_pool.cpp
     src/gl/app.cpp
     src/core/transform.cpp
+    src/core/math.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp
     src/geometry/half_edge.cpp
