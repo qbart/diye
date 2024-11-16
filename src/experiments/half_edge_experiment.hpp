@@ -193,10 +193,9 @@ public:
             gl.BindBuffer(GL::BufferType::ElementArray, 0);
             gl.BindVertexArray(0);
         }
-
     }
 
-    void RenderUI(UI &ui) override
+    void RenderUI(const Camera &camera, UI &ui) override
     {
     }
 
