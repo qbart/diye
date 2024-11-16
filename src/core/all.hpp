@@ -1,6 +1,6 @@
 #pragma once
 
-#include <fmt/format.h>
+#include "../deps/fmt.hpp"
 #include "types.hpp"
 #include "math.hpp"
 #include "colors.hpp"

@@ -2,10 +2,7 @@
 
 #include "core/all.hpp"
 #include <memory>
-#include "gl.hpp"
-#include "deps/sdl.hpp"
 #include "deps/imgui.hpp"
-#include "deps/vulkan.hpp"
 
 Window::Ptr Window::New(int w, int h, const std::string &title)
 {
@@ -21,29 +18,12 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
         fmt::println(sdl::GetError());
         return nullptr;
     }
-    auto exts = sdl::GetVulkanExtensions(wnd);
-
-    // create instance
-    VkInstance instance;
-
-    VkApplicationInfo appInfo;
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = title.c_str();
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "No Engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
-
-    VkInstanceCreateInfo createInfo;
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &appInfo;
-    createInfo.enabledExtensionCount = exts.size();
-    createInfo.ppEnabledExtensionNames = exts.data();
-    createInfo.enabledLayerCount = 0; // later
-    createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-
-    VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
-    if (result != VK_SUCCESS)
+    vulkan::CreateInstanceInfo info;
+    info.title = title;
+    info.extensions = sdl::GetVulkanExtensions(wnd, true);
+    info.validationLayers = vulkan::CStrings({"VK_LAYER_KHRONOS_validation"});
+    vulkan::Instance instance = vulkan::CreateInstance(info, true);
+    if (!instance.IsValid())
     {
         fmt::println("Failed to create Vulkan instance");
         return nullptr;
@@ -61,7 +41,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
 Window::~Window()
 {
-    vkDestroyInstance(instance, nullptr);
+    vulkan::DestroyInstance(instance);
     sdl::DestroyWindow(wnd);
     sdl::Quit();
 }
@@ -120,7 +100,7 @@ void Window::PollEvents()
             break;
         }
 
-        ImGui_ImplSDL2_ProcessEvent(&event);
+        // ImGui_ImplSDL2_ProcessEvent(&event);
     }
 }
 
