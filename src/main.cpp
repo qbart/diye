@@ -3,9 +3,9 @@
 #include "input.hpp"
 #include "window.hpp"
 #include "renderer.hpp"
-#include "ui.hpp"
+#include "ui/ui.hpp"
 #include "debug_draw_renderer.hpp"
-#include "experiments/half_edge.hpp"
+#include "experiments/experiment.hpp"
 #include "gl/app.hpp"
 
 int main()
@@ -27,7 +27,7 @@ int main()
     Input input = window.GetInput();
 
     Camera camera;
-    // camera.SetPosition(Vec3(0.0f, 5.0f, 5.0f));
+    camera.SetPosition(Vec3(0.0f, 5.0f, 5.0f));
     // camera.LookAt(ZERO);
     camera.SetPosition(Vec3(2.0f, 2.0f, 2.0f));
     camera.LookAt(ZERO);

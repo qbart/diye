@@ -326,3 +326,5 @@ imgui.ini
 # shader binaries
 *.spv
 *.ninja_log
+/res/
+/src/experiments/game.hpp
