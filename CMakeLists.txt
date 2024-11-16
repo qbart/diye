@@ -15,7 +15,7 @@ add_executable(${PROJECT_NAME}
     src/gl.cpp
     src/image.cpp
     src/input.cpp
-    src/ui.cpp
+    src/ui/ui.cpp
     src/window.cpp
 
     src/main.cpp

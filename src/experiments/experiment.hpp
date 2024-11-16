@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../core/all.hpp"
-#include "../ui.hpp"
+#include "../ui/ui.hpp"
 #include "../debug_draw_renderer.hpp"
 #include "../window.hpp"
 

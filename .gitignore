@@ -322,3 +322,5 @@ pythonenv3.8/
 
 # imgui
 imgui.ini
+/res/
+/src/experiments/game.hpp

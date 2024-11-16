@@ -4,8 +4,8 @@
 #include <unordered_map>
 #include <functional>
 
-#include "core/all.hpp"
-#include "deps/imgui.hpp"
+#include "../core/all.hpp"
+#include "../deps/imgui.hpp"
 
 class AnimationCurveWidget
 {

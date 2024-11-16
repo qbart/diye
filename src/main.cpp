@@ -3,9 +3,9 @@
 #include "input.hpp"
 #include "window.hpp"
 #include "renderer.hpp"
-#include "ui.hpp"
+#include "ui/ui.hpp"
 #include "debug_draw_renderer.hpp"
-#include "experiments/half_edge.hpp"
+#include "experiments/half_edge_experiment.hpp"
 
 int main()
 {
