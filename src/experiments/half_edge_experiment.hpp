@@ -29,6 +29,7 @@ public:
     GL::Location camDistanceLoc;
     Transform transform;
     Window::Ptr window;
+    bool debug = false;
 
 public:
     int Init(Window::Ptr window) override
@@ -95,10 +96,18 @@ public:
     void Update(float dt) override
     {
         transform.Update();
+
+        if (window->KeyJustReleased(SDLK_TAB))
+        {
+            debug = !debug;
+        }
     }
 
     void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) override
     {
+        if (!debug)
+            return;
+
         auto camPos = camera.Position();
 
         auto onDebugDrawLine = [&](const HalfEdgeMesh::DrawLine &line)
@@ -252,9 +261,9 @@ void main(void)
 //   viewFactor = remap(viewFactor, -1.0, 1.0, 0.0, 1.0);
   float viewFactor = 1;
 
-  FragColor = vec4(clamp(color * viewFactor, 0.0, 1.0), 1.0);
+//   FragColor = vec4(clamp(color * viewFactor, 0.0, 1.0), 1.0);
 
-    // FragColor = vec4(vertPos, 1.0);
+    FragColor = vec4(vertPos, 1.0);
 }
 
 )glsl";

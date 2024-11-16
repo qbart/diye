@@ -126,7 +126,7 @@ void Window::PollEvents()
             mouseRelPos.x = event.motion.xrel;
             mouseRelPos.y = event.motion.yrel;
             break;
-        
+
         case SDL_MOUSEBUTTONDOWN:
             mouseInputs[event.button.button] = true;
             break;
@@ -134,13 +134,13 @@ void Window::PollEvents()
         case SDL_MOUSEBUTTONUP:
             mouseInputs[event.button.button] = false;
             break;
-        
+
         case SDL_MOUSEWHEEL:
             mouseWheel.x = event.wheel.preciseX;
             mouseWheel.y = event.wheel.preciseY;
             lastTimeWheeled = SDL_GetTicks();
             break;
-        
+
         case SDL_WINDOWEVENT_RESIZED:
             size.w = event.window.data1;
             size.h = event.window.data2;
@@ -150,6 +150,29 @@ void Window::PollEvents()
 
         ImGui_ImplSDL2_ProcessEvent(&event);
     }
+}
+
+bool Window::KeyJustReleased(int key)
+{
+    if (KeyDown(key))
+        wasDown[key] = true;
+    else if (wasDown.find(key) != wasDown.end() && wasDown[key])
+    {
+        wasDown[key] = false;
+        return true;
+    }
+
+    return false;
+}
+
+bool Window::KeyDown(int key)
+{
+    const auto val = inputs.find(key);
+    if (val != inputs.end())
+    {
+        return val->second;
+    }
+    return false;
 }
 
 void Window::Close()

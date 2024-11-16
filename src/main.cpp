@@ -1,6 +1,5 @@
 #include <fmt/core.h>
 
-#include "input.hpp"
 #include "window.hpp"
 #include "renderer.hpp"
 #include "ui/ui.hpp"
@@ -17,7 +16,6 @@ int main()
     }
     UI ui(window->Get());
 
-    Input input = window->GetInput();
     window->Debug();
 
     Camera camera;
@@ -44,22 +42,22 @@ int main()
     {
         // ---------- inputs -----------
         window->PollEvents();
-        if (input.KeyJustReleased(SDLK_ESCAPE))
+        if (window->KeyJustReleased(SDLK_ESCAPE))
             window->Close();
 
-        if (input.KeyDown(SDLK_w))
+        if (window->KeyDown(SDLK_w))
             camera.MoveForward(5 * dt);
 
-        if (input.KeyDown(SDLK_s))
+        if (window->KeyDown(SDLK_s))
             camera.MoveBackward(5 * dt);
 
-        if (input.KeyDown(SDLK_a))
+        if (window->KeyDown(SDLK_a))
             camera.MoveLeft(5 * dt);
 
-        if (input.KeyDown(SDLK_d))
+        if (window->KeyDown(SDLK_d))
             camera.MoveRight(5 * dt);
 
-        if (window->MouseButtonDown(SDL_BUTTON_RIGHT) && input.KeyDown(SDLK_LALT))
+        if (window->MouseButtonDown(SDL_BUTTON_RIGHT) && window->KeyDown(SDLK_LALT))
         {
             auto md = window->MouseRelativePosition();
             camera.OrbitAround(UP, ZERO, md.x * 2 * dt);
