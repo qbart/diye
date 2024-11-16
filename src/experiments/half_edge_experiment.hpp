@@ -41,7 +41,7 @@ public:
         editableMesh = HalfEdgeMesh::NewCube();
 
         fmt::println("Generating mesh");
-        mesh = editableMesh->GenerateMesh();
+        mesh = editableMesh->GenerateMesh(false);
 
         if (mesh.Vertices.size() > 0)
         {
@@ -267,6 +267,7 @@ void main(void)
   FragColor = vec4(clamp(color * viewFactor, 0.0, 1.0), 1.0);
 
     // FragColor = vec4(vertPos, 1.0);
+    FragColor = vec4(vertColor, 1.0);
 }
 
 )glsl";

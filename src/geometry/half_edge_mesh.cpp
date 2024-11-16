@@ -269,38 +269,113 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::NewCube()
     return std::move(mesh);
 }
 
-Mesh HalfEdgeMesh::GenerateMesh() const
+Mesh HalfEdgeMesh::GenerateMesh(bool shareVertices) const
 {
     Mesh mesh;
     if (Vertices.empty())
         return std::move(mesh);
 
-    std::map<HalfEdge::Vertex::Ptr, int> vertexMap;
-    for (const auto &v : Vertices)
+    if (shareVertices)
     {
-        vertexMap[v] = mesh.Vertices.size();
-        mesh.Vertices.emplace_back(v->P);
-        // fmt::println("Vertex: {}, {}, {}", v->P.x, v->P.y, v->P.z);
-        mesh.Colors.push_back(YELLOW);
-        auto normal = v->IncidentEdge->IncidentFace->Normal();
-        mesh.Normals.emplace_back(normal);
-    }
-
-    for (const auto &f : Faces)
-    {
-        auto eachTriangle = [&](const HalfEdge::Vertex::Ptr &a, const HalfEdge::Vertex::Ptr &b, const HalfEdge::Vertex::Ptr &c)
+        std::map<HalfEdge::Vertex::Ptr, int> vertexMap;
+        for (const auto &v : Vertices)
         {
-            mesh.Indices.push_back(vertexMap[a]);
-            mesh.Indices.push_back(vertexMap[b]);
-            mesh.Indices.push_back(vertexMap[c]);
-            auto normals = a->IncidentEdge->IncidentFace->Normal() + b->IncidentEdge->IncidentFace->Normal() + c->IncidentEdge->IncidentFace->Normal();
-            normals = Mathf::Normalize(normals/3.0f);
-            mesh.Normals[vertexMap[a]] = normals;
-            mesh.Normals[vertexMap[b]] = normals;
-            mesh.Normals[vertexMap[c]] = normals;
-            // fmt::println("Triangle: {}, {}, {}", vertexMap[a], vertexMap[b], vertexMap[c]);
+            vertexMap[v] = mesh.Vertices.size();
+            mesh.Vertices.emplace_back(v->P);
+            // fmt::println("Vertex: {}, {}, {}", v->P.x, v->P.y, v->P.z);
+            mesh.Colors.push_back(YELLOW);
+            auto normal = v->IncidentEdge->IncidentFace->Normal();
+            mesh.Normals.emplace_back(normal);
+        }
+
+        for (const auto &f : Faces)
+        {
+            auto eachTriangle = [&](const HalfEdge::Vertex::Ptr &a, const HalfEdge::Vertex::Ptr &b, const HalfEdge::Vertex::Ptr &c)
+            {
+                mesh.Indices.push_back(vertexMap[a]);
+                mesh.Indices.push_back(vertexMap[b]);
+                mesh.Indices.push_back(vertexMap[c]);
+                auto normals = a->IncidentEdge->IncidentFace->Normal() + b->IncidentEdge->IncidentFace->Normal() + c->IncidentEdge->IncidentFace->Normal();
+                normals = Mathf::Normalize(normals / 3.0f);
+                mesh.Normals[vertexMap[a]] = normals;
+                mesh.Normals[vertexMap[b]] = normals;
+                mesh.Normals[vertexMap[c]] = normals;
+                // fmt::println("Triangle: {}, {}, {}", vertexMap[a], vertexMap[b], vertexMap[c]);
+            };
+            f->EachTriangle(eachTriangle);
+        }
+    }
+    else
+    {
+        std::vector<Vec4> colors = {
+            Vec4(0.0f, 0.0f, 0.0f, 1.0f),
+            Vec4(1.0f, 0.0f, 0.0f, 1.0f),
+            Vec4(0.0f, 1.0f, 0.0f, 1.0f),
+            Vec4(0.0f, 0.0f, 1.0f, 1.0f),
+            Vec4(1.0f, 1.0f, 0.0f, 1.0f),
+            Vec4(1.0f, 0.0f, 1.0f, 1.0f),
+            Vec4(0.0f, 1.0f, 1.0f, 1.0f),
+            Vec4(1.0f, 1.0f, 1.0f, 1.0f),
+            Vec4(0.5f, 0.0f, 0.0f, 1.0f),
+            Vec4(0.0f, 0.5f, 0.0f, 1.0f),
+            Vec4(0.0f, 0.0f, 0.5f, 1.0f),
+            Vec4(0.5f, 0.5f, 0.0f, 1.0f),
+            Vec4(0.5f, 0.0f, 0.5f, 1.0f),
+            Vec4(0.0f, 0.5f, 0.5f, 1.0f),
+            Vec4(0.5f, 0.5f, 0.5f, 1.0f),
+            Vec4(0.25f, 0.0f, 0.0f, 1.0f),
+            Vec4(0.0f, 0.25f, 0.0f, 1.0f),
+            Vec4(0.0f, 0.0f, 0.25f, 1.0f),
+            Vec4(0.25f, 0.25f, 0.0f, 1.0f),
+            Vec4(0.25f, 0.0f, 0.25f, 1.0f),
+            Vec4(0.0f, 0.25f, 0.25f, 1.0f),
+            Vec4(0.25f, 0.25f, 0.25f, 1.0f),
+            Vec4(0.75f, 0.0f, 0.0f, 1.0f),
+            Vec4(0.0f, 0.75f, 0.0f, 1.0f),
+            Vec4(0.0f, 0.0f, 0.75f, 1.0f),
+            Vec4(0.75f, 0.75f, 0.0f, 1.0f),
+            Vec4(0.75f, 0.0f, 0.75f, 1.0f),
+            Vec4(0.0f, 0.75f, 0.75f, 1.0f),
+            Vec4(0.75f, 0.75f, 0.75f, 1.0f),
+            Vec4(0.25f, 0.0f, 0.0f, 1.0f),
+            Vec4(0.0f, 0.25f, 0.0f, 1.0f),
+            Vec4(0.0f, 0.0f, 0.25f, 1.0f),
+            Vec4(0.25f, 0.25f, 0.0f, 1.0f),
+            Vec4(0.25f, 0.0f, 0.25f, 1.0f),
+            Vec4(0.0f, 0.25f, 0.25f, 1.0f),
+            Vec4(0.25f, 0.25f, 0.25f, 1.0f),
         };
-        f->EachTriangle(eachTriangle);
+        int colorIndex = 0;
+
+        for (const auto &f : Faces)
+        {
+            std::map<HalfEdge::Vertex::Ptr, int> vertexMap;
+            auto normal = f->Normal();
+            auto color = colors[colorIndex % colors.size()];
+            colorIndex++;
+            auto eachTriangle = [&](const HalfEdge::Vertex::Ptr &a, const HalfEdge::Vertex::Ptr &b, const HalfEdge::Vertex::Ptr &c)
+            {
+                auto addVertex = [&](const HalfEdge::Vertex::Ptr &v)
+                {
+                    auto it = vertexMap.find(v);
+                    if (it == vertexMap.end())
+                    {
+                        vertexMap[v] = mesh.Vertices.size();
+                        mesh.Vertices.emplace_back(v->P);
+                        mesh.Colors.push_back(color);
+                        mesh.Normals.push_back(normal);
+                    }
+                };
+                addVertex(a);
+                addVertex(b);
+                addVertex(c);
+                mesh.Indices.push_back(vertexMap[a]);
+                mesh.Indices.push_back(vertexMap[b]);
+                mesh.Indices.push_back(vertexMap[c]);
+            };
+
+            f->EachTriangle(eachTriangle);
+        }
     }
 
     return std::move(mesh);
