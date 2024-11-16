@@ -96,7 +96,7 @@ int main()
 
         // ---------- render:ui -----------
         ui.BeginFrame(size);
-        experiment->RenderUI(ui);
+        experiment->RenderUI(camera, ui);
         ui.EndFrame();
         ui.Draw();
 

@@ -17,7 +17,7 @@ void EmptyExperiment::RenderDebug(const Camera &camera, const DebugDrawRenderer 
 {
 }
 
-void EmptyExperiment::RenderUI(UI &ui)
+void EmptyExperiment::RenderUI(const Camera &camera, UI &ui)
 {
 }
 
