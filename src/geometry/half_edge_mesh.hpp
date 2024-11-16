@@ -36,7 +36,7 @@ public:
 
     const std::vector<HalfEdge::Face::Ptr> &GetFaces() const { return Faces; }
 
-    Mesh GenerateMesh() const;
+    Mesh GenerateMesh(bool shareVertices = true) const;
     void DebugDrawLine(const std::function<void(const DrawLine &)> &fn, const Vec3 &cameraPosition) const;
     void DebugDrawPoint(const std::function<void(const DrawPoint &)> &fn, const Vec3 &cameraPosition) const;
     void DebugDrawNormal(const std::function<void(const DrawNormal &)> &fn, const Vec3 &cameraPosition) const;
