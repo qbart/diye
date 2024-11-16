@@ -4,6 +4,7 @@ project(diye)
 
 add_executable(${PROJECT_NAME}
     src/core/transform.cpp
+    src/core/math.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp
     src/geometry/half_edge.cpp

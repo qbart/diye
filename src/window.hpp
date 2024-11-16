@@ -21,11 +21,12 @@ public:
     inline Vec2 MousePosition() const { return mousePos; }
     inline Vec2 MouseRelativePosition() const { return mouseRelPos; }
     inline Vec2 MouseWheel() const { return mouseWheel; }
-    inline bool MouseButtonDown(uint8 button) const { return HashMapHasKey(mouseInputs, button) && mouseInputs.at(button); }
     inline bool MouseWheelScrolled() const { return SDL_GetTicks() - lastTimeWheeled < 100; }
     inline bool WasResized() const { return resized; }
     bool KeyJustReleased(int key);
     bool KeyDown(int key);
+    bool MouseButtonDown(uint8 button);
+    bool MouseButtonUp(uint8 button);
 
 private:
     bool isOpen = false;
@@ -34,6 +35,7 @@ private:
     SDL_Event event;
     SDL_GLContext glContext = nullptr;
     HashMap<uint8, bool> mouseInputs;
+    HashMap<uint8, bool> mouseWasDown;
     HashMap<int32, bool> wasDown;
     HashMap<int32, bool> inputs;
     Vec2 mousePos = Vec2(0, 0);
