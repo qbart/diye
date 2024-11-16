@@ -145,6 +145,9 @@ public:
 
     void Render(const Camera &camera) override
     {
+        if (debug)
+            return;
+
         if (mesh.Vertices.size() > 0)
         {
             auto model = transform.GetModelMatrix();
