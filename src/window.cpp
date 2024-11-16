@@ -142,3 +142,26 @@ bool Window::KeyDown(int key)
     }
     return false;
 }
+
+bool Window::MouseButtonDown(uint8 button) const
+{
+    const auto val = mouseInputs.find(button);
+    if (val != mouseInputs.end())
+    {
+        return val->second;
+    }
+    return false;
+}
+
+bool Window::MouseButtonUp(uint8 button)
+{
+    if (MouseButtonDown(button))
+        mouseWasDown[button] = true;
+    else if (mouseWasDown.find(button) != mouseWasDown.end() && mouseWasDown[button])
+    {
+        mouseWasDown[button] = false;
+        return true;
+    }
+
+    return false;
+}

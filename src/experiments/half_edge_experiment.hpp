@@ -12,6 +12,7 @@ class HalfEdgeExperiment : public Experiment
 {
 public:
     HalfEdgeMesh::Ptr editableMesh;
+    HalfEdgeMeshSelection selection;
     Mesh mesh;
 
     uint vao;
@@ -31,6 +32,7 @@ public:
     Window *window;
 
     bool debug = false;
+    Ray ray;
 
 public:
     int Init(Window *window) override
@@ -141,10 +143,29 @@ public:
         editableMesh->DebugDrawLine(onDebugDrawLine, camPos);
         editableMesh->DebugDrawPoint(onDebugDrawPoint, camPos);
         editableMesh->DebugDrawNormal(onDebugDrawNormal, camPos);
+
+        auto eachEdgeOfSelectedFace = [&](const HalfEdgeMesh::DrawLine &line)
+        {
+            g.Line(line.From, line.To, ORANGE);
+        };
+        selection.DrawLine(eachEdgeOfSelectedFace, camPos);
     }
 
     void Render(const Camera &camera) override
     {
+        if (window->KeyJustReleased(SDLK_TAB))
+            debug = !debug;
+
+        if (window->MouseButtonUp(SDL_BUTTON_LEFT))
+        {
+            ray = camera.ScreenToRay(window->MousePosition(), window->Size());
+            auto hit = editableMesh->Raycast(ray);
+            if (hit.Hit())
+            {
+                selection.Select(hit.Face);
+            }
+        }
+
         if (debug)
             return;
 
@@ -172,6 +193,7 @@ public:
             gl.BindBuffer(GL::BufferType::ElementArray, 0);
             gl.BindVertexArray(0);
         }
+
     }
 
     void RenderUI(UI &ui) override
