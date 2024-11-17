@@ -34,15 +34,16 @@ public:
     };
 
 public:
-    using Ptr = std::unique_ptr<HalfEdgeMesh>;
+    using Ptr = std::shared_ptr<HalfEdgeMesh>;
 
-    static Ptr New() { return std::make_unique<HalfEdgeMesh>(); }
+    static Ptr New() { return std::make_shared<HalfEdgeMesh>(); }
     static Ptr NewPlane();
     static Ptr NewCube();
     HalfEdgeMesh() = default;
-    ~HalfEdgeMesh() = default;
+    ~HalfEdgeMesh();
 
-    const std::vector<HalfEdge::Face::Ptr> &GetFaces() const { return Faces; }
+    void DeleteFace(const HalfEdge::Face::Ptr &face);
+    void Extrude(const HalfEdge::Face::Ptr &fromFace, float distance);
 
     Mesh GenerateMesh(bool shareVertices = true) const;
     void DebugDrawLine(const std::function<void(const DrawLine &)> &fn, const Vec3 &cameraPosition) const;
@@ -60,12 +61,12 @@ private:
 class HalfEdgeMeshSelection
 {
 public:
-    bool IsSelected() const { return !SelectedFaces.empty(); }
-    void Select(const HalfEdge::Face::Ptr &face);
+    bool IsSelected() const;
+    void Select(const HalfEdge::Face::Ref &face);
     void Clear();
 
     void DrawLine(const std::function<void(const HalfEdgeMesh::DrawLine &)> &fn, const Vec3 &cameraPosition) const;
 
 public:
-    std::vector<HalfEdge::Face::Ptr> SelectedFaces;
+    std::vector<HalfEdge::Face::Ref> SelectedFaces;
 };
