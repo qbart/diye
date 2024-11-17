@@ -3,33 +3,57 @@
 #include <queue>
 #include <map>
 
-HalfEdge::HalfEdge() : Origin(nullptr),
-                       Twin(nullptr),
-                       IncidentFace(nullptr),
-                       Prev(nullptr),
-                       Next(nullptr)
+HalfEdge::HalfEdge()
 {
+    Origin.reset();
+    Twin.reset();
+    IncidentFace.reset();
+    Prev.reset();
+    Next.reset();
+}
+
+HalfEdge::~HalfEdge()
+{
+    Origin.reset();
+    Twin.reset();
+    IncidentFace.reset();
+    Prev.reset();
+    Next.reset();
+
+    fmt::println("HalfEdge deleted");
+}
+
+HalfEdge::Vertex::~Vertex()
+{
+    IncidentEdge.reset();
+    fmt::println("Vertex deleted");
+}
+
+HalfEdge::Face::~Face()
+{
+    Edge.reset();
+    fmt::println("Face deleted");
 }
 
 Vec3 HalfEdge::Face::Center() const
 {
     Vec3 sum(0);
-    auto e = Edge;
+    auto e = Edge.lock();
     float points = 0;
     do
     {
-        sum += e->Origin->P;
-        e = e->Next;
+        sum += e->Origin.lock()->P;
+        e = e->Next.lock();
         points += 1;
-    } while (e != Edge);
+    } while (e != Edge.lock());
 
     return sum / points;
 }
 
 Vec3 HalfEdge::Face::Normal() const
 {
-    auto edge1 = Edge->Next->Origin->P - Edge->Origin->P; // v1 - v0
-    auto edge2 = Edge->Next->Next->Origin->P - Edge->Origin->P; // v2 - v0
+    auto edge1 = Edge.lock()->Next.lock()->Origin.lock()->P - Edge.lock()->Origin.lock()->P;       // v1 - v0
+    auto edge2 = Edge.lock()->Next.lock()->Next.lock()->Origin.lock()->P - Edge.lock()->Origin.lock()->P; // v2 - v0
     return Mathf::Normalize(Mathf::Cross(edge1, edge2));
 }
 
@@ -45,17 +69,17 @@ inline bool HalfEdge::Face::IsQuad() const
 
 inline bool HalfEdge::Face::IsPolygon(int n) const
 {
-    auto e = Edge;
+    auto e = Edge.lock();
     int count = 0;
     do
     {
-        e = e->Next;
+        e = e->Next.lock();
         ++count;
-    } while (e != Edge);
+    } while (e != Edge.lock());
 
     if (n == -1)
         return count >= 5;
-    
+
     if (n == count)
         return true;
 
@@ -66,25 +90,25 @@ void HalfEdge::Face::EachTriangle(std::function<void(const Vertex::Ptr &a, const
 {
     if (IsTriangle())
     {
-        fn(Edge->Origin, Edge->Next->Origin, Edge->Next->Next->Origin);
+        fn(Edge.lock()->Origin.lock(), Edge.lock()->Next.lock()->Origin.lock(), Edge.lock()->Next.lock()->Next.lock()->Origin.lock());
     }
     else if (IsQuad())
     {
-        auto a = Edge->Origin;
-        auto b = Edge->Next->Origin;
-        auto c = Edge->Next->Next->Origin;
-        auto d = Edge->Next->Next->Next->Origin;
+        auto a = Edge.lock()->Origin.lock();
+        auto b = Edge.lock()->Next.lock()->Origin.lock();
+        auto c = Edge.lock()->Next.lock()->Next.lock()->Origin.lock();
+        auto d = Edge.lock()->Next.lock()->Next.lock()->Next.lock()->Origin.lock();
 
         fn(a, b, c);
         fn(a, c, d);
     }
     else
     {
-        auto e = Edge;
+        auto e = Edge.lock();
         do
         {
-            fn(e->Origin, e->Next->Origin, e->Next->Next->Origin);
-            e = e->Next->Next;
-        } while (e != Edge);
+            fn(e->Origin.lock(), e->Next.lock()->Origin.lock(), e->Next.lock()->Next.lock()->Origin.lock());
+            e = e->Next.lock()->Next.lock();
+        } while (e != Edge.lock());
     }
 }

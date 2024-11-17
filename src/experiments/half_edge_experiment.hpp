@@ -33,6 +33,8 @@ public:
     bool debug = false;
     Ray ray;
 
+    Transform extrudeTransform;
+
 public:
     int Init(Window::Ptr window) override
     {
@@ -98,12 +100,32 @@ public:
     void Update(float dt) override
     {
         transform.Update();
+
+        if (window->KeyJustReleased(SDLK_1))
+        {
+            editableMesh = HalfEdgeMesh::NewPlane();
+            mesh = editableMesh->GenerateMesh(false);
+        }
+
+        if (window->KeyJustReleased(SDLK_2))
+        {
+            editableMesh = HalfEdgeMesh::NewCube();
+            mesh = editableMesh->GenerateMesh(false);
+        }
     }
 
     void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) override
     {
         if (!debug)
             return;
+
+        if (selection.IsSelected())
+        {
+            // auto face = selection.SelectedFaces[0];
+            // g.Arrow(extrudeTransform.position, extrudeTransform.position + face->Normal() * 0.25f, ORANGE);
+            // editableMesh->Extrude(face, 0.1f);
+            // mesh = editableMesh->GenerateMesh(true);
+        }
 
         auto camPos = camera.Position();
 
@@ -158,7 +180,15 @@ public:
             if (hit.Hit())
             {
                 selection.Select(hit.Face);
+                extrudeTransform.position = hit.Center;
+                extrudeTransform.Update();
             }
+            
+            // test extrude
+            // editableMesh->Extrude(hit.Face, 0.5f);
+            selection.Clear();
+            editableMesh->DeleteFace(hit.Face);
+            mesh = editableMesh->GenerateMesh(false);
         }
 
         if (debug)
