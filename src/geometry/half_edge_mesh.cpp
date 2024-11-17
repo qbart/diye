@@ -68,26 +68,26 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::NewPlane()
     e[3]->Prev = e[2];
 
     e[4]->Origin = v[0];
-    e[4]->IncidentFace = nullptr;
+    e[4]->IncidentFace.reset();
     e[4]->Next = e[5];
     e[4]->Prev = e[7];
 
     e[5]->Origin = v[3];
-    e[5]->IncidentFace = nullptr;
+    e[5]->IncidentFace.reset();
     e[5]->Next = e[6];
     e[5]->Prev = e[4];
 
     e[6]->Origin = v[2];
-    e[6]->IncidentFace = nullptr;
+    e[6]->IncidentFace.reset();
     e[6]->Next = e[7];
     e[6]->Prev = e[5];
 
     e[7]->Origin = v[1];
-    e[7]->IncidentFace = nullptr;
+    e[6]->IncidentFace.reset();
     e[7]->Next = e[4];
     e[7]->Prev = e[6];
 
-    auto mesh = std::make_unique<HalfEdgeMesh>();
+    auto mesh = std::make_shared<HalfEdgeMesh>();
     for (int i = 0; i < 4; ++i)
         mesh->Vertices.emplace_back(v[i]);
 
@@ -99,7 +99,7 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::NewPlane()
 
     mesh->generateMissingTwins();
 
-    return std::move(mesh);
+    return mesh;
 }
 
 HalfEdgeMesh::Ptr HalfEdgeMesh::NewCube()
@@ -254,7 +254,7 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::NewCube()
     v[7]->IncidentEdge = e[15];
 
     // Create the mesh
-    auto mesh = std::make_unique<HalfEdgeMesh>();
+    auto mesh = std::make_shared<HalfEdgeMesh>();
     for (int i = 0; i < 8; ++i)
         mesh->Vertices.emplace_back(v[i]);
 
@@ -266,7 +266,126 @@ HalfEdgeMesh::Ptr HalfEdgeMesh::NewCube()
 
     mesh->generateMissingTwins();
 
-    return std::move(mesh);
+    return mesh;
+}
+
+HalfEdgeMesh::~HalfEdgeMesh()
+{
+    fmt::println("HalfEdgeMesh deleted");
+    Faces.clear();
+    Vertices.clear();
+    Edges.clear();
+}
+
+void HalfEdgeMesh::DeleteFace(const HalfEdge::Face::Ptr &face)
+{
+    auto e = face->Edge.lock();
+    std::vector<HalfEdge::Ptr> edges;
+    std::vector<HalfEdge::Vertex::Ptr> orphanVertices;
+    do
+    {
+        edges.emplace_back(e);
+        auto twin = e->Twin.lock();
+        if (twin)
+        {
+            twin->Twin.reset();
+            auto isBoundary = twin->IncidentFace.expired();
+            if (isBoundary)
+            {
+                edges.emplace_back(twin);
+            }
+        }
+        e->IncidentFace.reset();
+        e = e->Next.lock();
+    } while (e != face->Edge.lock());
+
+    e = face->Edge.lock();
+    do
+    {
+        auto vertex = e->Origin.lock();
+        auto edge = vertex->IncidentEdge.lock();
+        if (edge->IncidentFace.expired())
+        {
+            orphanVertices.emplace_back(vertex);
+        }
+        e->Origin.lock()->IncidentEdge.reset();
+        e->Origin.reset();
+        e = e->Next.lock();
+    } while (e != face->Edge.lock());
+
+    face->Edge.reset();
+
+    fmt::println("Faces: {}, Edges: {}, Vertex: {}", Faces.size(), Edges.size(), Vertices.size());
+    Faces.erase(std::remove(Faces.begin(), Faces.end(), face), Faces.end());
+    for (auto &e : edges)
+        Edges.erase(std::remove(Edges.begin(), Edges.end(), e), Edges.end());
+    for (auto &v : orphanVertices)
+        Vertices.erase(std::remove(Vertices.begin(), Vertices.end(), v), Vertices.end());
+    fmt::println("Faces: {}, Edges: {}, Vertex: {}", Faces.size(), Edges.size(), Vertices.size());
+}
+
+void HalfEdgeMesh::Extrude(const HalfEdge::Face::Ptr &fromFace, float distance)
+{
+    // std::vector<HalfEdge::Ptr> newEdges;
+    // std::vector<HalfEdge::Vertex::Ptr> newVertices;
+    // std::vector<HalfEdge::Face::Ptr> newFaces;
+    // std::unordered_map<HalfEdge::Vertex::Ptr, HalfEdge::Vertex::Ptr> vertexMap;
+
+    // auto faceEdge = fromFace->Edge;
+    // auto dir = fromFace->Normal() * distance;
+    // DeleteFace(fromFace);
+
+    // // vertices first
+    // auto e = faceEdge.lock();
+    // do
+    // {
+    //     auto extrudedVertex = HalfEdge::Vertex::New(e->Origin.lock()->P + dir);
+    //     vertexMap[e->Origin.lock()] = extrudedVertex;
+    //     newVertices.push_back(extrudedVertex);
+    //     e = e->Next.lock();
+    // } while (e != faceEdge.lock());
+
+    // // connect half-edges to new vertices
+    // e = faceEdge;
+    // do
+    // {
+    //     auto edge = HalfEdge::New();
+    //     // auto twin = HalfEdge::New();
+    //     auto face = HalfEdge::Face::New();
+
+    //     newEdges.push_back(edge);
+    //     newFaces.push_back(face);
+
+    //     face->Edge = edge;
+
+    //     edge->Origin = e->Origin;
+    //     edge->IncidentFace = face;
+    //     edge->Next = nullptr; // later
+    //     edge->Prev = nullptr; // later
+
+    //     e = e->Next;
+    // } while (e != faceEdge);
+
+    // // build opposite face (extruded face along direction)
+    // e = faceEdge;
+    // do
+    // {
+    //     auto v = vertexMap[e->Origin];
+    //     auto nextV = vertexMap[e->Next->Origin];
+    //     auto edge = HalfEdge::New();
+    //     auto twin = HalfEdge::New();
+
+    //     e = e->Next;
+    // } while (e != faceEdge);
+
+    // for (auto &v : newVertices)
+    //     Vertices.emplace_back(v);
+
+    // for (auto &f : newFaces)
+    //     Faces.emplace_back(f);
+
+    // for (auto &e : newEdges)
+    //     Edges.emplace_back(e);
 }
 
 Mesh HalfEdgeMesh::GenerateMesh(bool shareVertices) const
@@ -284,7 +403,7 @@ Mesh HalfEdgeMesh::GenerateMesh(bool shareVertices) const
             mesh.Vertices.emplace_back(v->P);
             // fmt::println("Vertex: {}, {}, {}", v->P.x, v->P.y, v->P.z);
             mesh.Colors.push_back(YELLOW);
-            auto normal = v->IncidentEdge->IncidentFace->Normal();
+            auto normal = v->IncidentEdge.lock()->IncidentFace.lock()->Normal();
             mesh.Normals.emplace_back(normal);
         }
 
@@ -295,7 +414,7 @@ Mesh HalfEdgeMesh::GenerateMesh(bool shareVertices) const
                 mesh.Indices.push_back(vertexMap[a]);
                 mesh.Indices.push_back(vertexMap[b]);
                 mesh.Indices.push_back(vertexMap[c]);
-                auto normals = a->IncidentEdge->IncidentFace->Normal() + b->IncidentEdge->IncidentFace->Normal() + c->IncidentEdge->IncidentFace->Normal();
+                auto normals = a->IncidentEdge.lock()->IncidentFace.lock()->Normal() + b->IncidentEdge.lock()->IncidentFace.lock()->Normal() + c->IncidentEdge.lock()->IncidentFace.lock()->Normal();
                 normals = Mathf::Normalize(normals / 3.0f);
                 mesh.Normals[vertexMap[a]] = normals;
                 mesh.Normals[vertexMap[b]] = normals;
@@ -387,22 +506,22 @@ void HalfEdgeMesh::DebugDrawLine(const std::function<void(const DrawLine &)> &fn
     DrawLine draw;
     for (const auto &e : Edges)
     {
-        draw.Boundary = e->IncidentFace == nullptr;
+        draw.Boundary = e->IncidentFace.expired();
         if (draw.Boundary)
         {
-            draw.From = e->Origin->P;
-            draw.To = e->Next->Origin->P;
+            draw.From = e->Origin.lock()->P;
+            draw.To = e->Next.lock()->Origin.lock()->P;
             draw.Boundary = true;
             draw.Visible = true; // would be nice to have visibility check (twin face check)
             fn(draw);
         }
         else
         {
-            auto center = e->IncidentFace->Center();
+            auto center = e->IncidentFace.lock()->Center();
             auto dir = Mathf::Normalize(cameraPosition - center);
-            auto dot = Mathf::Dot(dir, e->IncidentFace->Normal());
-            draw.From = Mathf::Normalize(center - e->Origin->P) * 0.01f + e->Origin->P;
-            draw.To = Mathf::Normalize(center - e->Next->Origin->P) * 0.01f + e->Next->Origin->P;
+            auto dot = Mathf::Dot(dir, e->IncidentFace.lock()->Normal());
+            draw.From = Mathf::Normalize(center - e->Origin.lock()->P) * 0.01f + e->Origin.lock()->P;
+            draw.To = Mathf::Normalize(center - e->Next.lock()->Origin.lock()->P) * 0.01f + e->Next.lock()->Origin.lock()->P;
             draw.Visible = dot >= 0;
             fn(draw);
         }
@@ -453,12 +572,12 @@ HalfEdgeMesh::RaycastHit HalfEdgeMesh::Raycast(const Ray &ray) const
     float minDistance = 100;
     for (const auto &f : Faces)
     {
-        auto e = f->Edge;
+        auto e = f->Edge.lock();
         do
         {
-            auto a = e->Origin->P;
-            auto b = e->Next->Origin->P;
-            auto c = e->Next->Next->Origin->P;
+            auto a = e->Origin.lock()->P;
+            auto b = e->Next.lock()->Origin.lock()->P;
+            auto c = e->Next.lock()->Next.lock()->Origin.lock()->P;
             auto normal = -Mathf::Normalize(Mathf::Cross(b - a, c - a));
             if (Mathf::Dot(ray.Direction, normal) < 0)
                 continue;
@@ -474,8 +593,8 @@ HalfEdgeMesh::RaycastHit HalfEdgeMesh::Raycast(const Ray &ray) const
                 hit.Face = f;
                 break;
             }
-            e = e->Next;
-        } while (e != f->Edge);
+            e = e->Next.lock();
+        } while (e != f->Edge.lock());
     }
     return hit;
 }
@@ -485,13 +604,13 @@ void HalfEdgeMesh::generateMissingTwins()
     std::map<std::pair<HalfEdge::Vertex::Ptr, HalfEdge::Vertex::Ptr>, HalfEdge::Ptr> edgeMap;
     for (const auto &e : Edges)
     {
-        auto key = std::make_pair(e->Origin, e->Next->Origin);
+        auto key = std::make_pair(e->Origin.lock(), e->Next.lock()->Origin.lock());
         edgeMap[key] = e;
     }
 
     for (const auto &e : Edges)
     {
-        auto key = std::make_pair(e->Next->Origin, e->Origin);
+        auto key = std::make_pair(e->Next.lock()->Origin.lock(), e->Origin.lock());
         if (edgeMap.find(key) != edgeMap.end())
         {
             auto twin = edgeMap[key];
@@ -501,7 +620,17 @@ void HalfEdgeMesh::generateMissingTwins()
     }
 }
 
-void HalfEdgeMeshSelection::Select(const HalfEdge::Face::Ptr &face)
+bool HalfEdgeMeshSelection::IsSelected() const
+{
+    for (const auto &f : SelectedFaces)
+    {
+        if (!f.expired())
+            return true;
+    }
+    return false;
+}
+
+void HalfEdgeMeshSelection::Select(const HalfEdge::Face::Ref &face)
 {
     Clear();
     SelectedFaces.emplace_back(face);
@@ -518,19 +647,22 @@ void HalfEdgeMeshSelection::DrawLine(const std::function<void(const HalfEdgeMesh
 
     for (const auto &f : SelectedFaces)
     {
-        auto center = f->Center();
-        auto dir = Mathf::Normalize(cameraPosition - center);
-        auto dot = Mathf::Dot(dir, f->Normal());
+        if (f.expired())
+            continue;
 
-        auto e = f->Edge;
+        auto center = f.lock()->Center();
+        auto dir = Mathf::Normalize(cameraPosition - center);
+        auto dot = Mathf::Dot(dir, f.lock()->Normal());
+
+        auto e = f.lock()->Edge.lock();
         do
         {
-            draw.From = e->Origin->P;
-            draw.To = e->Next->Origin->P;
-            draw.Boundary = e->IncidentFace == nullptr;
+            draw.From = e->Origin.lock()->P;
+            draw.To = e->Next.lock()->Origin.lock()->P;
+            draw.Boundary = e->IncidentFace.expired();
             draw.Visible = dot >= 0;
             fn(draw);
-            e = e->Next;
-        } while (e != f->Edge);
+            e = e->Next.lock();
+        } while (e != f.lock()->Edge.lock());
     }
 }

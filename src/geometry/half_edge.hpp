@@ -9,26 +9,31 @@ class HalfEdge
 {
 public:
     using Ptr = std::shared_ptr<HalfEdge>;
+    using Ref = std::weak_ptr<HalfEdge>;
 
     struct Vertex
     {
         using Ptr = std::shared_ptr<Vertex>;
+        using Ref = std::weak_ptr<Vertex>;
         static Ptr New() { return std::make_shared<Vertex>(); }
         static Ptr New(const Vec3 &v) { return std::make_shared<Vertex>(v); }
-        Vertex() : IncidentEdge(nullptr) {}
-        Vertex(const Vec3 &v) : IncidentEdge(nullptr), P(v) {}
+        Vertex() { IncidentEdge.reset(); }
+        Vertex(const Vec3 &v) : P(v) { IncidentEdge.reset(); }
+        ~Vertex();
 
         Vec3 P;
-        HalfEdge::Ptr IncidentEdge;
+        HalfEdge::Ref IncidentEdge;
     };
 
     struct Face
     {
         using Ptr = std::shared_ptr<Face>;
+        using Ref = std::weak_ptr<Face>;
         static Ptr New() { return std::make_shared<Face>(); }
-        Face() : Edge(nullptr) {}
+        Face() { Edge.reset(); }
+        ~Face();
 
-        HalfEdge::Ptr Edge;
+        HalfEdge::Ref Edge;
 
         Vec3 Center() const;
         Vec3 Normal() const;
@@ -41,12 +46,12 @@ public:
 public:
     static Ptr New() { return std::make_shared<HalfEdge>(); }
     HalfEdge();
-    ~HalfEdge() = default;
+    ~HalfEdge();
 
 public:
-    Vertex::Ptr Origin;
-    Ptr Twin;
-    Face::Ptr IncidentFace;
-    Ptr Prev;
-    Ptr Next;
+    Vertex::Ref Origin;
+    Ref Twin;
+    Face::Ref IncidentFace;
+    Ref Prev;
+    Ref Next;
 };
