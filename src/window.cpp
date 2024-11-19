@@ -29,11 +29,10 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
         return nullptr;
     }
     auto devices = vulkan::GetPhysicalDevices(instance);
-    for (const auto &device : devices)
+    auto device = vulkan::SelectBestPhysicalDevice(devices);
+    if (!device.Valid())
     {
-        fmtx::Info(fmt::format("GPU Discrete: {}", device.IsDiscreteGPU()));
-        fmtx::Info(fmt::format("Max image dimension {}", device.properties.limits.maxImageDimension2D));
-        fmtx::Info(fmt::format("Geometry shader {}", device.features.geometryShader));
+        return nullptr;
     }
 
     auto ptr = std::make_shared<Window>();

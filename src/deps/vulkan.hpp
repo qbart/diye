@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <string>
 #include <vector>
+#include <optional>
 #include "fmt.hpp"
 
 namespace vulkan
@@ -35,13 +36,21 @@ namespace vulkan
         inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
     };
 
+    struct QueueFamilyIndices
+    {
+        std::optional<uint32_t> graphicsFamily;
+    };
+
     struct PhysicalDevice
     {
-        VkPhysicalDevice device;
+        VkPhysicalDevice device = VK_NULL_HANDLE;
         VkPhysicalDeviceProperties properties;
         VkPhysicalDeviceFeatures features;
+        std::vector<VkQueueFamilyProperties> queueFamilies;
+        QueueFamilyIndices queueFamilyIndices;
 
         bool IsDiscreteGPU() const;
+        bool Valid() const;
     };
 
     VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -58,4 +67,5 @@ namespace vulkan
     Instance CreateInstance(const CreateInstanceInfo &info, bool debug = false);
     void DestroyInstance(Instance &instance);
     std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance);
+    PhysicalDevice SelectBestPhysicalDevice(const std::vector<PhysicalDevice> &devices);
 };
