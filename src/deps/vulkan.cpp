@@ -1,4 +1,5 @@
 #include "vulkan.hpp"
+#include <map>
 
 namespace vulkan
 {
@@ -181,13 +182,59 @@ namespace vulkan
             devices[i].device = enumDevices[i];
             vkGetPhysicalDeviceProperties(devices[i].device, &devices[i].properties);
             vkGetPhysicalDeviceFeatures(devices[i].device, &devices[i].features);
+
+            uint32_t queueFamilyCount = 0;
+            vkGetPhysicalDeviceQueueFamilyProperties(devices[i].device, &queueFamilyCount, nullptr);
+            devices[i].queueFamilies.resize(queueFamilyCount);
+            vkGetPhysicalDeviceQueueFamilyProperties(devices[i].device, &queueFamilyCount, devices[i].queueFamilies.data());
+
+            int familyIndex = 0;
+            for (const auto &queueFamily : devices[i].queueFamilies)
+            {
+                if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+                    devices[i].queueFamilyIndices.graphicsFamily = familyIndex;
+
+                ++familyIndex;
+            }
         }
 
         return devices;
     }
 
+    PhysicalDevice SelectBestPhysicalDevice(const std::vector<PhysicalDevice> &devices)
+    {
+        std::multimap<int, PhysicalDevice> candidates;
+
+        for (const auto &device : devices)
+        {
+            int score = device.properties.limits.maxImageDimension2D;
+
+            if (device.IsDiscreteGPU())
+                score += 1000;
+
+            candidates.insert(std::make_pair(score, device));
+        }
+        PhysicalDevice best;
+        int score = 0;
+        for (const auto &c : candidates)
+        {
+            if (c.first > score)
+            {
+                score = c.first;
+                best = c.second;
+            }
+        }
+
+        return best;
+    }
+
     bool vulkan::PhysicalDevice::IsDiscreteGPU() const
     {
         return properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+    }
+
+    bool PhysicalDevice::Valid() const
+    {
+        return device != VK_NULL_HANDLE && queueFamilyIndices.graphicsFamily.has_value();
     }
 };
