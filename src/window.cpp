@@ -28,6 +28,13 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
         fmt::println("Failed to create Vulkan instance");
         return nullptr;
     }
+    auto devices = vulkan::GetPhysicalDevices(instance);
+    for (const auto &device : devices)
+    {
+        fmtx::Info(fmt::format("GPU Discrete: {}", device.IsDiscreteGPU()));
+        fmtx::Info(fmt::format("Max image dimension {}", device.properties.limits.maxImageDimension2D));
+        fmtx::Info(fmt::format("Geometry shader {}", device.features.geometryShader));
+    }
 
     auto ptr = std::make_shared<Window>();
     ptr->wnd = wnd;
