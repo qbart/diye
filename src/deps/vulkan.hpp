@@ -35,6 +35,15 @@ namespace vulkan
         inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
     };
 
+    struct PhysicalDevice
+    {
+        VkPhysicalDevice device;
+        VkPhysicalDeviceProperties properties;
+        VkPhysicalDeviceFeatures features;
+
+        bool IsDiscreteGPU() const;
+    };
+
     VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -48,4 +57,5 @@ namespace vulkan
     void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator);
     Instance CreateInstance(const CreateInstanceInfo &info, bool debug = false);
     void DestroyInstance(Instance &instance);
+    std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance);
 };

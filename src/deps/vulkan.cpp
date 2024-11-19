@@ -166,4 +166,28 @@ namespace vulkan
             vkDestroyInstance(instance.handle, nullptr);
     }
 
+    std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance)
+    {
+        std::vector<VkPhysicalDevice> enumDevices;
+        uint32_t count;
+        vkEnumeratePhysicalDevices(instance.handle, &count, nullptr);
+
+        enumDevices.resize(count);
+        vkEnumeratePhysicalDevices(instance.handle, &count, enumDevices.data());
+
+        std::vector<PhysicalDevice> devices(enumDevices.size());
+        for (int i = 0; i < devices.size(); ++i)
+        {
+            devices[i].device = enumDevices[i];
+            vkGetPhysicalDeviceProperties(devices[i].device, &devices[i].properties);
+            vkGetPhysicalDeviceFeatures(devices[i].device, &devices[i].features);
+        }
+
+        return devices;
+    }
+
+    bool vulkan::PhysicalDevice::IsDiscreteGPU() const
+    {
+        return properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+    }
 };
