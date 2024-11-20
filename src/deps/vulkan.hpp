@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_beta.h>
 #include <string>
 #include <vector>
 #include <optional>
@@ -53,19 +54,35 @@ namespace vulkan
         bool Valid() const;
     };
 
+    struct CreateDeviceInfo
+    { 
+        PhysicalDevice physicalDevice;
+        CStrings validationLayers;
+    }; 
+
+    struct Device
+    {
+        VkDevice handle;
+        VkQueue graphicsQueue;
+
+        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
+    };
+
     VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
         void *pUserData);
 
-    std::vector<VkExtensionProperties> GetInstanceExtensions();
+    std::vector<VkExtensionProperties> GetSupportedInstanceExtensions();
     std::vector<VkLayerProperties> GetAvailableValidationLayers();
     bool CheckValidationLayersSupport(const std::vector<VkLayerProperties> &availableLayers, const CStrings &requestedLayers);
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
     void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator);
     Instance CreateInstance(const CreateInstanceInfo &info, bool debug = false);
-    void DestroyInstance(Instance &instance);
+    void DestroyInstance(const Instance &instance);
     std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance);
     PhysicalDevice SelectBestPhysicalDevice(const std::vector<PhysicalDevice> &devices);
+    Device CreateDevice(const CreateDeviceInfo &info);
+    void DestroyDevice(const Device &device);
 };

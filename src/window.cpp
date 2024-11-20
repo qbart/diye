@@ -8,36 +8,53 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 {
     if (sdl::Init() != 0)
     {
-        fmt::println("Failed to init SDL");
+        fmtx::Error("Failed to init SDL");
         return nullptr;
     }
 
     auto wnd = sdl::CreateWindow(title, w, h);
     if (wnd == nullptr)
     {
-        fmt::println(sdl::GetError());
+        fmtx::Error(sdl::GetError());
         return nullptr;
     }
     vulkan::CreateInstanceInfo info;
     info.title = title;
     info.extensions = sdl::GetVulkanExtensions(wnd, true);
     info.validationLayers = vulkan::CStrings({"VK_LAYER_KHRONOS_validation"});
+    auto supportedExt = vulkan::GetSupportedInstanceExtensions();
+
+    for (const auto &ext : supportedExt)
+        fmtx::Info(fmt::format("Supported extension: {}", ext.extensionName));
+    for (const auto &ext : info.extensions)
+        fmtx::Info(fmt::format("Requested extension: {}", ext));
+
     vulkan::Instance instance = vulkan::CreateInstance(info, true);
     if (!instance.IsValid())
     {
-        fmt::println("Failed to create Vulkan instance");
+        fmtx::Error("Failed to create Vulkan instance");
         return nullptr;
     }
     auto devices = vulkan::GetPhysicalDevices(instance);
-    auto device = vulkan::SelectBestPhysicalDevice(devices);
-    if (!device.Valid())
+    auto physicalDevice = vulkan::SelectBestPhysicalDevice(devices);
+    if (!physicalDevice.Valid())
     {
+        fmtx::Error("Failed to select physical device");
         return nullptr;
     }
+    fmtx::Info(fmt::format("Selected device: {}", physicalDevice.properties.deviceName));
+    fmtx::Info(fmt::format("Selected device API version: {}", physicalDevice.properties.apiVersion));
+    fmtx::Info(fmt::format("Selected device driver version: {}", physicalDevice.properties.driverVersion));
+
+    vulkan::CreateDeviceInfo deviceInfo;
+    deviceInfo.physicalDevice = physicalDevice;
+    deviceInfo.validationLayers = info.validationLayers;
+    auto device = vulkan::CreateDevice(deviceInfo);
 
     auto ptr = std::make_shared<Window>();
     ptr->wnd = wnd;
     ptr->instance = instance;
+    ptr->device = device;
     ptr->size.w = w;
     ptr->size.h = h;
     ptr->isOpen = true;
@@ -47,6 +64,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
 Window::~Window()
 {
+    vulkan::DestroyDevice(device);
     vulkan::DestroyInstance(instance);
     sdl::DestroyWindow(wnd);
     sdl::Quit();

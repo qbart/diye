@@ -41,4 +41,5 @@ private:
     bool resized = false;
 
     vulkan::Instance instance;
+    vulkan::Device device;
 };

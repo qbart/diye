@@ -34,7 +34,7 @@ namespace vulkan
         return VK_FALSE;
     }
 
-    std::vector<VkExtensionProperties> GetInstanceExtensions()
+    std::vector<VkExtensionProperties> GetSupportedInstanceExtensions()
     {
         uint32_t count = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
@@ -112,7 +112,7 @@ namespace vulkan
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
+        appInfo.apiVersion = VK_API_VERSION_1_1;
         appInfo.pNext = nullptr;
 
         VkInstanceCreateInfo createInfo;
@@ -158,7 +158,7 @@ namespace vulkan
         return instance;
     }
 
-    void DestroyInstance(Instance &instance)
+    void DestroyInstance(const Instance &instance)
     {
         if (instance.debugMessenger != VK_NULL_HANDLE)
             DestroyDebugUtilsMessengerEXT(instance.handle, instance.debugMessenger, nullptr);
@@ -226,6 +226,60 @@ namespace vulkan
         }
 
         return best;
+    }
+
+    Device CreateDevice(const CreateDeviceInfo &info)
+    {
+        Device result;
+        result.handle = VK_NULL_HANDLE;
+
+        CStrings deviceExtensions;
+        deviceExtensions.emplace_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME); // apple
+
+        VkDevice device;
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = info.physicalDevice.queueFamilyIndices.graphicsFamily.value();
+        queueCreateInfo.queueCount = 1;
+        float queuePriority = 1.0f;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+
+        VkPhysicalDeviceFeatures deviceFeatures{};
+        VkDeviceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        createInfo.pQueueCreateInfos = &queueCreateInfo;
+        createInfo.queueCreateInfoCount = 1;
+        createInfo.pEnabledFeatures = &deviceFeatures;
+        createInfo.pNext = nullptr;
+        createInfo.enabledExtensionCount = 0;
+        createInfo.enabledLayerCount = 0;
+
+        if (info.validationLayers.size() > 0)
+        {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(info.validationLayers.size());
+            createInfo.ppEnabledLayerNames = info.validationLayers.data();
+        }
+        if (deviceExtensions.size() > 0)
+        {
+            createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+            createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+        }
+
+        if (vkCreateDevice(info.physicalDevice.device, &createInfo, nullptr, &device) != VK_SUCCESS)
+        {
+            return result;
+        }
+
+        result.handle = device;
+        vkGetDeviceQueue(result.handle, info.physicalDevice.queueFamilyIndices.graphicsFamily.value(), 0, &result.graphicsQueue);
+
+        return result;
+    }
+
+    void DestroyDevice(const Device &device)
+    {
+        if (device.handle != VK_NULL_HANDLE)
+            vkDestroyDevice(device.handle, nullptr);
     }
 
     bool vulkan::PhysicalDevice::IsDiscreteGPU() const
