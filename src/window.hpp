@@ -42,4 +42,5 @@ private:
 
     vulkan::Instance instance;
     vulkan::Device device;
+    vulkan::Surface surface;
 };

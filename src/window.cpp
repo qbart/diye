@@ -29,13 +29,15 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
     for (const auto &ext : info.extensions)
         fmtx::Info(fmt::format("Requested extension: {}", ext));
 
-    vulkan::Instance instance = vulkan::CreateInstance(info, true);
+    auto instance = vulkan::CreateInstance(info, true);
     if (!instance.IsValid())
     {
         fmtx::Error("Failed to create Vulkan instance");
         return nullptr;
     }
-    auto devices = vulkan::GetPhysicalDevices(instance);
+    auto surface = vulkan::CreateSurface(instance, wnd);
+
+    auto devices = vulkan::GetPhysicalDevices(instance, surface);
     auto physicalDevice = vulkan::SelectBestPhysicalDevice(devices);
     if (!physicalDevice.Valid())
     {
@@ -55,6 +57,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
     ptr->wnd = wnd;
     ptr->instance = instance;
     ptr->device = device;
+    ptr->surface = surface;
     ptr->size.w = w;
     ptr->size.h = h;
     ptr->isOpen = true;
@@ -65,6 +68,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 Window::~Window()
 {
     vulkan::DestroyDevice(device);
+    vulkan::DestroySurface(instance, surface);
     vulkan::DestroyInstance(instance);
     sdl::DestroyWindow(wnd);
     sdl::Quit();

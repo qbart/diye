@@ -6,6 +6,7 @@
 #include <vector>
 #include <optional>
 #include "fmt.hpp"
+#include "sdl.hpp"
 
 namespace vulkan
 {
@@ -37,9 +38,20 @@ namespace vulkan
         inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
     };
 
+    struct Surface
+    {
+        VkSurfaceKHR handle;
+        // VkSurfaceCapabilitiesKHR capabilities;
+        // std::vector<VkSurfaceFormatKHR> formats;
+        // std::vector<VkPresentModeKHR> presentModes;
+
+        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
+    };
+
     struct QueueFamilyIndices
     {
         std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
     };
 
     struct PhysicalDevice
@@ -55,10 +67,10 @@ namespace vulkan
     };
 
     struct CreateDeviceInfo
-    { 
+    {
         PhysicalDevice physicalDevice;
         CStrings validationLayers;
-    }; 
+    };
 
     struct Device
     {
@@ -81,7 +93,9 @@ namespace vulkan
     void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator);
     Instance CreateInstance(const CreateInstanceInfo &info, bool debug = false);
     void DestroyInstance(const Instance &instance);
-    std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance);
+    Surface CreateSurface(const Instance &instance, SDL_Window *window);
+    void DestroySurface(const Instance &instance, const Surface &surface);
+    std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance, const Surface &surface);
     PhysicalDevice SelectBestPhysicalDevice(const std::vector<PhysicalDevice> &devices);
     Device CreateDevice(const CreateDeviceInfo &info);
     void DestroyDevice(const Device &device);
