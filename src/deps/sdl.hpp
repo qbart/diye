@@ -19,6 +19,7 @@ namespace sdl
     void DestroyWindow(SDL_Window *wnd);
 
     std::vector<const char *> GetVulkanExtensions(SDL_Window *wnd, bool debug = false);
+    bool CreateVulkanSurface(SDL_Window *wnd, VkInstance instance, VkSurfaceKHR *surface);
 };
 
 namespace sdl

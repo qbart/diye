@@ -167,7 +167,26 @@ namespace vulkan
             vkDestroyInstance(instance.handle, nullptr);
     }
 
-    std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance)
+    Surface CreateSurface(const Instance &instance, SDL_Window *window)
+    {
+        Surface surface;
+        surface.handle = VK_NULL_HANDLE;
+        VkSurfaceKHR handle;
+
+        if (!sdl::CreateVulkanSurface(window, instance.handle, &handle))
+            return surface;
+
+        surface.handle = handle;
+        return surface;
+    }
+
+    void DestroySurface(const Instance &instance, const Surface &surface)
+    {
+        if (surface.handle != VK_NULL_HANDLE)
+            vkDestroySurfaceKHR(instance.handle, surface.handle, nullptr);
+    }
+
+    std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance, const Surface &surface)
     {
         std::vector<VkPhysicalDevice> enumDevices;
         uint32_t count;
@@ -194,6 +213,17 @@ namespace vulkan
                 if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
                     devices[i].queueFamilyIndices.graphicsFamily = familyIndex;
 
+                VkBool32 presentSupport = false;
+                vkGetPhysicalDeviceSurfaceSupportKHR(
+                    devices[i].device,
+                    familyIndex,
+                    surface.handle,
+                    &presentSupport);
+
+                if (presentSupport)
+                    devices[i].queueFamilyIndices.presentFamily = familyIndex;
+
+                //
                 ++familyIndex;
             }
         }
@@ -289,6 +319,8 @@ namespace vulkan
 
     bool PhysicalDevice::Valid() const
     {
-        return device != VK_NULL_HANDLE && queueFamilyIndices.graphicsFamily.has_value();
+        return device != VK_NULL_HANDLE &&
+               queueFamilyIndices.graphicsFamily.has_value() &&
+               queueFamilyIndices.presentFamily.has_value();
     }
 };
