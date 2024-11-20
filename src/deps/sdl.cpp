@@ -1,4 +1,5 @@
 #include "sdl.hpp"
+#include <vulkan/vulkan_beta.h>
 
 namespace sdl
 {
@@ -73,7 +74,6 @@ namespace sdl
         extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         if (debug)
         {
-            // extensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
             extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
 
