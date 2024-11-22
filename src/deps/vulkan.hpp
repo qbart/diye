@@ -76,6 +76,7 @@ namespace vulkan
     {
         VkDevice handle;
         VkQueue graphicsQueue;
+        VkQueue presentQueue;
 
         inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
     };
