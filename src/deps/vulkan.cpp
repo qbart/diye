@@ -41,7 +41,7 @@ namespace vulkan
         vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
         std::vector<VkExtensionProperties> extensions(count);
         vkEnumerateInstanceExtensionProperties(nullptr, &count, extensions.data());
-        return std::move(extensions);
+        return extensions;
     }
 
     std::vector<VkLayerProperties> GetAvailableValidationLayers()
@@ -187,6 +187,15 @@ namespace vulkan
             vkDestroySurfaceKHR(instance.handle, surface.handle, nullptr);
     }
 
+    std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device)
+    {
+        uint32_t count = 0;
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &count, nullptr);
+        std::vector<VkExtensionProperties> extensions(count);
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &count, extensions.data());
+        return extensions;
+    }
+
     std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance, const Surface &surface)
     {
         std::vector<VkPhysicalDevice> enumDevices;
@@ -199,10 +208,30 @@ namespace vulkan
         std::vector<PhysicalDevice> devices(enumDevices.size());
         for (int i = 0; i < devices.size(); ++i)
         {
+            // device
             devices[i].device = enumDevices[i];
+            devices[i].extensions = GetSupportedPhysicalDeviceExtensions(devices[i].device);
             vkGetPhysicalDeviceProperties(devices[i].device, &devices[i].properties);
             vkGetPhysicalDeviceFeatures(devices[i].device, &devices[i].features);
 
+            // swap chain support
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(devices[i].device, surface.handle, &devices[i].swapChainSupport.capabilities);
+            uint32_t formatCount;
+            vkGetPhysicalDeviceSurfaceFormatsKHR(devices[i].device, surface.handle, &formatCount, nullptr);
+            if (formatCount != 0)
+            {
+                devices[i].swapChainSupport.formats.resize(formatCount);
+                vkGetPhysicalDeviceSurfaceFormatsKHR(devices[i].device, surface.handle, &formatCount, devices[i].swapChainSupport.formats.data());
+            }
+            uint32_t presentModeCount;
+            vkGetPhysicalDeviceSurfacePresentModesKHR(devices[i].device, surface.handle, &presentModeCount, nullptr);
+            if (presentModeCount != 0)
+            {
+                devices[i].swapChainSupport.presentModes.resize(presentModeCount);
+                vkGetPhysicalDeviceSurfacePresentModesKHR(devices[i].device, surface.handle, &presentModeCount, devices[i].swapChainSupport.presentModes.data());
+            }
+
+            // queue families
             uint32_t queueFamilyCount = 0;
             vkGetPhysicalDeviceQueueFamilyProperties(devices[i].device, &queueFamilyCount, nullptr);
             devices[i].queueFamilies.resize(queueFamilyCount);
@@ -272,8 +301,7 @@ namespace vulkan
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
         std::set<uint32_t> uniqueQueueFamilies = {
             info.physicalDevice.queueFamilyIndices.graphicsFamily.value(),
-            info.physicalDevice.queueFamilyIndices.presentFamily.value()
-        };
+            info.physicalDevice.queueFamilyIndices.presentFamily.value()};
         float queuePriority = 1.0f;
         for (uint32_t queueFamily : uniqueQueueFamilies)
         {
@@ -324,15 +352,42 @@ namespace vulkan
             vkDestroyDevice(device.handle, nullptr);
     }
 
-    bool vulkan::PhysicalDevice::IsDiscreteGPU() const
+    bool PhysicalDevice::IsDiscreteGPU() const
     {
         return properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
     }
 
-    bool PhysicalDevice::Valid() const
+    bool PhysicalDevice::IsValid() const
     {
-        return device != VK_NULL_HANDLE &&
-               queueFamilyIndices.graphicsFamily.has_value() &&
-               queueFamilyIndices.presentFamily.has_value();
+        bool valid = device != VK_NULL_HANDLE;
+        bool complete = queueFamilyIndices.graphicsFamily.has_value() && queueFamilyIndices.presentFamily.has_value();
+        bool deviceExtensionsSupported = IsExtensionSupported({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
+        bool swapChainAdequate = false;
+        bool formatAvailable = false;
+        if (deviceExtensionsSupported)
+        {
+            swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+            for (const auto &availableFormat : swapChainSupport.formats)
+            {
+                if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+                {
+                    formatAvailable = true;
+                    break;
+                }
+            }
+        }
+        return valid && complete && deviceExtensionsSupported && swapChainAdequate && formatAvailable;
+    }
+
+    bool PhysicalDevice::IsExtensionSupported(const CStrings &checkExtensions) const
+    {
+        std::set<std::string> requiredExtensions(checkExtensions.begin(), checkExtensions.end());
+
+        for (const auto &ext : extensions)
+        {
+            requiredExtensions.erase(ext.extensionName);
+        }
+
+        return requiredExtensions.empty();
     }
 };
