@@ -39,11 +39,13 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
     auto devices = vulkan::GetPhysicalDevices(instance, surface);
     auto physicalDevice = vulkan::SelectBestPhysicalDevice(devices);
-    if (!physicalDevice.Valid())
+    if (!physicalDevice.IsValid())
     {
         fmtx::Error("Failed to select physical device");
         return nullptr;
     }
+    for (const auto &ext : physicalDevice.extensions)
+        fmtx::Info(fmt::format("Supported device extension: {}", ext.extensionName));
     fmtx::Info(fmt::format("Selected device: {}", physicalDevice.properties.deviceName));
     fmtx::Info(fmt::format("Selected device API version: {}", physicalDevice.properties.apiVersion));
     fmtx::Info(fmt::format("Selected device driver version: {}", physicalDevice.properties.driverVersion));
@@ -51,6 +53,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
     vulkan::CreateDeviceInfo deviceInfo;
     deviceInfo.physicalDevice = physicalDevice;
     deviceInfo.validationLayers = info.validationLayers;
+    deviceInfo.requiredExtensions = vulkan::CStrings({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
     auto device = vulkan::CreateDevice(deviceInfo);
 
     auto ptr = std::make_shared<Window>();

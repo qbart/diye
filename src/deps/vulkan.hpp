@@ -54,22 +54,33 @@ namespace vulkan
         std::optional<uint32_t> presentFamily;
     };
 
+    struct SwapChainSupportDetails
+    {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
+    };
+
     struct PhysicalDevice
     {
         VkPhysicalDevice device = VK_NULL_HANDLE;
         VkPhysicalDeviceProperties properties;
         VkPhysicalDeviceFeatures features;
+        std::vector<VkExtensionProperties> extensions;
         std::vector<VkQueueFamilyProperties> queueFamilies;
         QueueFamilyIndices queueFamilyIndices;
+        SwapChainSupportDetails swapChainSupport;
 
         bool IsDiscreteGPU() const;
-        bool Valid() const;
+        bool IsValid() const;
+        bool IsExtensionSupported(const CStrings &extensions) const;
     };
 
     struct CreateDeviceInfo
     {
         PhysicalDevice physicalDevice;
         CStrings validationLayers;
+        CStrings requiredExtensions;
     };
 
     struct Device
@@ -96,6 +107,7 @@ namespace vulkan
     void DestroyInstance(const Instance &instance);
     Surface CreateSurface(const Instance &instance, SDL_Window *window);
     void DestroySurface(const Instance &instance, const Surface &surface);
+    std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device);
     std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance, const Surface &surface);
     PhysicalDevice SelectBestPhysicalDevice(const std::vector<PhysicalDevice> &devices);
     Device CreateDevice(const CreateDeviceInfo &info);
