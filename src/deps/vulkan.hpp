@@ -41,9 +41,7 @@ namespace vulkan
     struct Surface
     {
         VkSurfaceKHR handle;
-        // VkSurfaceCapabilitiesKHR capabilities;
-        // std::vector<VkSurfaceFormatKHR> formats;
-        // std::vector<VkPresentModeKHR> presentModes;
+        SDL_Window *window;
 
         inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
     };
@@ -63,7 +61,7 @@ namespace vulkan
 
     struct PhysicalDevice
     {
-        VkPhysicalDevice device = VK_NULL_HANDLE;
+        VkPhysicalDevice device;
         VkPhysicalDeviceProperties properties;
         VkPhysicalDeviceFeatures features;
         std::vector<VkExtensionProperties> extensions;
@@ -92,6 +90,24 @@ namespace vulkan
         inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
     };
 
+    struct CreateSwapChainInfo
+    {
+        Surface surface;
+        PhysicalDevice physicalDevice;
+        Device device;
+        CStrings validationLayers;
+    };
+
+    struct SwapChain
+    {
+        VkSwapchainKHR handle;
+        std::vector<VkImage> images;
+        VkFormat imageFormat;
+        VkExtent2D extent;
+
+        bool IsValid() const;
+    };
+
     VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -112,4 +128,7 @@ namespace vulkan
     PhysicalDevice SelectBestPhysicalDevice(const std::vector<PhysicalDevice> &devices);
     Device CreateDevice(const CreateDeviceInfo &info);
     void DestroyDevice(const Device &device);
+    VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities, SDL_Window *window);
+    SwapChain CreateSwapChain(const CreateSwapChainInfo &info);
+    void DestroySwapChain(const Device &device, const SwapChain &swapChain);
 };

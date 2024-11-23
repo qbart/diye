@@ -1,4 +1,5 @@
 #pragma once
+
 #include "deps/sdl.hpp"
 #include "deps/vulkan.hpp"
 #include "input.hpp"
@@ -43,4 +44,6 @@ private:
     vulkan::Instance instance;
     vulkan::Device device;
     vulkan::Surface surface;
+    vulkan::PhysicalDevice physicalDevice;
+    vulkan::SwapChain swapChain;
 };

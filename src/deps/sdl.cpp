@@ -85,4 +85,13 @@ namespace sdl
     {
         return SDL_Vulkan_CreateSurface(wnd, instance, surface) == SDL_TRUE;
     }
+
+    VkExtent2D GetVulkanFramebufferSize(SDL_Window *window)
+    {
+        VkExtent2D extent;
+        int w, h;
+        SDL_Vulkan_GetDrawableSize(window, &w, &h);
+        extent.width = static_cast<uint32_t>(w);
+        extent.height = static_cast<uint32_t>(h);
+    }
 };

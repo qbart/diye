@@ -55,12 +55,29 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
     deviceInfo.validationLayers = info.validationLayers;
     deviceInfo.requiredExtensions = vulkan::CStrings({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
     auto device = vulkan::CreateDevice(deviceInfo);
+    if (!device.IsValid())
+    {
+        fmtx::Error("Failed to create device");
+        return nullptr;
+    }
+    vulkan::CreateSwapChainInfo swapChainInfo;
+    swapChainInfo.surface = surface;
+    swapChainInfo.physicalDevice = physicalDevice;
+    swapChainInfo.device = device;
+    auto swapChain = vulkan::CreateSwapChain(swapChainInfo);
+    if (!swapChain.IsValid())
+    {
+        fmtx::Error("Failed to create swap chain");
+        return nullptr;
+    }
 
     auto ptr = std::make_shared<Window>();
     ptr->wnd = wnd;
     ptr->instance = instance;
     ptr->device = device;
     ptr->surface = surface;
+    ptr->physicalDevice = physicalDevice;
+    ptr->swapChain = swapChain;
     ptr->size.w = w;
     ptr->size.h = h;
     ptr->isOpen = true;
@@ -70,6 +87,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
 Window::~Window()
 {
+    vulkan::DestroySwapChain(device, swapChain);
     vulkan::DestroyDevice(device);
     vulkan::DestroySurface(instance, surface);
     vulkan::DestroyInstance(instance);
