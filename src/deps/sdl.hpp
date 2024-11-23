@@ -20,6 +20,7 @@ namespace sdl
 
     std::vector<const char *> GetVulkanExtensions(SDL_Window *wnd, bool debug = false);
     bool CreateVulkanSurface(SDL_Window *wnd, VkInstance instance, VkSurfaceKHR *surface);
+    VkExtent2D GetVulkanFramebufferSize(SDL_Window *window);
 };
 
 namespace sdl

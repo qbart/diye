@@ -172,6 +172,7 @@ namespace vulkan
     {
         Surface surface;
         surface.handle = VK_NULL_HANDLE;
+        surface.window = window;
         VkSurfaceKHR handle;
 
         if (!sdl::CreateVulkanSurface(window, instance.handle, &handle))
@@ -295,6 +296,8 @@ namespace vulkan
 
         CStrings deviceExtensions;
         deviceExtensions.emplace_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME); // apple
+        for (const auto &ext : info.requiredExtensions)
+            deviceExtensions.emplace_back(ext);
 
         VkDevice device;
 
@@ -350,6 +353,89 @@ namespace vulkan
     {
         if (device.handle != VK_NULL_HANDLE)
             vkDestroyDevice(device.handle, nullptr);
+    }
+
+    VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities, SDL_Window *window)
+    {
+        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+        {
+            return capabilities.currentExtent;
+        }
+        else
+        {
+            VkExtent2D actualExtent = sdl::GetVulkanFramebufferSize(window);
+
+            actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+            actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+            return actualExtent;
+        }
+    }
+
+    SwapChain CreateSwapChain(const CreateSwapChainInfo &info)
+    {
+        SwapChainSupportDetails swapChainSupport = info.physicalDevice.swapChainSupport;
+        // at this point we know that this format is available
+        VkSurfaceFormatKHR surfaceFormat = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+        // guaranteed to be available
+        VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+        VkExtent2D extent = SelectSwapExtent(swapChainSupport.capabilities, info.surface.window);
+        uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+        if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
+            imageCount = swapChainSupport.capabilities.maxImageCount;
+
+        VkSwapchainCreateInfoKHR createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        createInfo.surface = info.surface.handle;
+        createInfo.minImageCount = imageCount;
+        createInfo.imageFormat = surfaceFormat.format;
+        createInfo.imageColorSpace = surfaceFormat.colorSpace;
+        createInfo.imageExtent = extent;
+        createInfo.imageArrayLayers = 1;
+        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; // VK_IMAGE_USAGE_TRANSFER_DST_BIT
+        createInfo.pNext = nullptr;
+
+        uint32_t queueFamilyIndices[] = {
+            info.physicalDevice.queueFamilyIndices.graphicsFamily.value(),
+            info.physicalDevice.queueFamilyIndices.presentFamily.value()};
+
+        if (queueFamilyIndices[0] != queueFamilyIndices[1])
+        {
+            createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+            createInfo.queueFamilyIndexCount = 2;
+            createInfo.pQueueFamilyIndices = queueFamilyIndices;
+        }
+        else
+        {
+            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            createInfo.queueFamilyIndexCount = 0;
+            createInfo.pQueueFamilyIndices = nullptr;
+        }
+        createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+        createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        createInfo.presentMode = presentMode;
+        createInfo.clipped = VK_TRUE;
+        createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+        SwapChain swapChain;
+        if (vkCreateSwapchainKHR(info.device.handle, &createInfo, nullptr, &swapChain.handle) != VK_SUCCESS)
+        {
+            swapChain.handle = VK_NULL_HANDLE;
+            return swapChain;
+        }
+
+        return swapChain;
+    }
+
+    void DestroySwapChain(const Device &device, const SwapChain &swapChain)
+    {
+        if (swapChain.handle != VK_NULL_HANDLE)
+            vkDestroySwapchainKHR(device.handle, swapChain.handle, nullptr);
+    }
+
+    bool vulkan::SwapChain::IsValid() const
+    {
+        return false;
     }
 
     bool PhysicalDevice::IsDiscreteGPU() const
