@@ -93,5 +93,7 @@ namespace sdl
         SDL_Vulkan_GetDrawableSize(window, &w, &h);
         extent.width = static_cast<uint32_t>(w);
         extent.height = static_cast<uint32_t>(h);
+
+        return extent;
     }
 };

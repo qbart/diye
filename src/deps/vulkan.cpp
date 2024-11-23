@@ -1,6 +1,7 @@
 #include "vulkan.hpp"
 #include <map>
 #include <set>
+#include <algorithm>
 
 namespace vulkan
 {
@@ -295,7 +296,9 @@ namespace vulkan
         result.handle = VK_NULL_HANDLE;
 
         CStrings deviceExtensions;
-        deviceExtensions.emplace_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME); // apple
+#ifdef __APPLE__
+        deviceExtensions.emplace_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME); 
+#endif
         for (const auto &ext : info.requiredExtensions)
             deviceExtensions.emplace_back(ext);
 
