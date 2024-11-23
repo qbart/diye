@@ -438,7 +438,7 @@ namespace vulkan
 
     bool vulkan::SwapChain::IsValid() const
     {
-        return false;
+        return handle != VK_NULL_HANDLE;
     }
 
     bool PhysicalDevice::IsDiscreteGPU() const
