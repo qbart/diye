@@ -70,6 +70,12 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
         fmtx::Error("Failed to create swap chain");
         return nullptr;
     }
+    auto imageViews = vulkan::CreateImageViews(device, swapChain);
+    if (imageViews.empty())
+    {
+        fmtx::Error("Failed to create image views");
+        return nullptr;
+    }
 
     auto ptr = std::make_shared<Window>();
     ptr->wnd = wnd;
@@ -78,6 +84,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
     ptr->surface = surface;
     ptr->physicalDevice = physicalDevice;
     ptr->swapChain = swapChain;
+    ptr->imageViews = imageViews;
     ptr->size.w = w;
     ptr->size.h = h;
     ptr->isOpen = true;
@@ -87,6 +94,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
 Window::~Window()
 {
+    vulkan::DestroyImageViews(device, imageViews);
     vulkan::DestroySwapChain(device, swapChain);
     vulkan::DestroyDevice(device);
     vulkan::DestroySurface(instance, surface);
