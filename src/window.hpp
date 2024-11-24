@@ -46,4 +46,5 @@ private:
     vulkan::Surface surface;
     vulkan::PhysicalDevice physicalDevice;
     vulkan::SwapChain swapChain;
+    std::vector<VkImageView> imageViews;
 };

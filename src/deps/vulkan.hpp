@@ -131,4 +131,6 @@ namespace vulkan
     VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities, SDL_Window *window);
     SwapChain CreateSwapChain(const CreateSwapChainInfo &info);
     void DestroySwapChain(const Device &device, const SwapChain &swapChain);
+    std::vector<VkImageView> CreateImageViews(const Device &device, const SwapChain &swapChain);
+    void DestroyImageViews(const Device &device, const std::vector<VkImageView> &views);
 };
