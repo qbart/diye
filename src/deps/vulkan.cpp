@@ -297,7 +297,7 @@ namespace vulkan
 
         CStrings deviceExtensions;
 #ifdef __APPLE__
-        deviceExtensions.emplace_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME); 
+        deviceExtensions.emplace_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
 #endif
         for (const auto &ext : info.requiredExtensions)
             deviceExtensions.emplace_back(ext);
@@ -426,6 +426,12 @@ namespace vulkan
             swapChain.handle = VK_NULL_HANDLE;
             return swapChain;
         }
+        swapChain.imageFormat = surfaceFormat.format;
+        swapChain.extent = extent;
+
+        vkGetSwapchainImagesKHR(info.device.handle, swapChain.handle, &imageCount, nullptr);
+        swapChain.images.resize(imageCount);
+        vkGetSwapchainImagesKHR(info.device.handle, swapChain.handle, &imageCount, swapChain.images.data());
 
         return swapChain;
     }
