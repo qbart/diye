@@ -108,6 +108,19 @@ namespace vulkan
         bool IsValid() const;
     };
 
+    struct ShaderModule
+    {
+        VkShaderModule handle;
+
+        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
+    };
+
+    struct ShaderModules
+    {
+        ShaderModule vert;
+        ShaderModule frag;
+    };
+
     VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -133,4 +146,6 @@ namespace vulkan
     void DestroySwapChain(const Device &device, const SwapChain &swapChain);
     std::vector<VkImageView> CreateImageViews(const Device &device, const SwapChain &swapChain);
     void DestroyImageViews(const Device &device, const std::vector<VkImageView> &views);
+    ShaderModule CreateShaderModule(const Device &device, const std::vector<char> &code);
+    void DestroyShaderModule(const Device &device, const ShaderModule &module);
 };

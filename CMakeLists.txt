@@ -11,6 +11,7 @@ add_executable(${PROJECT_NAME}
     src/core/animation_curve.cpp
     src/geometry/half_edge.cpp
     src/geometry/half_edge_mesh.cpp
+    src/io/binary.cpp
 
     src/experiments/experiment.cpp
 

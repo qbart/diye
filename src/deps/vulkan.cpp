@@ -495,6 +495,30 @@ namespace vulkan
         }
     }
 
+    ShaderModule CreateShaderModule(const Device &device, const std::vector<char> &code)
+    {
+        ShaderModule mod;
+
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = code.size();
+        createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
+
+        VkShaderModule shaderModule;
+        if (vkCreateShaderModule(device.handle, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+            mod.handle = VK_NULL_HANDLE;
+        else
+            mod.handle = shaderModule;
+
+        return mod;
+    }
+
+    void DestroyShaderModule(const Device &device, const ShaderModule &module)
+    {
+        if (module.handle != VK_NULL_HANDLE)
+            vkDestroyShaderModule(device.handle, module.handle, nullptr);
+    }
+
     bool vulkan::SwapChain::IsValid() const
     {
         return handle != VK_NULL_HANDLE;

@@ -322,3 +322,6 @@ pythonenv3.8/
 
 # imgui
 imgui.ini
+
+# shader binaries
+*.spv
