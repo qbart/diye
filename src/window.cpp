@@ -3,6 +3,7 @@
 #include "core/all.hpp"
 #include <memory>
 #include "deps/imgui.hpp"
+#include "io/binary.hpp"
 
 Window::Ptr Window::New(int w, int h, const std::string &title)
 {
@@ -76,6 +77,14 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
         fmtx::Error("Failed to create image views");
         return nullptr;
     }
+    vulkan::ShaderModules shaderModules;
+    shaderModules.vert = vulkan::CreateShaderModule(device, BinaryFile::Load("dummy.vert.spv")->Bytes());
+    shaderModules.frag = vulkan::CreateShaderModule(device, BinaryFile::Load("dummy.frag.spv")->Bytes());
+    if (!shaderModules.vert.IsValid() || !shaderModules.frag.IsValid())
+    {
+        fmtx::Error("Failed to create shader modules");
+        return nullptr;
+    }
 
     auto ptr = std::make_shared<Window>();
     ptr->wnd = wnd;
@@ -85,6 +94,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
     ptr->physicalDevice = physicalDevice;
     ptr->swapChain = swapChain;
     ptr->imageViews = imageViews;
+    ptr->shaderModules = shaderModules;
     ptr->size.w = w;
     ptr->size.h = h;
     ptr->isOpen = true;
@@ -94,6 +104,8 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
 Window::~Window()
 {
+    vulkan::DestroyShaderModule(device, shaderModules.vert);
+    vulkan::DestroyShaderModule(device, shaderModules.frag);
     vulkan::DestroyImageViews(device, imageViews);
     vulkan::DestroySwapChain(device, swapChain);
     vulkan::DestroyDevice(device);

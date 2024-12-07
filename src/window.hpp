@@ -47,4 +47,5 @@ private:
     vulkan::PhysicalDevice physicalDevice;
     vulkan::SwapChain swapChain;
     std::vector<VkImageView> imageViews;
+    vulkan::ShaderModules shaderModules;
 };
