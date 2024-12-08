@@ -121,6 +121,19 @@ namespace vulkan
         ShaderModule frag;
     };
 
+    struct ShaderStage
+    {
+        VkShaderModule module;
+        VkShaderStageFlagBits stage;
+    };
+
+    struct RenderPass
+    {
+        VkRenderPass handle;
+
+        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
+    };
+
     VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -148,4 +161,6 @@ namespace vulkan
     void DestroyImageViews(const Device &device, const std::vector<VkImageView> &views);
     ShaderModule CreateShaderModule(const Device &device, const std::vector<char> &code);
     void DestroyShaderModule(const Device &device, const ShaderModule &module);
+    RenderPass CreateRenderPass(const Device &device, const SwapChain &swapChain, const ShaderModules &modules);
+    void DestroyRenderPass(const Device &device, const RenderPass &renderPass);
 };
