@@ -46,6 +46,16 @@ private:
     vulkan::Surface surface;
     vulkan::PhysicalDevice physicalDevice;
     vulkan::SwapChain swapChain;
+    vulkan::RenderPass renderPass;
     std::vector<VkImageView> imageViews;
     vulkan::ShaderModules shaderModules;
+    VkPipelineLayout pipelineLayout;
+    VkPipeline graphicsPipeline;
+    std::vector<VkFramebuffer> swapChainFramebuffers;
+    VkCommandPool commandPool;
+    std::vector<VkCommandBuffer> commandBuffers;
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
+    uint32_t currentFrame = 0;
 };
