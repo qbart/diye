@@ -326,7 +326,7 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
 Window::~Window()
 {
-    vkDeviceWaitIdle(device.handle);
+    device.WaitIdle();
     for (size_t i = 0; i < 2; i++)
     {
         vkDestroySemaphore(device.handle, imageAvailableSemaphores[i], nullptr);
@@ -359,7 +359,7 @@ void Window::Swap()
     uint32_t imageIndex;
     vkAcquireNextImageKHR(device.handle, swapChain.handle, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-    vkResetCommandBuffer(commandBuffers[currentFrame],  0);
+    vkResetCommandBuffer(commandBuffers[currentFrame], 0);
     // record command buffer
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -439,6 +439,68 @@ void Window::Swap()
 
     vkQueuePresentKHR(device.presentQueue, &presentInfo);
     currentFrame = (currentFrame + 1) % 2;
+
+    if (resized)
+    {
+        resized = false;
+        fmtx::Debug(fmt::format("Resized to {}x{}", swapChain.extent.width, swapChain.extent.height));
+
+        // wait
+        device.WaitIdle();
+
+        // clean swap chain
+        for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
+        {
+            vkDestroyFramebuffer(device.handle, swapChainFramebuffers[i], nullptr);
+        }
+
+        for (size_t i = 0; i < imageViews.size(); i++)
+        {
+            vkDestroyImageView(device.handle, imageViews[i], nullptr);
+        }
+
+        vkDestroySwapchainKHR(device.handle, swapChain.handle, nullptr);
+
+        // recreate swap chain
+
+        vulkan::CreateSwapChainInfo swapChainInfo;
+        swapChainInfo.surface = surface;
+        swapChainInfo.physicalDevice = physicalDevice;
+        swapChainInfo.device = device;
+        swapChain = vulkan::CreateSwapChain(swapChainInfo);
+        if (!swapChain.IsValid())
+        {
+            fmtx::Error("Failed to recreate swap chain");
+        }
+
+        // recreate image views
+        imageViews = vulkan::CreateImageViews(device, swapChain);
+        if (imageViews.empty())
+        {
+            fmtx::Error("Failed to create image views");
+        }
+        // recreate framebuffers
+        swapChainFramebuffers.clear();
+        swapChainFramebuffers.resize(imageViews.size());
+        for (size_t i = 0; i < imageViews.size(); i++)
+        {
+            VkImageView attachments[] = {imageViews[i]};
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass.handle;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = attachments;
+            framebufferInfo.width = swapChain.extent.width;
+            framebufferInfo.height = swapChain.extent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(device.handle, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
+            {
+                fmtx::Error("Failed to create framebuffers");
+            }
+        }
+    }
 }
 
 void Window::PollEvents()
@@ -483,10 +545,13 @@ void Window::PollEvents()
             lastTimeWheeled = SDL_GetTicks();
             break;
 
-        case SDL_WINDOWEVENT_RESIZED:
-            size.w = event.window.data1;
-            size.h = event.window.data2;
-            resized = true;
+        case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+            {
+                size.w = event.window.data1;
+                size.h = event.window.data2;
+                resized = true;
+            }
             break;
         }
 

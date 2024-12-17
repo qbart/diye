@@ -358,6 +358,11 @@ namespace vulkan
             vkDestroyDevice(device.handle, nullptr);
     }
 
+    VkResult Device::WaitIdle() const
+    {
+        return vkDeviceWaitIdle(handle);
+    }
+
     VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities, SDL_Window *window)
     {
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
