@@ -88,6 +88,7 @@ namespace vulkan
         VkQueue presentQueue;
 
         inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
+        VkResult WaitIdle() const;
     };
 
     struct CreateSwapChainInfo
