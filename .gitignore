@@ -325,3 +325,4 @@ imgui.ini
 
 # shader binaries
 *.spv
+*.ninja_log

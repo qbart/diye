@@ -3,6 +3,7 @@
 #include <fstream>
 #include <memory>
 #include <memory>
+#include <vector>
 
 class BinaryFile
 {

@@ -1,0 +1,11 @@
+ninja_required_version = 1.3
+
+rule compile
+  command = glslc -fshader-stage=$stage $in -o ../../../build/$out
+  description = Compiling $in to SPIR-V
+
+build dummy.vert.spv: compile vert.glsl
+    stage = vertex
+
+build dummy.frag.spv: compile frag.glsl
+    stage = fragment
