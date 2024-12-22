@@ -216,48 +216,8 @@ namespace vulkan
             vkGetPhysicalDeviceProperties(devices[i].device, &devices[i].properties);
             vkGetPhysicalDeviceFeatures(devices[i].device, &devices[i].features);
 
-            // swap chain support
-            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(devices[i].device, surface.handle, &devices[i].swapChainSupport.capabilities);
-            uint32_t formatCount;
-            vkGetPhysicalDeviceSurfaceFormatsKHR(devices[i].device, surface.handle, &formatCount, nullptr);
-            if (formatCount != 0)
-            {
-                devices[i].swapChainSupport.formats.resize(formatCount);
-                vkGetPhysicalDeviceSurfaceFormatsKHR(devices[i].device, surface.handle, &formatCount, devices[i].swapChainSupport.formats.data());
-            }
-            uint32_t presentModeCount;
-            vkGetPhysicalDeviceSurfacePresentModesKHR(devices[i].device, surface.handle, &presentModeCount, nullptr);
-            if (presentModeCount != 0)
-            {
-                devices[i].swapChainSupport.presentModes.resize(presentModeCount);
-                vkGetPhysicalDeviceSurfacePresentModesKHR(devices[i].device, surface.handle, &presentModeCount, devices[i].swapChainSupport.presentModes.data());
-            }
-
-            // queue families
-            uint32_t queueFamilyCount = 0;
-            vkGetPhysicalDeviceQueueFamilyProperties(devices[i].device, &queueFamilyCount, nullptr);
-            devices[i].queueFamilies.resize(queueFamilyCount);
-            vkGetPhysicalDeviceQueueFamilyProperties(devices[i].device, &queueFamilyCount, devices[i].queueFamilies.data());
-
-            int familyIndex = 0;
-            for (const auto &queueFamily : devices[i].queueFamilies)
-            {
-                if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-                    devices[i].queueFamilyIndices.graphicsFamily = familyIndex;
-
-                VkBool32 presentSupport = false;
-                vkGetPhysicalDeviceSurfaceSupportKHR(
-                    devices[i].device,
-                    familyIndex,
-                    surface.handle,
-                    &presentSupport);
-
-                if (presentSupport)
-                    devices[i].queueFamilyIndices.presentFamily = familyIndex;
-
-                //
-                ++familyIndex;
-            }
+            devices[i].QuerySwapChainSupport(surface);
+            devices[i].QueryQueueFamilies(surface);
         }
 
         return devices;
@@ -367,11 +327,15 @@ namespace vulkan
     {
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
         {
+            fmtx::Debug(fmt::format("Using fixed Extent from surface capabilities {}x{}", capabilities.currentExtent.width, capabilities.currentExtent.height));
             return capabilities.currentExtent;
         }
         else
         {
             VkExtent2D actualExtent = sdl::GetVulkanFramebufferSize(window);
+            fmtx::Debug(fmt::format("Framebuffer size: {}x{}", actualExtent.width, actualExtent.height));
+            fmtx::Debug(fmt::format("Min image extent: {}x{}", capabilities.minImageExtent.width, capabilities.minImageExtent.height));
+            fmtx::Debug(fmt::format("Max image extent: {}x{}", capabilities.maxImageExtent.width, capabilities.maxImageExtent.height));
 
             actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
             actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
@@ -620,5 +584,52 @@ namespace vulkan
         }
 
         return requiredExtensions.empty();
+    }
+
+    void PhysicalDevice::QuerySwapChainSupport(const Surface &surface)
+    {
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface.handle, &swapChainSupport.capabilities);
+        uint32_t formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface.handle, &formatCount, nullptr);
+        if (formatCount != 0)
+        {
+            swapChainSupport.formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface.handle, &formatCount, swapChainSupport.formats.data());
+        }
+        uint32_t presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface.handle, &presentModeCount, nullptr);
+        if (presentModeCount != 0)
+        {
+            swapChainSupport.presentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface.handle, &presentModeCount, swapChainSupport.presentModes.data());
+        }
+    }
+
+    void PhysicalDevice::QueryQueueFamilies(const Surface &surface)
+    {
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+        queueFamilies.resize(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+        int familyIndex = 0;
+        for (const auto &queueFamily : queueFamilies)
+        {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+                queueFamilyIndices.graphicsFamily = familyIndex;
+
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(
+                device,
+                familyIndex,
+                surface.handle,
+                &presentSupport);
+
+            if (presentSupport)
+                queueFamilyIndices.presentFamily = familyIndex;
+
+            //
+            ++familyIndex;
+        }
     }
 };

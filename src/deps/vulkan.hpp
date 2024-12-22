@@ -72,6 +72,8 @@ namespace vulkan
         bool IsDiscreteGPU() const;
         bool IsValid() const;
         bool IsExtensionSupported(const CStrings &extensions) const;
+        void QuerySwapChainSupport(const Surface &surface);
+        void QueryQueueFamilies(const Surface &surface);
     };
 
     struct CreateDeviceInfo
