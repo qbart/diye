@@ -29,8 +29,8 @@ public:
     inline bool MouseWheelScrolled() const { return SDL_GetTicks() - lastTimeWheeled < 100; }
     inline bool WasResized() const { return resized; }
 
-
 private:
+    bool active = false;
     bool isOpen = false;
     Dimension size;
     SDL_Window *wnd = nullptr;

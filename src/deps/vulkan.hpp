@@ -162,6 +162,7 @@ namespace vulkan
     void DestroySwapChain(const Device &device, const SwapChain &swapChain);
     std::vector<VkImageView> CreateImageViews(const Device &device, const SwapChain &swapChain);
     void DestroyImageViews(const Device &device, const std::vector<VkImageView> &views);
+    void DestroyFramebuffers(const Device &device, const std::vector<VkFramebuffer> &framebuffers);
     ShaderModule CreateShaderModule(const Device &device, const std::vector<char> &code);
     void DestroyShaderModule(const Device &device, const ShaderModule &module);
     RenderPass CreateRenderPass(const Device &device, const SwapChain &swapChain, const ShaderModules &modules);

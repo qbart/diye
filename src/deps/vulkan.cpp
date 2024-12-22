@@ -464,6 +464,14 @@ namespace vulkan
         }
     }
 
+    void DestroyFramebuffers(const Device &device, const std::vector<VkFramebuffer> &framebuffers)
+    {
+        for (auto fb : framebuffers)
+        {
+            vkDestroyFramebuffer(device.handle, fb, nullptr);
+        }
+    }
+
     ShaderModule CreateShaderModule(const Device &device, const std::vector<char> &code)
     {
         ShaderModule mod;

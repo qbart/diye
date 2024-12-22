@@ -335,8 +335,7 @@ Window::~Window()
     }
     vkDestroyCommandPool(device.handle, commandPool, nullptr);
 
-    for (auto framebuffer : swapChainFramebuffers)
-        vkDestroyFramebuffer(device.handle, framebuffer, nullptr);
+    vulkan::DestroyFramebuffers(device, swapChainFramebuffers);
     vkDestroyPipeline(device.handle, graphicsPipeline, nullptr);
     vkDestroyPipelineLayout(device.handle, pipelineLayout, nullptr);
     vulkan::DestroyRenderPass(device, renderPass);
@@ -357,17 +356,9 @@ void Window::RecreateSwapChain()
     device.WaitIdle();
 
     // clean swap chain
-    for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
-    {
-        vkDestroyFramebuffer(device.handle, swapChainFramebuffers[i], nullptr);
-    }
-
-    for (size_t i = 0; i < imageViews.size(); i++)
-    {
-        vkDestroyImageView(device.handle, imageViews[i], nullptr);
-    }
-
-    vkDestroySwapchainKHR(device.handle, swapChain.handle, nullptr);
+    vulkan::DestroyFramebuffers(device, swapChainFramebuffers);
+    vulkan::DestroyImageViews(device, imageViews);
+    vulkan::DestroySwapChain(device, swapChain);
 
     // recreate swap chain
     physicalDevice.QuerySwapChainSupport(surface);
@@ -414,6 +405,9 @@ void Window::RecreateSwapChain()
 
 void Window::Swap()
 {
+    if (!active)
+        return;
+
     vkWaitForFences(device.handle, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
     uint32_t imageIndex;
     VkResult nextResult = vkAcquireNextImageKHR(device.handle, swapChain.handle, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
@@ -575,9 +569,20 @@ void Window::PollEvents()
         case SDL_WINDOWEVENT:
             if (event.window.event == SDL_WINDOWEVENT_RESIZED)
             {
+                fmtx::Debug("[sdl] Window resized");
                 size.w = event.window.data1;
                 size.h = event.window.data2;
                 resized = true;
+            }
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+            {
+                fmtx::Debug("[sdl] Window focus gained");
+                active = true;
+            }
+            else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+            {
+                fmtx::Debug("[sdl] Window focus lost");
+                active = false;
             }
             break;
         }
