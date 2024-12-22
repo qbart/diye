@@ -25,10 +25,10 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
     info.validationLayers = vulkan::CStrings({"VK_LAYER_KHRONOS_validation"});
     auto supportedExt = vulkan::GetSupportedInstanceExtensions();
 
-    for (const auto &ext : supportedExt)
-        fmtx::Info(fmt::format("Supported extension: {}", ext.extensionName));
-    for (const auto &ext : info.extensions)
-        fmtx::Info(fmt::format("Requested extension: {}", ext));
+    // for (const auto &ext : supportedExt)
+    //     fmtx::Debug(fmt::format("Supported extension: {}", ext.extensionName));
+    // for (const auto &ext : info.extensions)
+    //     fmtx::Debug(fmt::format("Requested extension: {}", ext));
 
     auto instance = vulkan::CreateInstance(info, true);
     if (!instance.IsValid())
@@ -45,8 +45,8 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
         fmtx::Error("Failed to select physical device");
         return nullptr;
     }
-    for (const auto &ext : physicalDevice.extensions)
-        fmtx::Info(fmt::format("Supported device extension: {}", ext.extensionName));
+    // for (const auto &ext : physicalDevice.extensions)
+    //     fmtx::Debug(fmt::format("Supported device extension: {}", ext.extensionName));
     fmtx::Info(fmt::format("Selected device: {}", physicalDevice.properties.deviceName));
     fmtx::Info(fmt::format("Selected device API version: {}", physicalDevice.properties.apiVersion));
     fmtx::Info(fmt::format("Selected device driver version: {}", physicalDevice.properties.driverVersion));
@@ -351,13 +351,83 @@ Window::~Window()
     sdl::Quit();
 }
 
+void Window::RecreateSwapChain()
+{
+    // wait
+    device.WaitIdle();
+
+    // clean swap chain
+    for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
+    {
+        vkDestroyFramebuffer(device.handle, swapChainFramebuffers[i], nullptr);
+    }
+
+    for (size_t i = 0; i < imageViews.size(); i++)
+    {
+        vkDestroyImageView(device.handle, imageViews[i], nullptr);
+    }
+
+    vkDestroySwapchainKHR(device.handle, swapChain.handle, nullptr);
+
+    // recreate swap chain
+    physicalDevice.QuerySwapChainSupport(surface);
+
+    vulkan::CreateSwapChainInfo swapChainInfo;
+    swapChainInfo.surface = surface;
+    swapChainInfo.physicalDevice = physicalDevice;
+    swapChainInfo.device = device;
+    swapChain = vulkan::CreateSwapChain(swapChainInfo);
+
+    if (!swapChain.IsValid())
+    {
+        fmtx::Error("Failed to recreate swap chain");
+    }
+
+    // recreate image views
+    imageViews = vulkan::CreateImageViews(device, swapChain);
+    if (imageViews.empty())
+    {
+        fmtx::Error("Failed to create image views");
+    }
+    // recreate framebuffers
+    swapChainFramebuffers.clear();
+    swapChainFramebuffers.resize(imageViews.size());
+    for (size_t i = 0; i < imageViews.size(); i++)
+    {
+        VkImageView attachments[] = {imageViews[i]};
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = renderPass.handle;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.width = swapChain.extent.width;
+        framebufferInfo.height = swapChain.extent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device.handle, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
+        {
+            fmtx::Error("Failed to create framebuffers");
+        }
+    }
+}
+
 void Window::Swap()
 {
     vkWaitForFences(device.handle, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-    vkResetFences(device.handle, 1, &inFlightFences[currentFrame]);
-
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(device.handle, swapChain.handle, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult nextResult = vkAcquireNextImageKHR(device.handle, swapChain.handle, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    if (nextResult == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        fmtx::Warn("Vulkan acquire next image returned out of date");
+        RecreateSwapChain();
+        return;
+    }
+    else if (nextResult != VK_SUCCESS && nextResult != VK_SUBOPTIMAL_KHR)
+    {
+        throw std::runtime_error("failed to acquire swap chain image!");
+    }
+    vkResetFences(device.handle, 1, &inFlightFences[currentFrame]);
 
     vkResetCommandBuffer(commandBuffers[currentFrame], 0);
     // record command buffer
@@ -437,70 +507,27 @@ void Window::Swap()
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr; // Optional
 
-    vkQueuePresentKHR(device.presentQueue, &presentInfo);
-    currentFrame = (currentFrame + 1) % 2;
+    VkResult presentResult = vkQueuePresentKHR(device.presentQueue, &presentInfo);
 
-    if (resized)
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || resized)
     {
+        if (!resized)
+            fmtx::Error(fmt::format("Vulkan queue present returned out of date"));
+
         resized = false;
-        fmtx::Debug(fmt::format("Resized to {}x{}", swapChain.extent.width, swapChain.extent.height));
-
-        // wait
-        device.WaitIdle();
-
-        // clean swap chain
-        for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
-        {
-            vkDestroyFramebuffer(device.handle, swapChainFramebuffers[i], nullptr);
-        }
-
-        for (size_t i = 0; i < imageViews.size(); i++)
-        {
-            vkDestroyImageView(device.handle, imageViews[i], nullptr);
-        }
-
-        vkDestroySwapchainKHR(device.handle, swapChain.handle, nullptr);
-
-        // recreate swap chain
-
-        vulkan::CreateSwapChainInfo swapChainInfo;
-        swapChainInfo.surface = surface;
-        swapChainInfo.physicalDevice = physicalDevice;
-        swapChainInfo.device = device;
-        swapChain = vulkan::CreateSwapChain(swapChainInfo);
-        if (!swapChain.IsValid())
-        {
-            fmtx::Error("Failed to recreate swap chain");
-        }
-
-        // recreate image views
-        imageViews = vulkan::CreateImageViews(device, swapChain);
-        if (imageViews.empty())
-        {
-            fmtx::Error("Failed to create image views");
-        }
-        // recreate framebuffers
-        swapChainFramebuffers.clear();
-        swapChainFramebuffers.resize(imageViews.size());
-        for (size_t i = 0; i < imageViews.size(); i++)
-        {
-            VkImageView attachments[] = {imageViews[i]};
-
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = renderPass.handle;
-            framebufferInfo.attachmentCount = 1;
-            framebufferInfo.pAttachments = attachments;
-            framebufferInfo.width = swapChain.extent.width;
-            framebufferInfo.height = swapChain.extent.height;
-            framebufferInfo.layers = 1;
-
-            if (vkCreateFramebuffer(device.handle, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
-            {
-                fmtx::Error("Failed to create framebuffers");
-            }
-        }
+        RecreateSwapChain();
     }
+    else if (presentResult == VK_SUBOPTIMAL_KHR)
+    {
+        fmtx::Warn(fmt::format("Vulkan queue present returned suboptimal"));
+        RecreateSwapChain();
+    }
+    else if (presentResult != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to present swap chain image!");
+    }
+
+    currentFrame = (currentFrame + 1) % 2;
 }
 
 void Window::PollEvents()

@@ -18,6 +18,7 @@ public:
     void PollEvents();
     void Close();
     void Debug();
+    void RecreateSwapChain();
     inline bool IsOpen() const { return isOpen; }
     inline const Dimension &Size() const { return size; }
     inline Input GetInput() { return Input(inputs); }
@@ -27,6 +28,7 @@ public:
     inline bool MouseButtonDown(uint8 button) const { return HashMapHasKey(mouseInputs, button) && mouseInputs.at(button); }
     inline bool MouseWheelScrolled() const { return SDL_GetTicks() - lastTimeWheeled < 100; }
     inline bool WasResized() const { return resized; }
+
 
 private:
     bool isOpen = false;
