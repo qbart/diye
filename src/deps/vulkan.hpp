@@ -137,6 +137,44 @@ namespace vulkan
         inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
     };
 
+    struct Pipeline
+    {
+        VkPipeline handle;
+        VkPipelineLayout layout;
+        VkPipelineLayoutCreateInfo layoutCreateInfo;
+        VkGraphicsPipelineCreateInfo createInfo;
+        std::vector<VkDynamicState> dynamicStates;
+        std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+        VkPipelineViewportStateCreateInfo viewportStateCreateInfo;
+        VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo;
+        VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo;
+        std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
+        VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo;
+        VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
+        VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
+        VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
+
+        Pipeline();
+
+        bool Create(const Device &device);
+        void Destroy(const Device &device);
+        bool CreateLayout(const Device &device);
+        void DestroyLayout(const Device &device);
+
+        void AddShaderStage(VkShaderStageFlagBits stage, const ShaderModule &module, const char *entrypoint = "main");
+        void AddDynamicViewport(int numViewports = 1);
+        void AddDynamicScissor(int numScissors = 1);
+        VkPipelineColorBlendAttachmentState &AddColorBlendAttachment();
+        void SetMultisample();
+        void SetRasterization(VkFrontFace frontFace, VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT);
+        void SetInputAssembly(VkPrimitiveTopology topology);
+        void SetVertexInput();
+        void SetRenderPass(const RenderPass &renderPass);
+
+        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
+
+    };
+
     VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
         VkDebugUtilsMessageTypeFlagsEXT messageType,

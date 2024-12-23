@@ -51,8 +51,7 @@ private:
     vulkan::RenderPass renderPass;
     std::vector<VkImageView> imageViews;
     vulkan::ShaderModules shaderModules;
-    VkPipelineLayout pipelineLayout;
-    VkPipeline graphicsPipeline;
+    vulkan::Pipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
     std::vector<VkCommandBuffer> commandBuffers;
