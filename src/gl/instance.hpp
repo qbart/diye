@@ -43,9 +43,7 @@ namespace gl
         bool Create();
         void Destroy();
         void SetExtensions(const CStrings &extensions);
-        void SetValidationLayers();
-
-        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
+        void EnableValidationLayers();
 
     private:
         bool debug;

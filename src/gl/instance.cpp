@@ -161,7 +161,7 @@ void gl::Instance::SetExtensions(const CStrings &extensions)
     createInfo.ppEnabledExtensionNames = this->extensions.data();
 }
 
-void gl::Instance::SetValidationLayers()
+void gl::Instance::EnableValidationLayers()
 {
     validationLayers = CStrings({"VK_LAYER_KHRONOS_validation"});
     if (validationLayers.size() > 0)

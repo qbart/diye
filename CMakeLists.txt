@@ -7,6 +7,9 @@ add_executable(${PROJECT_NAME}
     src/deps/fmt.cpp
     src/gl/vulkan.cpp
     src/gl/instance.cpp
+    src/gl/surface.cpp
+    src/gl/physical_device.cpp
+    src/gl/device.cpp
     src/core/transform.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp

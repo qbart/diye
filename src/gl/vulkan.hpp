@@ -9,69 +9,17 @@
 #include "../deps/sdl.hpp"
 #include "core.hpp"
 #include "instance.hpp"
+#include "surface.hpp"
+#include "physical_device.hpp"
+#include "device.hpp"
 
 namespace vulkan
 {
-    struct Surface
-    {
-        VkSurfaceKHR handle;
-        SDL_Window *window;
-
-        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
-    };
-
-    struct QueueFamilyIndices
-    {
-        std::optional<uint32_t> graphicsFamily;
-        std::optional<uint32_t> presentFamily;
-    };
-
-    struct SwapChainSupportDetails
-    {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
-    };
-
-    struct PhysicalDevice
-    {
-        VkPhysicalDevice device;
-        VkPhysicalDeviceProperties properties;
-        VkPhysicalDeviceFeatures features;
-        std::vector<VkExtensionProperties> extensions;
-        std::vector<VkQueueFamilyProperties> queueFamilies;
-        QueueFamilyIndices queueFamilyIndices;
-        SwapChainSupportDetails swapChainSupport;
-
-        bool IsDiscreteGPU() const;
-        bool IsValid() const;
-        bool IsExtensionSupported(const gl::CStrings &extensions) const;
-        void QuerySwapChainSupport(const Surface &surface);
-        void QueryQueueFamilies(const Surface &surface);
-    };
-
-    struct CreateDeviceInfo
-    {
-        PhysicalDevice physicalDevice;
-        gl::CStrings validationLayers;
-        gl::CStrings requiredExtensions;
-    };
-
-    struct Device
-    {
-        VkDevice handle;
-        VkQueue graphicsQueue;
-        VkQueue presentQueue;
-
-        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
-        VkResult WaitIdle() const;
-    };
-
     struct CreateSwapChainInfo
     {
-        Surface surface;
-        PhysicalDevice physicalDevice;
-        Device device;
+        gl::Surface surface;
+        gl::PhysicalDevice physicalDevice;
+        gl::Device device;
         gl::CStrings validationLayers;
     };
 
@@ -130,10 +78,10 @@ namespace vulkan
 
         Pipeline();
 
-        bool Create(const Device &device);
-        void Destroy(const Device &device);
-        bool CreateLayout(const Device &device);
-        void DestroyLayout(const Device &device);
+        bool Create(const gl::Device &device);
+        void Destroy(const gl::Device &device);
+        bool CreateLayout(const gl::Device &device);
+        void DestroyLayout(const gl::Device &device);
 
         void AddShaderStage(VkShaderStageFlagBits stage, const ShaderModule &module, const char *entrypoint = "main");
         void AddDynamicViewport(int numViewports = 1);
@@ -149,21 +97,14 @@ namespace vulkan
 
     };
 
-    Surface CreateSurface(const gl::Instance &instance, SDL_Window *window);
-    void DestroySurface(const gl::Instance &instance, const Surface &surface);
-    std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device);
-    std::vector<PhysicalDevice> GetPhysicalDevices(const gl::Instance &instance, const Surface &surface);
-    PhysicalDevice SelectBestPhysicalDevice(const std::vector<PhysicalDevice> &devices);
-    Device CreateDevice(const CreateDeviceInfo &info);
-    void DestroyDevice(const Device &device);
     VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities, SDL_Window *window);
     SwapChain CreateSwapChain(const CreateSwapChainInfo &info);
-    void DestroySwapChain(const Device &device, const SwapChain &swapChain);
-    std::vector<VkImageView> CreateImageViews(const Device &device, const SwapChain &swapChain);
-    void DestroyImageViews(const Device &device, const std::vector<VkImageView> &views);
-    void DestroyFramebuffers(const Device &device, const std::vector<VkFramebuffer> &framebuffers);
-    ShaderModule CreateShaderModule(const Device &device, const std::vector<char> &code);
-    void DestroyShaderModule(const Device &device, const ShaderModule &module);
-    RenderPass CreateRenderPass(const Device &device, const SwapChain &swapChain, const ShaderModules &modules);
-    void DestroyRenderPass(const Device &device, const RenderPass &renderPass);
+    void DestroySwapChain(const gl::Device &device, const SwapChain &swapChain);
+    std::vector<VkImageView> CreateImageViews(const gl::Device &device, const SwapChain &swapChain);
+    void DestroyImageViews(const gl::Device &device, const std::vector<VkImageView> &views);
+    void DestroyFramebuffers(const gl::Device &device, const std::vector<VkFramebuffer> &framebuffers);
+    ShaderModule CreateShaderModule(const gl::Device &device, const std::vector<char> &code);
+    void DestroyShaderModule(const gl::Device &device, const ShaderModule &module);
+    RenderPass CreateRenderPass(const gl::Device &device, const SwapChain &swapChain, const ShaderModules &modules);
+    void DestroyRenderPass(const gl::Device &device, const RenderPass &renderPass);
 };
