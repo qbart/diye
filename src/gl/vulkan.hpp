@@ -12,51 +12,16 @@
 #include "surface.hpp"
 #include "physical_device.hpp"
 #include "device.hpp"
+#include "swap_chain.hpp"
+#include "shader_modules.hpp"
+#include "render_pass.hpp"
 
 namespace vulkan
 {
-    struct CreateSwapChainInfo
-    {
-        gl::Surface surface;
-        gl::PhysicalDevice physicalDevice;
-        gl::Device device;
-        gl::CStrings validationLayers;
-    };
-
-    struct SwapChain
-    {
-        VkSwapchainKHR handle;
-        std::vector<VkImage> images;
-        VkFormat imageFormat;
-        VkExtent2D extent;
-
-        bool IsValid() const;
-    };
-
-    struct ShaderModule
-    {
-        VkShaderModule handle;
-
-        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
-    };
-
-    struct ShaderModules
-    {
-        ShaderModule vert;
-        ShaderModule frag;
-    };
-
     struct ShaderStage
     {
         VkShaderModule module;
         VkShaderStageFlagBits stage;
-    };
-
-    struct RenderPass
-    {
-        VkRenderPass handle;
-
-        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
     };
 
     struct Pipeline
@@ -83,7 +48,7 @@ namespace vulkan
         bool CreateLayout(const gl::Device &device);
         void DestroyLayout(const gl::Device &device);
 
-        void AddShaderStage(VkShaderStageFlagBits stage, const ShaderModule &module, const char *entrypoint = "main");
+        void AddShaderStage(VkShaderStageFlagBits stage, VkShaderModule handle, const char *entrypoint = "main");
         void AddDynamicViewport(int numViewports = 1);
         void AddDynamicScissor(int numScissors = 1);
         VkPipelineColorBlendAttachmentState &AddColorBlendAttachment();
@@ -91,20 +56,13 @@ namespace vulkan
         void SetRasterization(VkFrontFace frontFace, VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT);
         void SetInputAssembly(VkPrimitiveTopology topology);
         void SetVertexInput();
-        void SetRenderPass(const RenderPass &renderPass);
+        void SetRenderPass(const gl::RenderPass &renderPass);
 
         inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
 
     };
 
-    VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities, SDL_Window *window);
-    SwapChain CreateSwapChain(const CreateSwapChainInfo &info);
-    void DestroySwapChain(const gl::Device &device, const SwapChain &swapChain);
-    std::vector<VkImageView> CreateImageViews(const gl::Device &device, const SwapChain &swapChain);
+    std::vector<VkImageView> CreateImageViews(const gl::Device &device, VkFormat format, const std::vector<VkImage> &images);
     void DestroyImageViews(const gl::Device &device, const std::vector<VkImageView> &views);
     void DestroyFramebuffers(const gl::Device &device, const std::vector<VkFramebuffer> &framebuffers);
-    ShaderModule CreateShaderModule(const gl::Device &device, const std::vector<char> &code);
-    void DestroyShaderModule(const gl::Device &device, const ShaderModule &module);
-    RenderPass CreateRenderPass(const gl::Device &device, const SwapChain &swapChain, const ShaderModules &modules);
-    void DestroyRenderPass(const gl::Device &device, const RenderPass &renderPass);
 };

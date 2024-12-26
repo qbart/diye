@@ -153,6 +153,10 @@ namespace gl
             }
         }
 
+        fmtx::Info(fmt::format("Selected device: {}", best.properties.deviceName));
+        fmtx::Info(fmt::format("Selected device API version: {}", best.properties.apiVersion));
+        fmtx::Info(fmt::format("Selected device driver version: {}", best.properties.driverVersion));
+
         return best;
     }
 

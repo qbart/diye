@@ -61,11 +61,6 @@ bool Window::InitGL()
         fmtx::Error("Failed to select physical device");
         return false;
     }
-    // for (const auto &ext : physicalDevice.extensions)
-    //     fmtx::Debug(fmt::format("Supported device extension: {}", ext.extensionName));
-    fmtx::Info(fmt::format("Selected device: {}", physicalDevice.properties.deviceName));
-    fmtx::Info(fmt::format("Selected device API version: {}", physicalDevice.properties.apiVersion));
-    fmtx::Info(fmt::format("Selected device driver version: {}", physicalDevice.properties.driverVersion));
 
     device.RequireSwapchainExtension();
     device.EnableValidationLayers();
@@ -75,34 +70,26 @@ bool Window::InitGL()
         return false;
     }
 
-    vulkan::CreateSwapChainInfo swapChainInfo;
-    swapChainInfo.surface = surface;
-    swapChainInfo.physicalDevice = physicalDevice;
-    swapChainInfo.device = device;
-    swapChain = vulkan::CreateSwapChain(swapChainInfo);
-    if (!swapChain.IsValid())
+    if (!swapChain.Create(device, surface, physicalDevice))
     {
         fmtx::Error("Failed to create swap chain");
         return false;
     }
-    imageViews = vulkan::CreateImageViews(device, swapChain);
+    imageViews = vulkan::CreateImageViews(device, swapChain.imageFormat, swapChain.images);
     if (imageViews.empty())
     {
         fmtx::Error("Failed to create image views");
         return false;
     }
-    shaderModules.vert = vulkan::CreateShaderModule(device, BinaryFile::Load("dummy.vert.spv")->Bytes());
-    shaderModules.frag = vulkan::CreateShaderModule(device, BinaryFile::Load("dummy.frag.spv")->Bytes());
-    if (!shaderModules.vert.IsValid() || !shaderModules.frag.IsValid())
+    shaderModules.vert = gl::CreateShaderModule(device, BinaryFile::Load("dummy.vert.spv")->Bytes());
+    shaderModules.frag = gl::CreateShaderModule(device, BinaryFile::Load("dummy.frag.spv")->Bytes());
+    if (shaderModules.vert == VK_NULL_HANDLE || shaderModules.frag == VK_NULL_HANDLE)
     {
         fmtx::Error("Failed to create shader modules");
         return false;
     }
-
-    renderPass = vulkan::CreateRenderPass(device, swapChain, shaderModules);
-    if (!renderPass.IsValid())
+    if (!renderPass.Create(device, swapChain, shaderModules))
     {
-        fmtx::Error("Failed to create render pass");
         return false;
     }
 
@@ -219,11 +206,11 @@ void Window::ShutdownGL()
     vulkan::DestroyFramebuffers(device, swapChainFramebuffers);
     graphicsPipeline.Destroy(device);
     graphicsPipeline.DestroyLayout(device);
-    vulkan::DestroyRenderPass(device, renderPass);
-    vulkan::DestroyShaderModule(device, shaderModules.vert);
-    vulkan::DestroyShaderModule(device, shaderModules.frag);
+    renderPass.Destroy(device);
+    gl::DestroyShaderModule(device, shaderModules.vert);
+    gl::DestroyShaderModule(device, shaderModules.frag);
     vulkan::DestroyImageViews(device, imageViews);
-    vulkan::DestroySwapChain(device, swapChain);
+    swapChain.Destroy(device);
     device.Destroy();
     surface.Destroy(instance);
     instance.Destroy();
@@ -237,24 +224,18 @@ void Window::RecreateSwapChain()
     // clean swap chain
     vulkan::DestroyFramebuffers(device, swapChainFramebuffers);
     vulkan::DestroyImageViews(device, imageViews);
-    vulkan::DestroySwapChain(device, swapChain);
+    swapChain.Destroy(device);
 
     // recreate swap chain
     physicalDevice.QuerySwapChainSupport(surface);
 
-    vulkan::CreateSwapChainInfo swapChainInfo;
-    swapChainInfo.surface = surface;
-    swapChainInfo.physicalDevice = physicalDevice;
-    swapChainInfo.device = device;
-    swapChain = vulkan::CreateSwapChain(swapChainInfo);
-
-    if (!swapChain.IsValid())
+    if (!swapChain.Create(device, surface, physicalDevice))
     {
         fmtx::Error("Failed to recreate swap chain");
     }
 
     // recreate image views
-    imageViews = vulkan::CreateImageViews(device, swapChain);
+    imageViews = vulkan::CreateImageViews(device, swapChain.imageFormat, swapChain.images);
     if (imageViews.empty())
     {
         fmtx::Error("Failed to create image views");

@@ -81,6 +81,7 @@ namespace sdl
 
         return std::move(extensions);
     }
+
     bool CreateVulkanSurface(SDL_Window *wnd, VkInstance instance, VkSurfaceKHR *surface)
     {
         return SDL_Vulkan_CreateSurface(wnd, instance, surface) == SDL_TRUE;

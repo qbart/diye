@@ -49,10 +49,10 @@ private:
     gl::Device device;
     gl::Surface surface;
     gl::PhysicalDevice physicalDevice;
-    vulkan::SwapChain swapChain;
-    vulkan::RenderPass renderPass;
+    gl::SwapChain swapChain;
+    gl::RenderPass renderPass;
     std::vector<VkImageView> imageViews;
-    vulkan::ShaderModules shaderModules;
+    gl::ShaderModules shaderModules;
     vulkan::Pipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
