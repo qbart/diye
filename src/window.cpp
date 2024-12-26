@@ -4,6 +4,7 @@
 #include <memory>
 #include "deps/imgui.hpp"
 #include "io/binary.hpp"
+#include "deps/fmt.hpp"
 
 Window::Ptr Window::New(int w, int h, const std::string &title)
 {
@@ -46,16 +47,15 @@ Window::~Window()
 bool Window::InitGL()
 {
     instance.SetExtensions(sdl::GetVulkanExtensions(wnd, true));
-    instance.SetValidationLayers();
+    instance.EnableValidationLayers();
     if (!instance.Create())
-    {
-        fmtx::Error("Failed to create Vulkan instance");
         return false;
-    }
-    surface = vulkan::CreateSurface(instance, wnd);
 
-    auto devices = vulkan::GetPhysicalDevices(instance, surface);
-    physicalDevice = vulkan::SelectBestPhysicalDevice(devices);
+    if (!surface.Create(instance, wnd))
+        return false;
+
+    auto devices = gl::GetPhysicalDevices(instance, surface);
+    physicalDevice = gl::SelectBestPhysicalDevice(devices);
     if (!physicalDevice.IsValid())
     {
         fmtx::Error("Failed to select physical device");
@@ -67,16 +67,14 @@ bool Window::InitGL()
     fmtx::Info(fmt::format("Selected device API version: {}", physicalDevice.properties.apiVersion));
     fmtx::Info(fmt::format("Selected device driver version: {}", physicalDevice.properties.driverVersion));
 
-    vulkan::CreateDeviceInfo deviceInfo;
-    deviceInfo.physicalDevice = physicalDevice;
-    deviceInfo.validationLayers = gl::CStrings({"VK_LAYER_KHRONOS_validation"});
-    deviceInfo.requiredExtensions = gl::CStrings({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
-    device = vulkan::CreateDevice(deviceInfo);
-    if (!device.IsValid())
+    device.RequireSwapchainExtension();
+    device.EnableValidationLayers();
+    if (!device.Create(physicalDevice))
     {
         fmtx::Error("Failed to create device");
         return false;
     }
+
     vulkan::CreateSwapChainInfo swapChainInfo;
     swapChainInfo.surface = surface;
     swapChainInfo.physicalDevice = physicalDevice;
@@ -226,8 +224,8 @@ void Window::ShutdownGL()
     vulkan::DestroyShaderModule(device, shaderModules.frag);
     vulkan::DestroyImageViews(device, imageViews);
     vulkan::DestroySwapChain(device, swapChain);
-    vulkan::DestroyDevice(device);
-    vulkan::DestroySurface(instance, surface);
+    device.Destroy();
+    surface.Destroy(instance);
     instance.Destroy();
 }
 

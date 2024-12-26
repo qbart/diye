@@ -46,9 +46,9 @@ private:
     bool resized = false;
 
     gl::Instance instance;
-    vulkan::Device device;
-    vulkan::Surface surface;
-    vulkan::PhysicalDevice physicalDevice;
+    gl::Device device;
+    gl::Surface surface;
+    gl::PhysicalDevice physicalDevice;
     vulkan::SwapChain swapChain;
     vulkan::RenderPass renderPass;
     std::vector<VkImageView> imageViews;
