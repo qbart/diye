@@ -1,5 +1,7 @@
 #include "device.hpp"
+
 #include <set>
+#include "render_pass.hpp"
 
 namespace gl
 {
@@ -142,6 +144,45 @@ namespace gl
         {
             vkDestroyImageView(handle, imageView, nullptr);
         }
+    }
+
+    std::vector<VkFramebuffer> Device::CreateFramebuffers(const RenderPass &renderPass, const std::vector<VkImageView> &views, const VkExtent2D &extent)
+    {
+        std::vector<VkFramebuffer> framebuffers;
+        std::vector<bool> valid;
+        framebuffers.resize(views.size());
+        valid.resize(views.size());
+        bool allValid = true;
+
+        for (size_t i = 0; i < views.size(); i++)
+        {
+            VkImageView attachments[] = {views[i]};
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass.handle;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = attachments;
+            framebufferInfo.width = extent.width;
+            framebufferInfo.height = extent.height;
+            framebufferInfo.layers = 1;
+
+            valid[i] = vkCreateFramebuffer(handle, &framebufferInfo, nullptr, &framebuffers[i]) == VK_SUCCESS;
+            if (!valid[i])
+                allValid = false;
+        }
+
+        if (!allValid)
+        {
+            for (size_t i = 0; i < framebuffers.size(); i++)
+            {
+                if (valid[i])
+                    vkDestroyFramebuffer(handle, framebuffers[i], nullptr);
+            }
+            framebuffers.clear();
+        }
+
+        return framebuffers;
     }
 
     void Device::DestroyFramebuffers(const std::vector<VkFramebuffer> &framebuffers)

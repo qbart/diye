@@ -193,4 +193,31 @@ namespace gl
     {
         createInfo.renderPass = renderPass.handle;
     }
+
+    VkVertexInputBindingDescription &Pipeline::AddVertexInputBindingDescription(std::uint32_t binding, VkVertexInputRate inputRate)
+    {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = 0;
+        bindingDescription.inputRate = inputRate;
+
+        vertexInputBindingDescriptions.push_back(bindingDescription);
+        vertexInputStateCreateInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputBindingDescriptions.size());
+        vertexInputStateCreateInfo.pVertexBindingDescriptions = vertexInputBindingDescriptions.data();
+        return vertexInputBindingDescriptions.back();
+    }
+
+    VkVertexInputAttributeDescription &Pipeline::AddVertexInputAttributeDescription(std::uint32_t binding, std::uint32_t location, VkFormat format, std::uint32_t offset)
+    {
+        VkVertexInputAttributeDescription attributeDescription{};
+        attributeDescription.binding = binding;
+        attributeDescription.location = location;
+        attributeDescription.format = format;
+        attributeDescription.offset = offset;
+
+        vertexInputAttributeDescriptions.push_back(attributeDescription);
+        vertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributeDescriptions.size());
+        vertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexInputAttributeDescriptions.data();
+        return vertexInputAttributeDescriptions.back();
+    }
 }

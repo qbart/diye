@@ -8,6 +8,11 @@ class Window
 {
 public:
     using Ptr = std::shared_ptr<Window>;
+    struct Vertex
+    {
+        Vec2 pos;
+        Vec3 color;
+    };
 
     static Ptr New(int w, int h, const std::string &title);
     Window() {}
@@ -61,4 +66,8 @@ private:
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
+
+    std::vector<Vertex> vertices;
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
 };

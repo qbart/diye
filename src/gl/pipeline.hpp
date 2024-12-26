@@ -23,6 +23,8 @@ namespace gl
         VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
         VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
+        std::vector<VkVertexInputBindingDescription> vertexInputBindingDescriptions;
+        std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions;
 
         Pipeline();
 
@@ -40,5 +42,7 @@ namespace gl
         void SetInputAssembly(VkPrimitiveTopology topology);
         void SetVertexInput();
         void SetRenderPass(const RenderPass &renderPass);
+        VkVertexInputBindingDescription &AddVertexInputBindingDescription(std::uint32_t binding, VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
+        VkVertexInputAttributeDescription &AddVertexInputAttributeDescription(std::uint32_t binding, std::uint32_t location, VkFormat format = VK_FORMAT_R32G32B32_SFLOAT, std::uint32_t offset = 0);
     };
 }
