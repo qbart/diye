@@ -5,7 +5,6 @@ project(diye)
 add_executable(${PROJECT_NAME}
     src/deps/sdl.cpp
     src/deps/fmt.cpp
-    src/gl/vulkan.cpp
     src/gl/instance.cpp
     src/gl/surface.cpp
     src/gl/physical_device.cpp
@@ -13,6 +12,7 @@ add_executable(${PROJECT_NAME}
     src/gl/swap_chain.cpp
     src/gl/shader_modules.cpp
     src/gl/render_pass.cpp
+    src/gl/pipeline.cpp
     src/core/transform.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp

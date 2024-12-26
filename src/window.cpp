@@ -75,7 +75,7 @@ bool Window::InitGL()
         fmtx::Error("Failed to create swap chain");
         return false;
     }
-    imageViews = vulkan::CreateImageViews(device, swapChain.imageFormat, swapChain.images);
+    imageViews = device.CreateImageViews(swapChain.imageFormat, swapChain.images);
     if (imageViews.empty())
     {
         fmtx::Error("Failed to create image views");
@@ -203,13 +203,13 @@ void Window::ShutdownGL()
     }
     vkDestroyCommandPool(device.handle, commandPool, nullptr);
 
-    vulkan::DestroyFramebuffers(device, swapChainFramebuffers);
+    device.DestroyFramebuffers(swapChainFramebuffers);
     graphicsPipeline.Destroy(device);
     graphicsPipeline.DestroyLayout(device);
     renderPass.Destroy(device);
     gl::DestroyShaderModule(device, shaderModules.vert);
     gl::DestroyShaderModule(device, shaderModules.frag);
-    vulkan::DestroyImageViews(device, imageViews);
+    device.DestroyImageViews(imageViews);
     swapChain.Destroy(device);
     device.Destroy();
     surface.Destroy(instance);
@@ -222,8 +222,8 @@ void Window::RecreateSwapChain()
     device.WaitIdle();
 
     // clean swap chain
-    vulkan::DestroyFramebuffers(device, swapChainFramebuffers);
-    vulkan::DestroyImageViews(device, imageViews);
+    device.DestroyFramebuffers(swapChainFramebuffers);
+    device.DestroyImageViews(imageViews);
     swapChain.Destroy(device);
 
     // recreate swap chain
@@ -235,7 +235,7 @@ void Window::RecreateSwapChain()
     }
 
     // recreate image views
-    imageViews = vulkan::CreateImageViews(device, swapChain.imageFormat, swapChain.images);
+    imageViews = device.CreateImageViews(swapChain.imageFormat, swapChain.images);
     if (imageViews.empty())
     {
         fmtx::Error("Failed to create image views");

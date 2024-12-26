@@ -22,5 +22,9 @@ namespace gl
         void RequireSwapchainExtension();
         void SetRequiredExtensions(const CStrings &extensions);
         void EnableValidationLayers();
+        //
+        std::vector<VkImageView> CreateImageViews(VkFormat format, const std::vector<VkImage> &images);
+        void DestroyImageViews(const std::vector<VkImageView> &views);
+        void DestroyFramebuffers(const std::vector<VkFramebuffer> &framebuffers);
     };
 };
