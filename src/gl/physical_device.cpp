@@ -95,6 +95,18 @@ namespace gl
         }
     }
 
+    int PhysicalDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+    {
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device)
     {
         uint32_t count = 0;
@@ -124,6 +136,7 @@ namespace gl
 
             devices[i].QuerySwapChainSupport(surface);
             devices[i].QueryQueueFamilies(surface);
+            vkGetPhysicalDeviceMemoryProperties(devices[i].handle, &devices[i].memProperties);
         }
 
         return devices;

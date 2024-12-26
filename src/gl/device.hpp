@@ -5,6 +5,8 @@
 
 namespace gl
 {
+    class RenderPass;
+
     class Device
     {
     public:
@@ -25,6 +27,7 @@ namespace gl
         //
         std::vector<VkImageView> CreateImageViews(VkFormat format, const std::vector<VkImage> &images);
         void DestroyImageViews(const std::vector<VkImageView> &views);
+        std::vector<VkFramebuffer> CreateFramebuffers(const RenderPass &renderPass, const std::vector<VkImageView> &views, const VkExtent2D &extent);
         void DestroyFramebuffers(const std::vector<VkFramebuffer> &framebuffers);
     };
 };
