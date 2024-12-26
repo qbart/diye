@@ -16,3 +16,5 @@
 #include "shader_modules.hpp"
 #include "render_pass.hpp"
 #include "pipeline.hpp"
+#include "buffer.hpp"
+#include "memory.hpp"
