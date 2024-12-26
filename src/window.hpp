@@ -68,6 +68,6 @@ private:
     uint32_t currentFrame = 0;
 
     std::vector<Vertex> vertices;
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
+    gl::Buffer vertexBuffer;
+    gl::Memory vertexBufferMemory;
 };

@@ -37,7 +37,7 @@ namespace gl
         bool IsExtensionSupported(const gl::CStrings &extensions) const;
         void QuerySwapChainSupport(const Surface &surface);
         void QueryQueueFamilies(const Surface &surface);
-        int FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+        int FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
     };
 
     std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device);

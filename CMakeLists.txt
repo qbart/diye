@@ -13,6 +13,8 @@ add_executable(${PROJECT_NAME}
     src/gl/shader_modules.cpp
     src/gl/render_pass.cpp
     src/gl/pipeline.cpp
+    src/gl/buffer.cpp
+    src/gl/memory.cpp
     src/core/transform.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp

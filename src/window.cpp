@@ -182,38 +182,19 @@ bool Window::InitGL()
         {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
         {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
         {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = sizeof(vertices[0]) * vertices.size();
-    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    if (vkCreateBuffer(device.handle, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS)
+    if (!vertexBuffer.Create(device, sizeof(vertices[0]) * vertices.size()))
     {
-        fmtx::Error("failed to create vertex buffer");
         return false;
     }
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device.handle, vertexBuffer, &memRequirements);
 
-    VkMemoryAllocateInfo memAllocInfo{};
-    memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    memAllocInfo.allocationSize = memRequirements.size;
-    memAllocInfo.memoryTypeIndex = physicalDevice.FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    if (memAllocInfo.memoryTypeIndex == -1)
-    {
-        fmtx::Error("failed to find suitable memory type");
+    VkMemoryRequirements memRequirements = vertexBuffer.MemoryRequirements(device);
+    if (!vertexBufferMemory.Allocate(physicalDevice, device, memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
         return false;
-    }
-    if (vkAllocateMemory(device.handle, &memAllocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS)
-    {
-        fmtx::Error("failed to allocate vertex buffer memory");
-        return false;
-    }
-    vkBindBufferMemory(device.handle, vertexBuffer, vertexBufferMemory, 0);
-    void *data;
-    vkMapMemory(device.handle, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
-    memcpy(data, vertices.data(), (size_t)bufferInfo.size);
-    vkUnmapMemory(device.handle, vertexBufferMemory);
+
+    vertexBuffer.BindMemory(device, vertexBufferMemory, 0);
+    vertexBufferMemory.Map(device, 0, vertexBuffer.Size());
+    vertexBufferMemory.CopyRaw(device, vertices.data(), vertexBuffer.Size());
+    vertexBufferMemory.Unmap(device);
 
     return true;
 }
@@ -221,8 +202,8 @@ bool Window::InitGL()
 void Window::ShutdownGL()
 {
     device.WaitIdle();
-    vkDestroyBuffer(device.handle, vertexBuffer, nullptr);
-    vkFreeMemory(device.handle, vertexBufferMemory, nullptr);
+    vertexBuffer.Destroy(device);
+    vertexBufferMemory.Free(device);
     for (size_t i = 0; i < 2; i++)
     {
         vkDestroySemaphore(device.handle, imageAvailableSemaphores[i], nullptr);
@@ -335,7 +316,7 @@ void Window::Swap()
     scissor.extent = swapChain.extent;
     vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &scissor);
 
-    VkBuffer vertexBuffers[] = {vertexBuffer};
+    VkBuffer vertexBuffers[] = {vertexBuffer.handle};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
 
