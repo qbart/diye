@@ -53,7 +53,7 @@ private:
     gl::RenderPass renderPass;
     std::vector<VkImageView> imageViews;
     gl::ShaderModules shaderModules;
-    vulkan::Pipeline graphicsPipeline;
+    gl::Pipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
     std::vector<VkCommandBuffer> commandBuffers;
