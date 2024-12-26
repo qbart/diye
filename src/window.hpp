@@ -1,7 +1,7 @@
 #pragma once
 
 #include "deps/sdl.hpp"
-#include "deps/vulkan.hpp"
+#include "gl/vulkan.hpp"
 #include "input.hpp"
 
 class Window
@@ -30,6 +30,8 @@ public:
     inline bool WasResized() const { return resized; }
 
 private:
+    bool InitGL();
+    void ShutdownGL();
     bool active = false;
     bool isOpen = false;
     Dimension size;
@@ -43,7 +45,7 @@ private:
     uint64 lastTimeWheeled = 0;
     bool resized = false;
 
-    vulkan::Instance instance;
+    gl::Instance instance;
     vulkan::Device device;
     vulkan::Surface surface;
     vulkan::PhysicalDevice physicalDevice;

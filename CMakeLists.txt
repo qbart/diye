@@ -4,8 +4,9 @@ project(diye)
 
 add_executable(${PROJECT_NAME}
     src/deps/sdl.cpp
-    src/deps/vulkan.cpp
     src/deps/fmt.cpp
+    src/gl/vulkan.cpp
+    src/gl/instance.cpp
     src/core/transform.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp

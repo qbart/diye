@@ -5,39 +5,13 @@
 #include <string>
 #include <vector>
 #include <optional>
-#include "fmt.hpp"
-#include "sdl.hpp"
+#include "../deps/fmt.hpp"
+#include "../deps/sdl.hpp"
+#include "core.hpp"
+#include "instance.hpp"
 
 namespace vulkan
 {
-    using CStrings = std::vector<const char *>;
-    using Strings = std::vector<std::string>;
-
-    enum LogLevelType
-    {
-        Error = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-        Warning = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
-        Info = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT,
-        Debug = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-    };
-
-    extern LogLevelType LogLevel;
-
-    struct CreateInstanceInfo
-    {
-        std::string title;
-        CStrings extensions;
-        CStrings validationLayers;
-    };
-
-    struct Instance
-    {
-        VkInstance handle;
-        VkDebugUtilsMessengerEXT debugMessenger;
-
-        inline bool IsValid() const { return handle != VK_NULL_HANDLE; }
-    };
-
     struct Surface
     {
         VkSurfaceKHR handle;
@@ -71,7 +45,7 @@ namespace vulkan
 
         bool IsDiscreteGPU() const;
         bool IsValid() const;
-        bool IsExtensionSupported(const CStrings &extensions) const;
+        bool IsExtensionSupported(const gl::CStrings &extensions) const;
         void QuerySwapChainSupport(const Surface &surface);
         void QueryQueueFamilies(const Surface &surface);
     };
@@ -79,8 +53,8 @@ namespace vulkan
     struct CreateDeviceInfo
     {
         PhysicalDevice physicalDevice;
-        CStrings validationLayers;
-        CStrings requiredExtensions;
+        gl::CStrings validationLayers;
+        gl::CStrings requiredExtensions;
     };
 
     struct Device
@@ -98,7 +72,7 @@ namespace vulkan
         Surface surface;
         PhysicalDevice physicalDevice;
         Device device;
-        CStrings validationLayers;
+        gl::CStrings validationLayers;
     };
 
     struct SwapChain
@@ -175,23 +149,10 @@ namespace vulkan
 
     };
 
-    VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-        void *pUserData);
-
-    std::vector<VkExtensionProperties> GetSupportedInstanceExtensions();
-    std::vector<VkLayerProperties> GetAvailableValidationLayers();
-    bool CheckValidationLayersSupport(const std::vector<VkLayerProperties> &availableLayers, const CStrings &requestedLayers);
-    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
-    void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator);
-    Instance CreateInstance(const CreateInstanceInfo &info, bool debug = false);
-    void DestroyInstance(const Instance &instance);
-    Surface CreateSurface(const Instance &instance, SDL_Window *window);
-    void DestroySurface(const Instance &instance, const Surface &surface);
+    Surface CreateSurface(const gl::Instance &instance, SDL_Window *window);
+    void DestroySurface(const gl::Instance &instance, const Surface &surface);
     std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device);
-    std::vector<PhysicalDevice> GetPhysicalDevices(const Instance &instance, const Surface &surface);
+    std::vector<PhysicalDevice> GetPhysicalDevices(const gl::Instance &instance, const Surface &surface);
     PhysicalDevice SelectBestPhysicalDevice(const std::vector<PhysicalDevice> &devices);
     Device CreateDevice(const CreateDeviceInfo &info);
     void DestroyDevice(const Device &device);
