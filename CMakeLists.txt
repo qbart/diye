@@ -10,6 +10,9 @@ add_executable(${PROJECT_NAME}
     src/gl/surface.cpp
     src/gl/physical_device.cpp
     src/gl/device.cpp
+    src/gl/swap_chain.cpp
+    src/gl/shader_modules.cpp
+    src/gl/render_pass.cpp
     src/core/transform.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp
