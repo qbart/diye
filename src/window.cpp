@@ -19,31 +19,47 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
         fmtx::Error(sdl::GetError());
         return nullptr;
     }
-    vulkan::CreateInstanceInfo info;
-    info.title = title;
-    info.extensions = sdl::GetVulkanExtensions(wnd, true);
-    info.validationLayers = vulkan::CStrings({"VK_LAYER_KHRONOS_validation"});
-    auto supportedExt = vulkan::GetSupportedInstanceExtensions();
 
-    // for (const auto &ext : supportedExt)
-    //     fmtx::Debug(fmt::format("Supported extension: {}", ext.extensionName));
-    // for (const auto &ext : info.extensions)
-    //     fmtx::Debug(fmt::format("Requested extension: {}", ext));
-
-    auto instance = vulkan::CreateInstance(info, true);
-    if (!instance.IsValid())
+    auto ptr = std::make_shared<Window>();
+    ptr->wnd = wnd;
+    ptr->size.w = w;
+    ptr->size.h = h;
+    ptr->isOpen = true;
+    bool ok = ptr->InitGL();
+    if (!ok)
     {
-        fmtx::Error("Failed to create Vulkan instance");
+        fmtx::Error("Failed to init GL");
+        ptr->ShutdownGL();
         return nullptr;
     }
-    auto surface = vulkan::CreateSurface(instance, wnd);
+
+    return ptr;
+}
+
+Window::~Window()
+{
+    ShutdownGL();
+    sdl::DestroyWindow(wnd);
+    sdl::Quit();
+}
+
+bool Window::InitGL()
+{
+    instance.SetExtensions(sdl::GetVulkanExtensions(wnd, true));
+    instance.SetValidationLayers();
+    if (!instance.Create())
+    {
+        fmtx::Error("Failed to create Vulkan instance");
+        return false;
+    }
+    surface = vulkan::CreateSurface(instance, wnd);
 
     auto devices = vulkan::GetPhysicalDevices(instance, surface);
-    auto physicalDevice = vulkan::SelectBestPhysicalDevice(devices);
+    physicalDevice = vulkan::SelectBestPhysicalDevice(devices);
     if (!physicalDevice.IsValid())
     {
         fmtx::Error("Failed to select physical device");
-        return nullptr;
+        return false;
     }
     // for (const auto &ext : physicalDevice.extensions)
     //     fmtx::Debug(fmt::format("Supported device extension: {}", ext.extensionName));
@@ -53,47 +69,45 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
     vulkan::CreateDeviceInfo deviceInfo;
     deviceInfo.physicalDevice = physicalDevice;
-    deviceInfo.validationLayers = info.validationLayers;
-    deviceInfo.requiredExtensions = vulkan::CStrings({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
-    auto device = vulkan::CreateDevice(deviceInfo);
+    deviceInfo.validationLayers = gl::CStrings({"VK_LAYER_KHRONOS_validation"});
+    deviceInfo.requiredExtensions = gl::CStrings({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
+    device = vulkan::CreateDevice(deviceInfo);
     if (!device.IsValid())
     {
         fmtx::Error("Failed to create device");
-        return nullptr;
+        return false;
     }
     vulkan::CreateSwapChainInfo swapChainInfo;
     swapChainInfo.surface = surface;
     swapChainInfo.physicalDevice = physicalDevice;
     swapChainInfo.device = device;
-    auto swapChain = vulkan::CreateSwapChain(swapChainInfo);
+    swapChain = vulkan::CreateSwapChain(swapChainInfo);
     if (!swapChain.IsValid())
     {
         fmtx::Error("Failed to create swap chain");
-        return nullptr;
+        return false;
     }
-    auto imageViews = vulkan::CreateImageViews(device, swapChain);
+    imageViews = vulkan::CreateImageViews(device, swapChain);
     if (imageViews.empty())
     {
         fmtx::Error("Failed to create image views");
-        return nullptr;
+        return false;
     }
-    vulkan::ShaderModules shaderModules;
     shaderModules.vert = vulkan::CreateShaderModule(device, BinaryFile::Load("dummy.vert.spv")->Bytes());
     shaderModules.frag = vulkan::CreateShaderModule(device, BinaryFile::Load("dummy.frag.spv")->Bytes());
     if (!shaderModules.vert.IsValid() || !shaderModules.frag.IsValid())
     {
         fmtx::Error("Failed to create shader modules");
-        return nullptr;
+        return false;
     }
 
-    auto renderPass = vulkan::CreateRenderPass(device, swapChain, shaderModules);
+    renderPass = vulkan::CreateRenderPass(device, swapChain, shaderModules);
     if (!renderPass.IsValid())
     {
         fmtx::Error("Failed to create render pass");
-        return nullptr;
+        return false;
     }
 
-    vulkan::Pipeline graphicsPipeline;
     graphicsPipeline.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, shaderModules.vert);
     graphicsPipeline.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, shaderModules.frag);
     graphicsPipeline.AddDynamicViewport();
@@ -107,15 +121,16 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
     if (!graphicsPipeline.CreateLayout(device))
     {
-        throw std::runtime_error("failed to create pipeline layout!");
+        fmtx::Error("failed to create pipeline layout!");
+        return false;
     }
 
     if (!graphicsPipeline.Create(device))
     {
-        throw std::runtime_error("failed to create graphics pipeline!");
+        fmtx::Error("failed to create graphics pipeline!");
+        return false;
     }
 
-    std::vector<VkFramebuffer> swapChainFramebuffers;
     swapChainFramebuffers.resize(imageViews.size());
     for (size_t i = 0; i < imageViews.size(); i++)
     {
@@ -132,21 +147,21 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
         if (vkCreateFramebuffer(device.handle, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to create framebuffer!");
+            fmtx::Error("failed to create framebuffer!");
+            return false;
         }
     }
 
-    VkCommandPool commandPool;
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     poolInfo.queueFamilyIndex = physicalDevice.queueFamilyIndices.graphicsFamily.value();
     if (vkCreateCommandPool(device.handle, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
     {
-        throw std::runtime_error("failed to create command pool!");
+        fmtx::Error("failed to create command pool!");
+        return false;
     }
 
-    std::vector<VkCommandBuffer> commandBuffers;
     commandBuffers.resize(2);
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -156,12 +171,9 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
 
     if (vkAllocateCommandBuffers(device.handle, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
     {
-        throw std::runtime_error("failed to allocate command buffers!");
+        fmtx::Error("failed to allocate command buffers!");
+        return false;
     }
-
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
 
     imageAvailableSemaphores.resize(2);
     renderFinishedSemaphores.resize(2);
@@ -177,43 +189,25 @@ Window::Ptr Window::New(int w, int h, const std::string &title)
     {
         if (vkCreateSemaphore(device.handle, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to create semaphores!");
+            fmtx::Error("failed to create semaphores!");
+            return false;
         }
         if (vkCreateSemaphore(device.handle, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to create semaphores!");
+            fmtx::Error("failed to create semaphores!");
+            return false;
         }
         if (vkCreateFence(device.handle, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to create fences!");
+            fmtx::Error("failed to create fences!");
+            return false;
         }
     }
 
-    auto ptr = std::make_shared<Window>();
-    ptr->imageAvailableSemaphores = imageAvailableSemaphores;
-    ptr->renderFinishedSemaphores = renderFinishedSemaphores;
-    ptr->inFlightFences = inFlightFences;
-    ptr->commandBuffers = commandBuffers;
-    ptr->commandPool = commandPool;
-    ptr->swapChainFramebuffers = swapChainFramebuffers;
-    ptr->graphicsPipeline = graphicsPipeline;
-    ptr->wnd = wnd;
-    ptr->instance = instance;
-    ptr->device = device;
-    ptr->surface = surface;
-    ptr->physicalDevice = physicalDevice;
-    ptr->swapChain = swapChain;
-    ptr->imageViews = imageViews;
-    ptr->shaderModules = shaderModules;
-    ptr->renderPass = renderPass;
-    ptr->size.w = w;
-    ptr->size.h = h;
-    ptr->isOpen = true;
-
-    return ptr;
+    return true;
 }
 
-Window::~Window()
+void Window::ShutdownGL()
 {
     device.WaitIdle();
     for (size_t i = 0; i < 2; i++)
@@ -234,9 +228,7 @@ Window::~Window()
     vulkan::DestroySwapChain(device, swapChain);
     vulkan::DestroyDevice(device);
     vulkan::DestroySurface(instance, surface);
-    vulkan::DestroyInstance(instance);
-    sdl::DestroyWindow(wnd);
-    sdl::Quit();
+    instance.Destroy();
 }
 
 void Window::RecreateSwapChain()
