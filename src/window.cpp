@@ -116,14 +116,14 @@ bool Window::InitGL()
 
     if (!graphicsPipeline.Create(device))
     {
-        fmtx::Error("failed to create graphics pipeline!");
+        fmtx::Error("failed to create graphics pipeline");
         return false;
     }
 
     swapChainFramebuffers = device.CreateFramebuffers(renderPass, imageViews, swapChain.extent);
     if (swapChainFramebuffers.empty())
     {
-        fmtx::Error("failed to create framebuffers!");
+        fmtx::Error("failed to create framebuffers");
         return false;
     }
 
@@ -133,7 +133,17 @@ bool Window::InitGL()
     poolInfo.queueFamilyIndex = physicalDevice.queueFamilyIndices.graphicsFamily.value();
     if (vkCreateCommandPool(device.handle, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
     {
-        fmtx::Error("failed to create command pool!");
+        fmtx::Error("failed to create command pool");
+        return false;
+    }
+
+    VkCommandPoolCreateInfo shortLivedPoolInfo{};
+    shortLivedPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    shortLivedPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+    shortLivedPoolInfo.queueFamilyIndex = physicalDevice.queueFamilyIndices.graphicsFamily.value();
+    if (vkCreateCommandPool(device.handle, &shortLivedPoolInfo, nullptr, &shortLivedCommandPool) != VK_SUCCESS)
+    {
+        fmtx::Error("failed to create short lived command pool");
         return false;
     }
 
@@ -178,23 +188,62 @@ bool Window::InitGL()
             return false;
         }
     }
+
     vertices = {
-        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
-    if (!vertexBuffer.Create(device, sizeof(vertices[0]) * vertices.size()))
-    {
-        return false;
-    }
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+    indices = {0, 1, 2, 2, 3, 0};
 
-    VkMemoryRequirements memRequirements = vertexBuffer.MemoryRequirements(device);
-    if (!vertexBufferMemory.Allocate(physicalDevice, device, memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+    stagingBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    if (!stagingBuffer.Create(device, sizeof(vertices[0]) * vertices.size()))
+        return false;
+    VkMemoryRequirements memRequirements = stagingBuffer.MemoryRequirements(device);
+    if (!stagingBufferMemory.Allocate(physicalDevice, device, memRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
         return false;
 
+    stagingBuffer.BindMemory(device, stagingBufferMemory, 0);
+    stagingBufferMemory.Map(device, 0, stagingBuffer.Size());
+    stagingBufferMemory.CopyRaw(device, vertices.data(), stagingBuffer.Size());
+    stagingBufferMemory.Unmap(device);
+
+    vertexBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    if (!vertexBuffer.Create(device, stagingBuffer.Size()))
+        return false;
+    if (!vertexBufferMemory.Allocate(physicalDevice, device, memRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        return false;
     vertexBuffer.BindMemory(device, vertexBufferMemory, 0);
-    vertexBufferMemory.Map(device, 0, vertexBuffer.Size());
-    vertexBufferMemory.CopyRaw(device, vertices.data(), vertexBuffer.Size());
-    vertexBufferMemory.Unmap(device);
+
+    gl::CopyBuffer(device, shortLivedCommandPool, device.graphicsQueue, stagingBuffer, vertexBuffer, stagingBuffer.Size());
+
+    stagingBuffer.Destroy(device);
+    stagingBufferMemory.Free(device);
+
+    indexStagingBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    if (!indexStagingBuffer.Create(device, sizeof(indices[0]) * indices.size()))
+        return false;
+    VkMemoryRequirements indexMemRequirements = indexStagingBuffer.MemoryRequirements(device);
+    if (!indexStagingBufferMemory.Allocate(physicalDevice, device, indexMemRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        return false;
+
+    indexStagingBuffer.BindMemory(device, indexStagingBufferMemory, 0);
+    indexStagingBufferMemory.Map(device, 0, indexStagingBuffer.Size());
+    indexStagingBufferMemory.CopyRaw(device, indices.data(), indexStagingBuffer.Size());
+    indexStagingBufferMemory.Unmap(device);
+
+    indexBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    if (!indexBuffer.Create(device, indexStagingBuffer.Size()))
+        return false;
+    if (!indexBufferMemory.Allocate(physicalDevice, device, indexMemRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        return false;
+
+    indexBuffer.BindMemory(device, indexBufferMemory, 0);
+
+    gl::CopyBuffer(device, shortLivedCommandPool, device.graphicsQueue, indexStagingBuffer, indexBuffer, indexStagingBuffer.Size());
+
+    indexStagingBuffer.Destroy(device);
+    indexStagingBufferMemory.Free(device);
 
     return true;
 }
@@ -202,6 +251,8 @@ bool Window::InitGL()
 void Window::ShutdownGL()
 {
     device.WaitIdle();
+    indexBuffer.Destroy(device);
+    indexBufferMemory.Free(device);
     vertexBuffer.Destroy(device);
     vertexBufferMemory.Free(device);
     for (size_t i = 0; i < 2; i++)
@@ -210,6 +261,7 @@ void Window::ShutdownGL()
         vkDestroySemaphore(device.handle, renderFinishedSemaphores[i], nullptr);
         vkDestroyFence(device.handle, inFlightFences[i], nullptr);
     }
+    vkDestroyCommandPool(device.handle, shortLivedCommandPool, nullptr);
     vkDestroyCommandPool(device.handle, commandPool, nullptr);
 
     device.DestroyFramebuffers(swapChainFramebuffers);
@@ -319,8 +371,9 @@ void Window::Swap()
     VkBuffer vertexBuffers[] = {vertexBuffer.handle};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(commandBuffers[currentFrame], indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
 
-    vkCmdDraw(commandBuffers[currentFrame], static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+    vkCmdDrawIndexed(commandBuffers[currentFrame], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
     vkCmdDraw(commandBuffers[currentFrame], 3, 1, 0, 0);
     vkCmdEndRenderPass(commandBuffers[currentFrame]);

@@ -30,6 +30,7 @@ namespace gl
     void Memory::Free(const Device &device)
     {
         vkFreeMemory(device.handle, handle, nullptr);
+        handle = VK_NULL_HANDLE;
     }
 
     void Memory::Map(const Device &device, VkDeviceSize offset, VkDeviceSize size)

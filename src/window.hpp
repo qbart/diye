@@ -61,6 +61,7 @@ private:
     gl::Pipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
+    VkCommandPool shortLivedCommandPool;
     std::vector<VkCommandBuffer> commandBuffers;
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -68,6 +69,13 @@ private:
     uint32_t currentFrame = 0;
 
     std::vector<Vertex> vertices;
+    std::vector<uint32> indices;
     gl::Buffer vertexBuffer;
     gl::Memory vertexBufferMemory;
+    gl::Buffer stagingBuffer;
+    gl::Memory stagingBufferMemory;
+    gl::Buffer indexBuffer;
+    gl::Memory indexBufferMemory;
+    gl::Buffer indexStagingBuffer;
+    gl::Memory indexStagingBufferMemory;
 };
