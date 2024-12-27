@@ -94,19 +94,94 @@ bool Window::InitGL()
         return false;
     }
 
+    VkDeviceSize uboBufferSize = sizeof(UniformBufferObject);
+    uniformBuffers.resize(2);
+    uniformBuffersMemory.resize(2);
+    ubos.resize(2);
+    for (auto i = 0; i < 2; i++)
+    {
+        uniformBuffers[i].Usage(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        if (!uniformBuffers[i].Create(device, uboBufferSize))
+            return false;
+        VkMemoryRequirements uboMemRequirements = uniformBuffers[i].MemoryRequirements(device);
+        if (!uniformBuffersMemory[i].Allocate(physicalDevice, device, uboMemRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+            return false;
+        uniformBuffers[i].BindMemory(device, uniformBuffersMemory[i], 0);
+        uniformBuffersMemory[i].Map(device, 0, uboBufferSize);
+    }
+
     graphicsPipeline.AddShaderStage(VK_SHADER_STAGE_VERTEX_BIT, shaderModules.vert);
     graphicsPipeline.AddShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, shaderModules.frag);
     graphicsPipeline.AddDynamicViewport();
     graphicsPipeline.AddDynamicScissor();
     graphicsPipeline.AddColorBlendAttachment();
     graphicsPipeline.SetMultisample();
-    graphicsPipeline.SetRasterization(VK_FRONT_FACE_CLOCKWISE);
+    graphicsPipeline.SetRasterization(VK_FRONT_FACE_COUNTER_CLOCKWISE);
     graphicsPipeline.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
     graphicsPipeline.SetVertexInput();
     graphicsPipeline.SetRenderPass(renderPass);
     graphicsPipeline.AddVertexInputBindingDescription(0).stride = sizeof(Vertex);
     graphicsPipeline.AddVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos));
     graphicsPipeline.AddVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color));
+    int setLayout = graphicsPipeline.AddDescriptorSetLayout();
+    graphicsPipeline.AddDescriptorSetLayoutBinding(setLayout, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+
+    if (!graphicsPipeline.CreateDescriptorSetLayouts(device))
+    {
+        return false;
+    }
+
+    descriptorPoolSize = {};
+    descriptorPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorPoolSize.descriptorCount = static_cast<uint32_t>(2);
+
+    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
+    descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descriptorPoolCreateInfo.poolSizeCount = 1;
+    descriptorPoolCreateInfo.pPoolSizes = &descriptorPoolSize;
+    descriptorPoolCreateInfo.maxSets = static_cast<uint32_t>(2);
+
+    if (vkCreateDescriptorPool(device.handle, &descriptorPoolCreateInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+    {
+        fmtx::Error("failed to create descriptor pool");
+        return false;
+    }
+    fmtx::Info("Descriptor pool created");
+
+    std::vector<VkDescriptorSetLayout> descriptorLayouts(2, graphicsPipeline.descriptorSetLayouts[0]);
+    VkDescriptorSetAllocateInfo descriptorSetAllocInfo{};
+    descriptorSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    descriptorSetAllocInfo.descriptorPool = descriptorPool;
+    descriptorSetAllocInfo.descriptorSetCount = static_cast<uint32_t>(2);
+    descriptorSetAllocInfo.pSetLayouts = descriptorLayouts.data();
+
+    graphicsPipeline.descriptorSets.resize(2);
+    if (vkAllocateDescriptorSets(device.handle, &descriptorSetAllocInfo, graphicsPipeline.descriptorSets.data()) != VK_SUCCESS)
+    {
+        fmtx::Error("failed to allocate descriptor sets");
+        return false;
+    }
+
+    for (int i = 0; i < 2; i++)
+    {
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffers[i].handle;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkWriteDescriptorSet descriptorWrite{};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = graphicsPipeline.descriptorSets[i];
+        descriptorWrite.dstBinding = 0;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = &bufferInfo;
+        descriptorWrite.pImageInfo = nullptr;       // Optional
+        descriptorWrite.pTexelBufferView = nullptr; // Optional
+
+        vkUpdateDescriptorSets(device.handle, 1, &descriptorWrite, 0, nullptr);
+    }
 
     if (!graphicsPipeline.CreateLayout(device))
     {
@@ -251,6 +326,12 @@ bool Window::InitGL()
 void Window::ShutdownGL()
 {
     device.WaitIdle();
+
+    for (size_t i = 0; i < 2; i++)
+    {
+        uniformBuffers[i].Destroy(device);
+        uniformBuffersMemory[i].Free(device);
+    }
     indexBuffer.Destroy(device);
     indexBufferMemory.Free(device);
     vertexBuffer.Destroy(device);
@@ -267,6 +348,8 @@ void Window::ShutdownGL()
     device.DestroyFramebuffers(swapChainFramebuffers);
     graphicsPipeline.Destroy(device);
     graphicsPipeline.DestroyLayout(device);
+    vkDestroyDescriptorPool(device.handle, descriptorPool, nullptr);
+    graphicsPipeline.DestroyDescriptorSetLayouts(device);
     renderPass.Destroy(device);
     gl::DestroyShaderModule(device, shaderModules.vert);
     gl::DestroyShaderModule(device, shaderModules.frag);
@@ -370,6 +453,18 @@ void Window::Swap()
 
     VkBuffer vertexBuffers[] = {vertexBuffer.handle};
     VkDeviceSize offsets[] = {0};
+
+    float time = SDL_GetTicks() / 1000.0f;
+    auto model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    auto view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    auto proj = glm::perspective(glm::radians(45.0f), swapChain.extent.width / (float)swapChain.extent.height, 0.1f, 10.0f);
+    proj[1][1] *= -1;
+    ubos[currentFrame].mvp = proj * view * model;
+
+    uniformBuffersMemory[currentFrame].CopyRaw(device, &ubos[currentFrame], sizeof(ubos[currentFrame]));
+    VkDescriptorSet descriptorSets[] = {graphicsPipeline.descriptorSets[currentFrame]};
+    vkCmdBindDescriptorSets(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.layout, 0, 1, &graphicsPipeline.descriptorSets[currentFrame], 0, nullptr);
+
     vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, 1, vertexBuffers, offsets);
     vkCmdBindIndexBuffer(commandBuffers[currentFrame], indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
 

@@ -13,6 +13,10 @@ public:
         Vec2 pos;
         Vec3 color;
     };
+    struct UniformBufferObject
+    {
+        Mat4 mvp;
+    };
 
     static Ptr New(int w, int h, const std::string &title);
     Window() {}
@@ -78,4 +82,9 @@ private:
     gl::Memory indexBufferMemory;
     gl::Buffer indexStagingBuffer;
     gl::Memory indexStagingBufferMemory;
+    std::vector<gl::Buffer> uniformBuffers;
+    std::vector<gl::Memory> uniformBuffersMemory;
+    std::vector<UniformBufferObject> ubos;
+    VkDescriptorPoolSize descriptorPoolSize;
+    VkDescriptorPool descriptorPool;
 };

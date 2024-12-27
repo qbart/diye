@@ -3,6 +3,7 @@
 #include "core.hpp"
 #include "device.hpp"
 #include "render_pass.hpp"
+#include <unordered_map>
 
 namespace gl
 {
@@ -25,6 +26,10 @@ namespace gl
         VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
         std::vector<VkVertexInputBindingDescription> vertexInputBindingDescriptions;
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions;
+        std::vector<VkDescriptorSet> descriptorSets;
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+        std::vector<VkDescriptorSetLayoutCreateInfo> descriptorSetLayoutCreateInfos;
+        std::unordered_map<int, std::vector<VkDescriptorSetLayoutBinding>> descriptorSetLayoutBindings;
 
         Pipeline();
 
@@ -32,6 +37,8 @@ namespace gl
         void Destroy(const gl::Device &device);
         bool CreateLayout(const gl::Device &device);
         void DestroyLayout(const gl::Device &device);
+        bool CreateDescriptorSetLayouts(const gl::Device &device);
+        void DestroyDescriptorSetLayouts(const gl::Device &device);
 
         void AddShaderStage(VkShaderStageFlagBits stage, VkShaderModule handle, const char *entrypoint = "main");
         void AddDynamicViewport(int numViewports = 1);
@@ -44,5 +51,7 @@ namespace gl
         void SetRenderPass(const RenderPass &renderPass);
         VkVertexInputBindingDescription &AddVertexInputBindingDescription(std::uint32_t binding, VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
         VkVertexInputAttributeDescription &AddVertexInputAttributeDescription(std::uint32_t binding, std::uint32_t location, VkFormat format = VK_FORMAT_R32G32B32_SFLOAT, std::uint32_t offset = 0);
+        int AddDescriptorSetLayout();
+        VkDescriptorSetLayoutBinding &AddDescriptorSetLayoutBinding(int descriptorSetLayout, int binding, VkDescriptorType type, VkShaderStageFlags stageFlags);
     };
 }
