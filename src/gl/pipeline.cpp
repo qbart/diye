@@ -72,6 +72,31 @@ namespace gl
         vkDestroyPipelineLayout(device.handle, layout, nullptr);
     }
 
+    bool Pipeline::CreateDescriptorSetLayouts(const gl::Device &device)
+    {
+        descriptorSetLayouts.resize(descriptorSetLayoutCreateInfos.size());
+        for (int i = 0; i < descriptorSetLayoutCreateInfos.size(); ++i)
+        {
+            if (vkCreateDescriptorSetLayout(device.handle, &descriptorSetLayoutCreateInfos[i], nullptr, &descriptorSetLayouts[i]) != VK_SUCCESS)
+            {
+                fmtx::Error("Failed to create descriptor set layout");
+                return false;
+            }
+        }
+        layoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+        layoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
+
+        fmtx::Info("Created descriptor set layouts");
+
+        return true;
+    }
+
+    void Pipeline::DestroyDescriptorSetLayouts(const gl::Device &device)
+    {
+        for (auto layout : descriptorSetLayouts)
+            vkDestroyDescriptorSetLayout(device.handle, layout, nullptr);
+    }
+
     void Pipeline::AddShaderStage(VkShaderStageFlagBits stage, VkShaderModule handle, const char *entrypoint)
     {
         VkPipelineShaderStageCreateInfo info{};
@@ -219,5 +244,36 @@ namespace gl
         vertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributeDescriptions.size());
         vertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexInputAttributeDescriptions.data();
         return vertexInputAttributeDescriptions.back();
+    }
+
+    int Pipeline::AddDescriptorSetLayout()
+    {
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = 0;
+        layoutInfo.pBindings = nullptr;
+
+        descriptorSetLayoutCreateInfos.push_back(layoutInfo);
+
+        return descriptorSetLayoutCreateInfos.size() - 1;
+    }
+
+    VkDescriptorSetLayoutBinding &Pipeline::AddDescriptorSetLayoutBinding(int descriptorSetLayout, int binding, VkDescriptorType type, VkShaderStageFlags stageFlags)
+    {
+        VkDescriptorSetLayoutBinding layoutBinding{};
+        layoutBinding.binding = binding;
+        layoutBinding.descriptorType = type;
+        layoutBinding.descriptorCount = 1;
+        layoutBinding.stageFlags = stageFlags;
+        layoutBinding.pImmutableSamplers = nullptr;
+
+        if (descriptorSetLayoutBindings.find(descriptorSetLayout) == descriptorSetLayoutBindings.end())
+            descriptorSetLayoutBindings[descriptorSetLayout] = std::vector<VkDescriptorSetLayoutBinding>();
+        descriptorSetLayoutBindings[descriptorSetLayout].push_back(layoutBinding);
+
+        descriptorSetLayoutCreateInfos[descriptorSetLayout].bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings[descriptorSetLayout].size());
+        descriptorSetLayoutCreateInfos[descriptorSetLayout].pBindings = descriptorSetLayoutBindings[descriptorSetLayout].data();
+
+        return descriptorSetLayoutBindings[descriptorSetLayout].back();
     }
 }
