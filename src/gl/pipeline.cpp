@@ -50,7 +50,14 @@ namespace gl
 
     bool Pipeline::Create(const gl::Device &device)
     {
-        return vkCreateGraphicsPipelines(device.handle, VK_NULL_HANDLE, 1, &createInfo, nullptr, &handle) == VK_SUCCESS;
+        if (vkCreateGraphicsPipelines(device.handle, VK_NULL_HANDLE, 1, &createInfo, nullptr, &handle) == VK_SUCCESS)
+        {
+            fmtx::Info("Created graphics pipeline");
+            return true;
+        }
+
+        fmtx::Error("Failed to create graphics pipeline");
+        return false;
     }
 
     void Pipeline::Destroy(const gl::Device &device)
@@ -60,11 +67,15 @@ namespace gl
 
     bool Pipeline::CreateLayout(const gl::Device &device)
     {
-        bool ok = vkCreatePipelineLayout(device.handle, &layoutCreateInfo, nullptr, &layout) == VK_SUCCESS;
-        if (ok)
+        if (vkCreatePipelineLayout(device.handle, &layoutCreateInfo, nullptr, &layout) == VK_SUCCESS)
+        {
             createInfo.layout = layout;
+            fmtx::Info("Created pipeline layout");
+            return true;
+        }
 
-        return ok;
+        fmtx::Error("Failed to create pipeline layout"); 
+        return false;
     }
 
     void Pipeline::DestroyLayout(const gl::Device &device)
