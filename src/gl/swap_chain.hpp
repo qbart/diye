@@ -7,11 +7,13 @@
 
 namespace gl
 {
+    class Image;
+
     class SwapChain
     {
     public:
         VkSwapchainKHR handle;
-        std::vector<VkImage> images;
+        std::vector<Image> images;
         VkFormat imageFormat;
         VkExtent2D extent;
 

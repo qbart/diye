@@ -1,5 +1,6 @@
 #include "swap_chain.hpp"
 
+#include "image.hpp"
 #include <algorithm>
 
 namespace gl
@@ -84,9 +85,17 @@ namespace gl
 
         fmtx::Info("Swap chain created");
 
+        std::vector<VkImage> imageHandles;
+
         vkGetSwapchainImagesKHR(device.handle, handle, &imageCount, nullptr);
-        images.resize(imageCount);
-        vkGetSwapchainImagesKHR(device.handle, handle, &imageCount, images.data());
+        imageHandles.resize(imageCount);
+        vkGetSwapchainImagesKHR(device.handle, handle, &imageCount, imageHandles.data());
+        for (auto &imageHandle : imageHandles)
+        {
+            Image image;
+            image.handle = imageHandle;
+            images.emplace_back(image);
+        }
 
         return true;
     }
