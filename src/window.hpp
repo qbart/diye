@@ -61,7 +61,7 @@ private:
     gl::PhysicalDevice physicalDevice;
     gl::SwapChain swapChain;
     gl::RenderPass renderPass;
-    std::vector<VkImageView> imageViews;
+    std::vector<gl::ImageView> imageViews;
     gl::ShaderModules shaderModules;
     gl::Pipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
@@ -83,8 +83,9 @@ private:
     gl::Memory indexBufferMemory;
     gl::Buffer indexStagingBuffer;
     gl::Memory indexStagingBufferMemory;
-    gl::Image image;
-    gl::Memory imageMemory;
+    gl::Image texture;
+    gl::Memory textureMemory;
+    gl::ImageView textureView;
     std::vector<gl::Buffer> uniformBuffers;
     std::vector<gl::Memory> uniformBuffersMemory;
     std::vector<UniformBufferObject> ubos;

@@ -2,6 +2,9 @@
 
 #include <set>
 #include "render_pass.hpp"
+#include "image.hpp"
+#include "image_view.hpp"
+#include <vector>
 
 namespace gl
 {
@@ -93,9 +96,9 @@ namespace gl
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
 
-    std::vector<VkImageView> Device::CreateImageViews(VkFormat format, const std::vector<VkImage> &images)
+    std::vector<ImageView> Device::CreateImageViews(VkFormat format, const std::vector<Image> &images)
     {
-        std::vector<VkImageView> views;
+        std::vector<ImageView> views;
         std::vector<bool> valid;
         views.resize(images.size());
         valid.resize(images.size());
@@ -103,50 +106,27 @@ namespace gl
 
         for (size_t i = 0; i < images.size(); i++)
         {
-            VkImageViewCreateInfo createInfo{};
-            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            createInfo.image = images[i];
-            createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            createInfo.format = format;
-
-            createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-            createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            createInfo.subresourceRange.baseMipLevel = 0;
-            createInfo.subresourceRange.levelCount = 1;
-            createInfo.subresourceRange.baseArrayLayer = 0;
-            createInfo.subresourceRange.layerCount = 1;
-
-            valid[i] = vkCreateImageView(handle, &createInfo, nullptr, &views[i]) == VK_SUCCESS;
+            valid[i] = views[i].Create(*this, images[i], format);
             if (!valid[i])
                 allValid = false;
         }
 
         if (!allValid)
         {
-            for (size_t i = 0; i < views.size(); i++)
-            {
-                if (valid[i])
-                    vkDestroyImageView(handle, views[i], nullptr);
-            }
+            DestroyImageViews(views);
             views.clear();
         }
 
         return views;
     }
 
-    void Device::DestroyImageViews(const std::vector<VkImageView> &views)
+    void Device::DestroyImageViews(std::vector<ImageView> &views)
     {
-        for (auto imageView : views)
-        {
-            vkDestroyImageView(handle, imageView, nullptr);
-        }
+        for (auto &imageView : views)
+            imageView.Destroy(*this); 
     }
 
-    std::vector<VkFramebuffer> Device::CreateFramebuffers(const RenderPass &renderPass, const std::vector<VkImageView> &views, const VkExtent2D &extent)
+    std::vector<VkFramebuffer> Device::CreateFramebuffers(const RenderPass &renderPass, const std::vector<ImageView> &views, const VkExtent2D &extent)
     {
         std::vector<VkFramebuffer> framebuffers;
         std::vector<bool> valid;
@@ -156,7 +136,7 @@ namespace gl
 
         for (size_t i = 0; i < views.size(); i++)
         {
-            VkImageView attachments[] = {views[i]};
+            VkImageView attachments[] = {views[i].handle};
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
