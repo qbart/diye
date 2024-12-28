@@ -19,6 +19,8 @@ add_executable(${PROJECT_NAME}
     src/gl/command_buffer.cpp
     src/gl/semaphore.cpp
     src/gl/fence.cpp
+    src/gl/image.cpp
+    src/gl/image_view.cpp
     src/core/transform.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp
