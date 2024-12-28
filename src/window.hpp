@@ -3,6 +3,7 @@
 #include "deps/sdl.hpp"
 #include "gl/vulkan.hpp"
 #include "input.hpp"
+#include "image.hpp"
 
 class Window
 {
@@ -82,6 +83,8 @@ private:
     gl::Memory indexBufferMemory;
     gl::Buffer indexStagingBuffer;
     gl::Memory indexStagingBufferMemory;
+    gl::Image image;
+    gl::Memory imageMemory;
     std::vector<gl::Buffer> uniformBuffers;
     std::vector<gl::Memory> uniformBuffersMemory;
     std::vector<UniformBufferObject> ubos;

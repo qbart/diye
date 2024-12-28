@@ -199,7 +199,7 @@ bool Window::InitGL()
 
     if (!imageAvailableSemaphores.Create(device, 2))
         return false;
-    
+
     if (!renderFinishedSemaphores.Create(device, 2))
         return false;
 
@@ -262,6 +262,42 @@ bool Window::InitGL()
     indexStagingBuffer.Destroy(device);
     indexStagingBufferMemory.Free(device);
 
+    gl::Buffer imageStagingBuffer;
+    gl::Memory imageStagingMemory;
+    Image rawImage;
+    if (!rawImage.Load("texture.png"))
+    {
+        fmtx::Error("Failed to load image");
+        return false;
+    }
+    imageStagingBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    if (!imageStagingBuffer.Create(device, rawImage.Size()))
+        return false;
+
+    auto imageMemRequirements = imageStagingBuffer.MemoryRequirements(device);
+    if (!imageStagingMemory.Allocate(physicalDevice, device, imageMemRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        return false;
+
+    imageStagingBuffer.BindMemory(device, imageStagingMemory, 0);
+    imageStagingMemory.Map(device, 0, rawImage.Size());
+    imageStagingMemory.CopyRaw(device, rawImage.GetPixelData(), rawImage.Size());
+    imageStagingMemory.Unmap(device);
+
+    image.Usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+    if (!image.Create(device, rawImage.Extent(), VK_FORMAT_R8G8B8A8_SRGB))
+        return false;
+
+    if (!imageMemory.Allocate(physicalDevice, device, imageMemRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        return false;
+    
+    image.BindMemory(device, imageMemory, 0);
+    image.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    image.CopyFromBuffer(device, shortLivedCommandPool, device.graphicsQueue, imageStagingBuffer, rawImage.Extent());
+    image.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    imageStagingBuffer.Destroy(device);
+    imageStagingMemory.Free(device);
+
     return true;
 }
 
@@ -269,6 +305,8 @@ void Window::ShutdownGL()
 {
     device.WaitIdle();
 
+    image.Destroy(device);
+    imageMemory.Free(device);
     for (size_t i = 0; i < 2; i++)
     {
         uniformBuffers[i].Destroy(device);

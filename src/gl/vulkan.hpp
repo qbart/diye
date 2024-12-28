@@ -22,3 +22,4 @@
 #include "command_buffer.hpp"
 #include "semaphore.hpp"
 #include "fence.hpp"
+#include "image.hpp"
