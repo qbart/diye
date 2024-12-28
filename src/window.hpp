@@ -64,12 +64,12 @@ private:
     gl::ShaderModules shaderModules;
     gl::Pipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
-    VkCommandPool commandPool;
-    VkCommandPool shortLivedCommandPool;
-    std::vector<VkCommandBuffer> commandBuffers;
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
+    gl::CommandPool commandPool;
+    gl::CommandPool shortLivedCommandPool;
+    gl::CommandBuffer commandBuffers;
+    gl::Semaphore imageAvailableSemaphores;
+    gl::Semaphore renderFinishedSemaphores;
+    gl::Fence inFlightFences;
     uint32_t currentFrame = 0;
 
     std::vector<Vertex> vertices;

@@ -18,3 +18,7 @@
 #include "pipeline.hpp"
 #include "buffer.hpp"
 #include "memory.hpp"
+#include "command_pool.hpp"
+#include "command_buffer.hpp"
+#include "semaphore.hpp"
+#include "fence.hpp"

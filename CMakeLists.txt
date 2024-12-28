@@ -15,6 +15,10 @@ add_executable(${PROJECT_NAME}
     src/gl/pipeline.cpp
     src/gl/buffer.cpp
     src/gl/memory.cpp
+    src/gl/command_pool.cpp
+    src/gl/command_buffer.cpp
+    src/gl/semaphore.cpp
+    src/gl/fence.cpp
     src/core/transform.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp
