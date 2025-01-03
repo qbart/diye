@@ -88,10 +88,10 @@ bool Window::InitGL()
         return false;
 
     VkDeviceSize uboBufferSize = sizeof(UniformBufferObject);
-    uniformBuffers.resize(2);
-    uniformBuffersMemory.resize(2);
-    ubos.resize(2);
-    for (auto i = 0; i < 2; i++)
+    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+    ubos.resize(MAX_FRAMES_IN_FLIGHT);
+    for (auto i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         uniformBuffers[i].Usage(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
         if (!uniformBuffers[i].Create(device, uboBufferSize))
@@ -114,65 +114,15 @@ bool Window::InitGL()
     graphicsPipeline.SetVertexInput();
     graphicsPipeline.SetRenderPass(renderPass);
     graphicsPipeline.AddVertexInputBindingDescription(0).stride = sizeof(Vertex);
-    graphicsPipeline.AddVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos));
+    graphicsPipeline.AddVertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos));
     graphicsPipeline.AddVertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color));
+    graphicsPipeline.AddVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv));
     int setLayout = graphicsPipeline.AddDescriptorSetLayout();
     graphicsPipeline.AddDescriptorSetLayoutBinding(setLayout, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+    graphicsPipeline.AddDescriptorSetLayoutBinding(setLayout, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 
     if (!graphicsPipeline.CreateDescriptorSetLayouts(device))
         return false;
-
-    descriptorPoolSize = {};
-    descriptorPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorPoolSize.descriptorCount = static_cast<uint32_t>(2);
-
-    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
-    descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptorPoolCreateInfo.poolSizeCount = 1;
-    descriptorPoolCreateInfo.pPoolSizes = &descriptorPoolSize;
-    descriptorPoolCreateInfo.maxSets = static_cast<uint32_t>(2);
-
-    if (vkCreateDescriptorPool(device.handle, &descriptorPoolCreateInfo, nullptr, &descriptorPool) != VK_SUCCESS)
-    {
-        fmtx::Error("failed to create descriptor pool");
-        return false;
-    }
-    fmtx::Info("Descriptor pool created");
-
-    std::vector<VkDescriptorSetLayout> descriptorLayouts(2, graphicsPipeline.descriptorSetLayouts[0]);
-    VkDescriptorSetAllocateInfo descriptorSetAllocInfo{};
-    descriptorSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptorSetAllocInfo.descriptorPool = descriptorPool;
-    descriptorSetAllocInfo.descriptorSetCount = static_cast<uint32_t>(2);
-    descriptorSetAllocInfo.pSetLayouts = descriptorLayouts.data();
-
-    graphicsPipeline.descriptorSets.resize(2);
-    if (vkAllocateDescriptorSets(device.handle, &descriptorSetAllocInfo, graphicsPipeline.descriptorSets.data()) != VK_SUCCESS)
-    {
-        fmtx::Error("failed to allocate descriptor sets");
-        return false;
-    }
-
-    for (int i = 0; i < 2; i++)
-    {
-        VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = uniformBuffers[i].handle;
-        bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject);
-
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = graphicsPipeline.descriptorSets[i];
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
-        descriptorWrite.pImageInfo = nullptr;       // Optional
-        descriptorWrite.pTexelBufferView = nullptr; // Optional
-
-        vkUpdateDescriptorSets(device.handle, 1, &descriptorWrite, 0, nullptr);
-    }
 
     if (!graphicsPipeline.CreateLayout(device))
         return false;
@@ -207,11 +157,18 @@ bool Window::InitGL()
         return false;
 
     vertices = {
-        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
-    indices = {0, 1, 2, 2, 3, 0};
+        {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+        {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+        {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+        {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+
+        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+        {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+        {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+        {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}};
+    indices = {
+        0, 1, 2, 2, 3, 0,
+        4, 5, 6, 6, 7, 4};
 
     stagingBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     if (!stagingBuffer.Create(device, sizeof(vertices[0]) * vertices.size()))
@@ -289,7 +246,7 @@ bool Window::InitGL()
 
     if (!textureMemory.Allocate(physicalDevice, device, imageMemRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
         return false;
-    
+
     texture.BindMemory(device, textureMemory, 0);
     texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     texture.CopyFromBuffer(device, shortLivedCommandPool, device.graphicsQueue, imageStagingBuffer, rawImage.Extent());
@@ -300,6 +257,105 @@ bool Window::InitGL()
 
     if (!textureView.Create(device, texture, VK_FORMAT_R8G8B8A8_SRGB))
         return false;
+    
+    VkSamplerCreateInfo samplerCreateInfo{};
+    samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+    samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
+    samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerCreateInfo.anisotropyEnable = VK_TRUE;
+    samplerCreateInfo.maxAnisotropy = physicalDevice.properties.limits.maxSamplerAnisotropy;
+    samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerCreateInfo.compareEnable = VK_FALSE;
+    samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerCreateInfo.mipLodBias = 0.0f;
+    samplerCreateInfo.minLod = 0.0f;
+    samplerCreateInfo.maxLod = 0.0f;
+    if (vkCreateSampler(device.handle, &samplerCreateInfo, nullptr, &textureSampler) != VK_SUCCESS)
+    {
+        fmtx::Error("failed to create texture sampler");
+        return false;
+    }
+
+    descriptorPoolSize.push_back({});
+    descriptorPoolSize.push_back({});
+    descriptorPoolSize[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorPoolSize[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    descriptorPoolSize[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorPoolSize[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
+    descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descriptorPoolCreateInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSize.size());
+    descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSize.data();
+    descriptorPoolCreateInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+    if (vkCreateDescriptorPool(device.handle, &descriptorPoolCreateInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+    {
+        fmtx::Error("failed to create descriptor pool");
+        return false;
+    }
+    fmtx::Info("Descriptor pool created");
+
+    std::vector<VkDescriptorSetLayout> descriptorLayouts(2, graphicsPipeline.descriptorSetLayouts[0]);
+    VkDescriptorSetAllocateInfo descriptorSetAllocInfo{};
+    descriptorSetAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    descriptorSetAllocInfo.descriptorPool = descriptorPool;
+    descriptorSetAllocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    descriptorSetAllocInfo.pSetLayouts = descriptorLayouts.data();
+
+    descriptorSets.resize(2);
+    if (vkAllocateDescriptorSets(device.handle, &descriptorSetAllocInfo, descriptorSets.data()) != VK_SUCCESS)
+    {
+        fmtx::Error("failed to allocate descriptor sets");
+        return false;
+    }
+    fmtx::Info("Descriptor sets allocated");
+
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffers[i].handle;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = textureView.handle;
+        imageInfo.sampler = textureSampler;
+
+        std::vector<VkWriteDescriptorSet> descriptorWrite{};
+        descriptorWrite.reserve(2);
+        descriptorWrite.push_back({});
+        descriptorWrite.push_back({});
+
+        descriptorWrite[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite[0].dstSet = descriptorSets[i];
+        descriptorWrite[0].dstBinding = 0;
+        descriptorWrite[0].dstArrayElement = 0;
+        descriptorWrite[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite[0].descriptorCount = 1;
+        descriptorWrite[0].pBufferInfo = &bufferInfo;
+        descriptorWrite[0].pImageInfo = nullptr;       
+        descriptorWrite[0].pTexelBufferView = nullptr;
+
+        descriptorWrite[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite[1].dstSet = descriptorSets[i];
+        descriptorWrite[1].dstBinding = 1;
+        descriptorWrite[1].dstArrayElement = 0;
+        descriptorWrite[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrite[1].descriptorCount = 1;
+        descriptorWrite[1].pBufferInfo = nullptr;
+        descriptorWrite[1].pImageInfo = &imageInfo;
+        descriptorWrite[1].pTexelBufferView = nullptr;
+
+        vkUpdateDescriptorSets(device.handle, static_cast<uint32_t>(descriptorWrite.size()), descriptorWrite.data(), 0, nullptr);
+    }
+    fmtx::Info("Descriptor sets updated");
 
     return true;
 }
@@ -308,10 +364,11 @@ void Window::ShutdownGL()
 {
     device.WaitIdle();
 
+    vkDestroySampler(device.handle, textureSampler, nullptr);
     textureView.Destroy(device);
     texture.Destroy(device);
     textureMemory.Free(device);
-    for (size_t i = 0; i < 2; i++)
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         uniformBuffers[i].Destroy(device);
         uniformBuffersMemory[i].Free(device);
@@ -425,8 +482,8 @@ void Window::Swap()
     ubos[currentFrame].mvp = proj * view * model;
 
     uniformBuffersMemory[currentFrame].CopyRaw(device, &ubos[currentFrame], sizeof(ubos[currentFrame]));
-    VkDescriptorSet descriptorSets[] = {graphicsPipeline.descriptorSets[currentFrame]};
-    vkCmdBindDescriptorSets(commandBuffers.handles[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.layout, 0, 1, &graphicsPipeline.descriptorSets[currentFrame], 0, nullptr);
+    VkDescriptorSet bindDescriptorSets[] = {descriptorSets[currentFrame]};
+    vkCmdBindDescriptorSets(commandBuffers.handles[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.layout, 0, 1, bindDescriptorSets, 0, nullptr);
 
     vkCmdBindVertexBuffers(commandBuffers.handles[currentFrame], 0, 1, vertexBuffers, offsets);
     vkCmdBindIndexBuffer(commandBuffers.handles[currentFrame], indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
@@ -491,7 +548,7 @@ void Window::Swap()
         throw std::runtime_error("failed to present swap chain image!");
     }
 
-    currentFrame = (currentFrame + 1) % 2;
+    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void Window::PollEvents()

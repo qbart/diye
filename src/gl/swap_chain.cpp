@@ -33,6 +33,8 @@ namespace gl
 
     bool SwapChain::Create(const Device &device, const Surface &surface, const PhysicalDevice &physicalDevice)
     {
+        images.clear();
+
         gl::SwapChainSupportDetails swapChainSupport = physicalDevice.swapChainSupport;
         // at this point we know that this format is available
         VkSurfaceFormatKHR surfaceFormat = {VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
@@ -90,6 +92,8 @@ namespace gl
         vkGetSwapchainImagesKHR(device.handle, handle, &imageCount, nullptr);
         imageHandles.resize(imageCount);
         vkGetSwapchainImagesKHR(device.handle, handle, &imageCount, imageHandles.data());
+        images.reserve(imageCount);
+
         for (auto &imageHandle : imageHandles)
         {
             Image image;
