@@ -29,6 +29,7 @@ namespace gl
         QueueFamilyIndices queueFamilyIndices;
         SwapChainSupportDetails swapChainSupport;
         VkPhysicalDeviceMemoryProperties memProperties;
+        VkFormat depthFormat;
 
         PhysicalDevice();
 
