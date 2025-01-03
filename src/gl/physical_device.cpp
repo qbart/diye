@@ -33,7 +33,7 @@ namespace gl
                 }
             }
         }
-        return valid && complete && deviceExtensionsSupported && swapChainAdequate && formatAvailable;
+        return valid && complete && deviceExtensionsSupported && swapChainAdequate && formatAvailable && features.samplerAnisotropy;
     }
 
     bool PhysicalDevice::IsExtensionSupported(const gl::CStrings &checkExtensions) const

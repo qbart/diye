@@ -26,7 +26,6 @@ namespace gl
         VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
         std::vector<VkVertexInputBindingDescription> vertexInputBindingDescriptions;
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions;
-        std::vector<VkDescriptorSet> descriptorSets;
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
         std::vector<VkDescriptorSetLayoutCreateInfo> descriptorSetLayoutCreateInfos;
         std::unordered_map<int, std::vector<VkDescriptorSetLayoutBinding>> descriptorSetLayoutBindings;

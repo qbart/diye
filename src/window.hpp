@@ -8,11 +8,14 @@
 class Window
 {
 public:
+    const static int MAX_FRAMES_IN_FLIGHT = 2;
+
     using Ptr = std::shared_ptr<Window>;
     struct Vertex
     {
-        Vec2 pos;
+        Vec3 pos;
         Vec3 color;
+        Vec2 uv;
     };
     struct UniformBufferObject
     {
@@ -86,9 +89,11 @@ private:
     gl::Image texture;
     gl::Memory textureMemory;
     gl::ImageView textureView;
+    std::vector<VkDescriptorSet> descriptorSets;
+    VkSampler textureSampler;
     std::vector<gl::Buffer> uniformBuffers;
     std::vector<gl::Memory> uniformBuffersMemory;
     std::vector<UniformBufferObject> ubos;
-    VkDescriptorPoolSize descriptorPoolSize;
+    std::vector<VkDescriptorPoolSize> descriptorPoolSize;
     VkDescriptorPool descriptorPool;
 };
