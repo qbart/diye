@@ -14,6 +14,7 @@ namespace gl
 
         ImageView();
         bool Create(const Device &device, const Image &image, VkFormat format);
+        void AspectMask(VkImageAspectFlags flags);
         void Destroy(const Device &device);
     };
 }

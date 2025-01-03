@@ -28,6 +28,11 @@ namespace gl
         }
     }
 
+    void ImageView::AspectMask(VkImageAspectFlags flags)
+    {
+        createInfo.subresourceRange.aspectMask = flags;
+    }
+
     void ImageView::Destroy(const Device &device)
     {
         if (handle != VK_NULL_HANDLE)

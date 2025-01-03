@@ -14,6 +14,7 @@ namespace gl
         VkPipelineLayout layout;
         VkPipelineLayoutCreateInfo layoutCreateInfo;
         VkGraphicsPipelineCreateInfo createInfo;
+        VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo;
         std::vector<VkDynamicState> dynamicStates;
         std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
         VkPipelineViewportStateCreateInfo viewportStateCreateInfo;
@@ -48,6 +49,7 @@ namespace gl
         void SetInputAssembly(VkPrimitiveTopology topology);
         void SetVertexInput();
         void SetRenderPass(const RenderPass &renderPass);
+        void SetDepthStencil();
         VkVertexInputBindingDescription &AddVertexInputBindingDescription(std::uint32_t binding, VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
         VkVertexInputAttributeDescription &AddVertexInputAttributeDescription(std::uint32_t binding, std::uint32_t location, VkFormat format = VK_FORMAT_R32G32B32_SFLOAT, std::uint32_t offset = 0);
         int AddDescriptorSetLayout();

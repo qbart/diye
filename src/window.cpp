@@ -77,6 +77,16 @@ bool Window::InitGL()
         fmtx::Error("Failed to create image views");
         return false;
     }
+    depthImage.Usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    if (!depthImage.Create(device, swapChain.extent, physicalDevice.depthFormat))
+        return false;
+    if (!depthImageMemory.Allocate(physicalDevice, device, depthImage.MemoryRequirements(device), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        return false;
+    depthImage.BindMemory(device, depthImageMemory, 0);
+    depthImageView.AspectMask(VK_IMAGE_ASPECT_DEPTH_BIT);
+    if (!depthImageView.Create(device, depthImage, physicalDevice.depthFormat))
+        return false;
+
     shaderModules.vert = gl::CreateShaderModule(device, BinaryFile::Load("dummy.vert.spv")->Bytes());
     shaderModules.frag = gl::CreateShaderModule(device, BinaryFile::Load("dummy.frag.spv")->Bytes());
     if (shaderModules.vert == VK_NULL_HANDLE || shaderModules.frag == VK_NULL_HANDLE)
@@ -84,7 +94,9 @@ bool Window::InitGL()
         fmtx::Error("Failed to create shader modules");
         return false;
     }
-    if (!renderPass.Create(device, swapChain, shaderModules))
+    renderPass.AddColorAttachment(swapChain.imageFormat);
+    renderPass.SetDepthAttachment(physicalDevice.depthFormat);
+    if (!renderPass.Create(device, shaderModules))
         return false;
 
     VkDeviceSize uboBufferSize = sizeof(UniformBufferObject);
@@ -108,6 +120,7 @@ bool Window::InitGL()
     graphicsPipeline.AddDynamicViewport();
     graphicsPipeline.AddDynamicScissor();
     graphicsPipeline.AddColorBlendAttachment();
+    graphicsPipeline.SetDepthStencil();
     graphicsPipeline.SetMultisample();
     graphicsPipeline.SetRasterization(VK_FRONT_FACE_COUNTER_CLOCKWISE);
     graphicsPipeline.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
@@ -257,7 +270,7 @@ bool Window::InitGL()
 
     if (!textureView.Create(device, texture, VK_FORMAT_R8G8B8A8_SRGB))
         return false;
-    
+
     VkSamplerCreateInfo samplerCreateInfo{};
     samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
@@ -340,7 +353,7 @@ bool Window::InitGL()
         descriptorWrite[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         descriptorWrite[0].descriptorCount = 1;
         descriptorWrite[0].pBufferInfo = &bufferInfo;
-        descriptorWrite[0].pImageInfo = nullptr;       
+        descriptorWrite[0].pImageInfo = nullptr;
         descriptorWrite[0].pTexelBufferView = nullptr;
 
         descriptorWrite[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -390,6 +403,9 @@ void Window::ShutdownGL()
     renderPass.Destroy(device);
     gl::DestroyShaderModule(device, shaderModules.vert);
     gl::DestroyShaderModule(device, shaderModules.frag);
+    depthImageView.Destroy(device);
+    depthImage.Destroy(device);
+    depthImageMemory.Free(device);
     device.DestroyImageViews(imageViews);
     swapChain.Destroy(device);
     device.Destroy();
@@ -461,9 +477,11 @@ void Window::Swap()
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = swapChain.extent;
 
-    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-    renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &clearColor;
+    std::vector<VkClearValue> clearValues(2);
+    clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
+    clearValues[1].depthStencil = {1.0f, 0};
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffers.handles[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(commandBuffers.handles[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.handle);

@@ -89,6 +89,9 @@ private:
     gl::Image texture;
     gl::Memory textureMemory;
     gl::ImageView textureView;
+    gl::Image depthImage;
+    gl::Memory depthImageMemory;
+    gl::ImageView depthImageView;
     std::vector<VkDescriptorSet> descriptorSets;
     VkSampler textureSampler;
     std::vector<gl::Buffer> uniformBuffers;

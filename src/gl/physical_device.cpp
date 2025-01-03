@@ -5,7 +5,8 @@
 
 namespace gl
 {
-    PhysicalDevice::PhysicalDevice()
+    PhysicalDevice::PhysicalDevice() : handle(VK_NULL_HANDLE),
+                                       depthFormat(VK_FORMAT_UNDEFINED)
     {
     }
 
@@ -137,6 +138,21 @@ namespace gl
             devices[i].QuerySwapChainSupport(surface);
             devices[i].QueryQueueFamilies(surface);
             vkGetPhysicalDeviceMemoryProperties(devices[i].handle, &devices[i].memProperties);
+
+            // take the best depth format with stencil buffer
+            VkFormatProperties depthFormatPropertiesD32S8;
+            VkFormatProperties depthFormatPropertiesD24S8;
+            vkGetPhysicalDeviceFormatProperties(devices[i].handle, VK_FORMAT_D32_SFLOAT_S8_UINT, &depthFormatPropertiesD32S8);
+            vkGetPhysicalDeviceFormatProperties(devices[i].handle, VK_FORMAT_D24_UNORM_S8_UINT, &depthFormatPropertiesD24S8);
+
+            if (depthFormatPropertiesD32S8.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT == VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+                devices[i].depthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
+            else if (depthFormatPropertiesD24S8.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT == VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+                devices[i].depthFormat = VK_FORMAT_D24_UNORM_S8_UINT;
+            else
+            {
+                fmtx::Error("Failed to find depth format with stencil buffer");
+            }
         }
 
         return devices;

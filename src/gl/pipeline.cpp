@@ -12,7 +12,8 @@ namespace gl
                            multisampleStateCreateInfo({}),
                            rasterizationStateCreateInfo({}),
                            inputAssemblyStateCreateInfo({}),
-                           vertexInputStateCreateInfo({})
+                           vertexInputStateCreateInfo({}),
+                           depthStencilStateCreateInfo({})
     {
         createInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         createInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
@@ -74,7 +75,7 @@ namespace gl
             return true;
         }
 
-        fmtx::Error("Failed to create pipeline layout"); 
+        fmtx::Error("Failed to create pipeline layout");
         return false;
     }
 
@@ -228,6 +229,21 @@ namespace gl
     void Pipeline::SetRenderPass(const gl::RenderPass &renderPass)
     {
         createInfo.renderPass = renderPass.handle;
+    }
+
+    void Pipeline::SetDepthStencil()
+    {
+        depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+        depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+        depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+        depthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
+        depthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
+        depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+        depthStencilStateCreateInfo.front = {}; // Optional
+        depthStencilStateCreateInfo.back = {};  // Optional
+        createInfo.pDepthStencilState = &depthStencilStateCreateInfo;
     }
 
     VkVertexInputBindingDescription &Pipeline::AddVertexInputBindingDescription(std::uint32_t binding, VkVertexInputRate inputRate)
