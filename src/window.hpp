@@ -67,7 +67,7 @@ private:
     std::vector<gl::ImageView> imageViews;
     gl::ShaderModules shaderModules;
     gl::Pipeline graphicsPipeline;
-    std::vector<VkFramebuffer> swapChainFramebuffers;
+    std::vector<gl::Framebuffer> swapChainFramebuffers;
     gl::CommandPool commandPool;
     gl::CommandPool shortLivedCommandPool;
     gl::CommandBuffer commandBuffers;

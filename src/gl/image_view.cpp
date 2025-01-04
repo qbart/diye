@@ -33,6 +33,11 @@ namespace gl
         createInfo.subresourceRange.aspectMask = flags;
     }
 
+    void ImageView::AspectMaskDepth()
+    {
+        AspectMask(VK_IMAGE_ASPECT_DEPTH_BIT);
+    }
+
     void ImageView::Destroy(const Device &device)
     {
         if (handle != VK_NULL_HANDLE)

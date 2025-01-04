@@ -24,3 +24,4 @@
 #include "fence.hpp"
 #include "image.hpp"
 #include "image_view.hpp"
+#include "framebuffer.hpp"

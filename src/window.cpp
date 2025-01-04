@@ -71,19 +71,20 @@ bool Window::InitGL()
     if (!swapChain.Create(device, surface, physicalDevice))
         return false;
 
-    imageViews = device.CreateImageViews(swapChain.imageFormat, swapChain.images);
-    if (imageViews.empty())
+    imageViews.resize(swapChain.images.size());
+    for (size_t i = 0; i < swapChain.images.size(); i++)
     {
-        fmtx::Error("Failed to create image views");
-        return false;
+        if (!imageViews[i].Create(device, swapChain.images[i], swapChain.imageFormat))
+            return false;
     }
-    depthImage.Usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+    depthImage.UsageDepthOnly();
     if (!depthImage.Create(device, swapChain.extent, physicalDevice.depthFormat))
         return false;
     if (!depthImageMemory.Allocate(physicalDevice, device, depthImage.MemoryRequirements(device), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
         return false;
     depthImage.BindMemory(device, depthImageMemory, 0);
-    depthImageView.AspectMask(VK_IMAGE_ASPECT_DEPTH_BIT);
+    depthImageView.AspectMaskDepth();
     if (!depthImageView.Create(device, depthImage, physicalDevice.depthFormat))
         return false;
 
@@ -143,11 +144,13 @@ bool Window::InitGL()
     if (!graphicsPipeline.Create(device))
         return false;
 
-    swapChainFramebuffers = device.CreateFramebuffers(renderPass, imageViews, swapChain.extent);
-    if (swapChainFramebuffers.empty())
+    swapChainFramebuffers.resize(swapChain.images.size());
+    for (auto i = 0; i < swapChain.images.size(); i++)
     {
-        fmtx::Error("failed to create framebuffers");
-        return false;
+        swapChainFramebuffers[i].AddAttachment(imageViews[i]);
+        swapChainFramebuffers[i].AddAttachment(depthImageView);
+        if (!swapChainFramebuffers[i].Create(device, renderPass, swapChain.extent))
+            return false;
     }
 
     if (!commandPool.Create(device, physicalDevice.queueFamilyIndices.graphicsFamily.value()))
@@ -157,13 +160,13 @@ bool Window::InitGL()
     if (!shortLivedCommandPool.Create(device, physicalDevice.queueFamilyIndices.graphicsFamily.value()))
         return false;
 
-    if (!commandBuffers.Allocate(device, commandPool, 2))
+    if (!commandBuffers.Allocate(device, commandPool, MAX_FRAMES_IN_FLIGHT))
         return false;
 
-    if (!imageAvailableSemaphores.Create(device, 2))
+    if (!imageAvailableSemaphores.Create(device, MAX_FRAMES_IN_FLIGHT))
         return false;
 
-    if (!renderFinishedSemaphores.Create(device, 2))
+    if (!renderFinishedSemaphores.Create(device, MAX_FRAMES_IN_FLIGHT))
         return false;
 
     if (!inFlightFences.Create(device, 2))
@@ -395,7 +398,8 @@ void Window::ShutdownGL()
     inFlightFences.Destroy(device);
     shortLivedCommandPool.Destroy(device);
     commandPool.Destroy(device);
-    device.DestroyFramebuffers(swapChainFramebuffers);
+    for (int i = 0; i < swapChainFramebuffers.size(); i++)
+        swapChainFramebuffers[i].Destroy(device);
     graphicsPipeline.Destroy(device);
     graphicsPipeline.DestroyLayout(device);
     vkDestroyDescriptorPool(device.handle, descriptorPool, nullptr);
@@ -406,7 +410,8 @@ void Window::ShutdownGL()
     depthImageView.Destroy(device);
     depthImage.Destroy(device);
     depthImageMemory.Free(device);
-    device.DestroyImageViews(imageViews);
+    for (auto i = 0; i < imageViews.size(); i++)
+        imageViews[i].Destroy(device);
     swapChain.Destroy(device);
     device.Destroy();
     surface.Destroy(instance);
@@ -419,8 +424,18 @@ void Window::RecreateSwapChain()
     device.WaitIdle();
 
     // clean swap chain
-    device.DestroyFramebuffers(swapChainFramebuffers);
-    device.DestroyImageViews(imageViews);
+    for (int i = 0; i < swapChainFramebuffers.size(); i++)
+        swapChainFramebuffers[i].Destroy(device);
+
+    depthImageView.Destroy(device);
+    depthImage.Destroy(device);
+    depthImageMemory.Free(device);
+
+    for (auto i = 0; i < imageViews.size(); i++)
+        imageViews[i].Destroy(device);
+
+    swapChainFramebuffers.clear();
+    imageViews.clear();
     swapChain.Destroy(device);
 
     // recreate swap chain
@@ -432,16 +447,33 @@ void Window::RecreateSwapChain()
     }
 
     // recreate image views
-    imageViews = device.CreateImageViews(swapChain.imageFormat, swapChain.images);
-    if (imageViews.empty())
+    imageViews.resize(swapChain.images.size());
+    for (size_t i = 0; i < imageViews.size(); i++)
     {
-        fmtx::Error("Failed to create image views");
+        if (!imageViews[i].Create(device, swapChain.images[i], swapChain.imageFormat))
+            fmtx::Error("Failed to recreate image views");
     }
+
+    // recreate depth image
+    depthImage.UsageDepthOnly();
+    if (!depthImage.Create(device, swapChain.extent, physicalDevice.depthFormat))
+        fmtx::Error("Failed to recreate depth image");
+    if (!depthImageMemory.Allocate(physicalDevice, device, depthImage.MemoryRequirements(device), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        fmtx::Error("Failed to recreate depth image memory");
+    depthImage.BindMemory(device, depthImageMemory, 0);
+    depthImageView.AspectMaskDepth();
+    if (!depthImageView.Create(device, depthImage, physicalDevice.depthFormat))
+        fmtx::Error("Failed to recreate depth image view");
+
     // recreate framebuffers
-    swapChainFramebuffers = device.CreateFramebuffers(renderPass, imageViews, swapChain.extent);
-    if (swapChainFramebuffers.empty())
+    swapChainFramebuffers.resize(swapChain.images.size());
+    for (int i = 0; i < swapChainFramebuffers.size(); i++)
     {
-        fmtx::Error("Failed to create framebuffers");
+        swapChainFramebuffers[i].ClearAttachments();
+        swapChainFramebuffers[i].AddAttachment(imageViews[i]);
+        swapChainFramebuffers[i].AddAttachment(depthImageView);
+        if (!swapChainFramebuffers[i].Create(device, renderPass, swapChain.extent))
+            fmtx::Error("Failed to recreate framebuffers");
     }
 }
 
@@ -473,7 +505,7 @@ void Window::Swap()
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = renderPass.handle;
-    renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+    renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex].handle;
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = swapChain.extent;
 
