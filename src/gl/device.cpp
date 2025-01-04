@@ -93,4 +93,9 @@ namespace gl
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
+
+    void Device::UpdateDescriptorSets(const std::vector<VkWriteDescriptorSet> &descriptorWrites)
+    {
+        vkUpdateDescriptorSets(handle, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
 }

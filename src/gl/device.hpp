@@ -22,5 +22,6 @@ namespace gl
         void RequireSwapchainExtension();
         void SetRequiredExtensions(const CStrings &extensions);
         void EnableValidationLayers();
+        void UpdateDescriptorSets(const std::vector<VkWriteDescriptorSet> &descriptorWrites);
     };
 };
