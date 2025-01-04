@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
     src/gl/image.cpp
     src/gl/image_view.cpp
     src/gl/framebuffer.cpp
+    src/gl/sampler.cpp
     src/core/transform.cpp
     src/core/camera.cpp
     src/core/animation_curve.cpp

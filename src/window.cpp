@@ -100,6 +100,15 @@ bool Window::InitGL()
     if (!renderPass.Create(device, shaderModules))
         return false;
 
+    swapChainFramebuffers.resize(swapChain.images.size());
+    for (auto i = 0; i < swapChain.images.size(); i++)
+    {
+        swapChainFramebuffers[i].AddAttachment(imageViews[i]);
+        swapChainFramebuffers[i].AddAttachment(depthImageView);
+        if (!swapChainFramebuffers[i].Create(device, renderPass, swapChain.extent))
+            return false;
+    }
+
     VkDeviceSize uboBufferSize = sizeof(UniformBufferObject);
     uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
@@ -143,15 +152,6 @@ bool Window::InitGL()
 
     if (!graphicsPipeline.Create(device))
         return false;
-
-    swapChainFramebuffers.resize(swapChain.images.size());
-    for (auto i = 0; i < swapChain.images.size(); i++)
-    {
-        swapChainFramebuffers[i].AddAttachment(imageViews[i]);
-        swapChainFramebuffers[i].AddAttachment(depthImageView);
-        if (!swapChainFramebuffers[i].Create(device, renderPass, swapChain.extent))
-            return false;
-    }
 
     if (!commandPool.Create(device, physicalDevice.queueFamilyIndices.graphicsFamily.value()))
         return false;
@@ -274,28 +274,10 @@ bool Window::InitGL()
     if (!textureView.Create(device, texture, VK_FORMAT_R8G8B8A8_SRGB))
         return false;
 
-    VkSamplerCreateInfo samplerCreateInfo{};
-    samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-    samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-    samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerCreateInfo.anisotropyEnable = VK_TRUE;
-    samplerCreateInfo.maxAnisotropy = physicalDevice.properties.limits.maxSamplerAnisotropy;
-    samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerCreateInfo.compareEnable = VK_FALSE;
-    samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerCreateInfo.mipLodBias = 0.0f;
-    samplerCreateInfo.minLod = 0.0f;
-    samplerCreateInfo.maxLod = 0.0f;
-    if (vkCreateSampler(device.handle, &samplerCreateInfo, nullptr, &textureSampler) != VK_SUCCESS)
-    {
-        fmtx::Error("failed to create texture sampler");
+    textureSampler.MaxAnisotropy(physicalDevice);
+    textureSampler.LinearFilter();
+    if (!textureSampler.Create(device))
         return false;
-    }
 
     descriptorPoolSize.push_back({});
     descriptorPoolSize.push_back({});
@@ -342,7 +324,7 @@ bool Window::InitGL()
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         imageInfo.imageView = textureView.handle;
-        imageInfo.sampler = textureSampler;
+        imageInfo.sampler = textureSampler.handle;
 
         std::vector<VkWriteDescriptorSet> descriptorWrite{};
         descriptorWrite.reserve(2);
@@ -380,7 +362,7 @@ void Window::ShutdownGL()
 {
     device.WaitIdle();
 
-    vkDestroySampler(device.handle, textureSampler, nullptr);
+    textureSampler.Destroy(device);
     textureView.Destroy(device);
     texture.Destroy(device);
     textureMemory.Free(device);
@@ -502,20 +484,11 @@ void Window::Swap()
     {
         throw std::runtime_error("failed to begin recording command buffer!");
     }
-    VkRenderPassBeginInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = renderPass.handle;
-    renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex].handle;
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = swapChain.extent;
 
-    std::vector<VkClearValue> clearValues(2);
-    clearValues[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
-    clearValues[1].depthStencil = {1.0f, 0};
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    renderPassInfo.pClearValues = clearValues.data();
+    commandBuffers.ClearColor({0.0f, 0.0f, 0.0f, 1.0f});
+    commandBuffers.ClearDepthStencil();
+    commandBuffers.CmdBeginRenderPass(currentFrame, renderPass, swapChainFramebuffers[imageIndex], swapChain.extent);
 
-    vkCmdBeginRenderPass(commandBuffers.handles[currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(commandBuffers.handles[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.handle);
 
     commandBuffers.CmdViewport(currentFrame, {0, 0}, swapChain.extent);
@@ -540,7 +513,7 @@ void Window::Swap()
 
     vkCmdDrawIndexed(commandBuffers.handles[currentFrame], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
-    vkCmdEndRenderPass(commandBuffers.handles[currentFrame]);
+    commandBuffers.CmdEndRenderPass(currentFrame);
     if (commandBuffers.End(currentFrame) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to record command buffer!");

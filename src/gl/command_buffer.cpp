@@ -2,9 +2,9 @@
 
 namespace gl
 {
-    CommandBuffer::CommandBuffer() : allocInfo({})
+    CommandBuffer::CommandBuffer() : allocInfo({}),
+                                     clearValues(0)
     {
-
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     }
@@ -34,7 +34,7 @@ namespace gl
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = flags;
-        beginInfo.pInheritanceInfo = nullptr; 
+        beginInfo.pInheritanceInfo = nullptr;
 
         return vkBeginCommandBuffer(handles[cmdBufferIndex], &beginInfo);
     }
@@ -47,6 +47,40 @@ namespace gl
     void CommandBuffer::Reset(uint32_t cmdBufferIndex, VkCommandBufferResetFlags flags)
     {
         vkResetCommandBuffer(handles[cmdBufferIndex], flags);
+    }
+
+    void CommandBuffer::ClearColor(VkClearColorValue color)
+    {
+        VkClearValue clearValue{};
+        clearValue.color = color;
+        clearValues.push_back(clearValue);
+    }
+
+    void CommandBuffer::ClearDepthStencil()
+    {
+        VkClearValue clearValue{};
+        clearValue.depthStencil = {1.0f, 0};
+        clearValues.push_back(clearValue);
+    }
+
+    void CommandBuffer::CmdBeginRenderPass(uint32_t cmdBufferIndex, const RenderPass &renderPass, const Framebuffer &framebuffer, VkExtent2D renderAreaExtent)
+    {
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass.handle;
+        renderPassInfo.framebuffer = framebuffer.handle;
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = renderAreaExtent;
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(handles[cmdBufferIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        clearValues.clear();
+    }
+
+    void CommandBuffer::CmdEndRenderPass(uint32_t cmdBufferIndex)
+    {
+        vkCmdEndRenderPass(handles[cmdBufferIndex]);
     }
 
     void CommandBuffer::CmdViewport(uint32_t cmdBufferIndex, VkOffset2D offset, VkExtent2D size, float minDepth, float maxDepth)
