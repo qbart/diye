@@ -26,3 +26,4 @@
 #include "image_view.hpp"
 #include "framebuffer.hpp"
 #include "sampler.hpp"
+#include "descriptor_pool.hpp"

@@ -92,11 +92,9 @@ private:
     gl::Image depthImage;
     gl::Memory depthImageMemory;
     gl::ImageView depthImageView;
-    std::vector<VkDescriptorSet> descriptorSets;
     gl::Sampler textureSampler;
     std::vector<gl::Buffer> uniformBuffers;
     std::vector<gl::Memory> uniformBuffersMemory;
     std::vector<UniformBufferObject> ubos;
-    std::vector<VkDescriptorPoolSize> descriptorPoolSize;
-    VkDescriptorPool descriptorPool;
+    gl::DescriptorPool descriptorPool;
 };
