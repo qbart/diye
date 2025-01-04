@@ -418,22 +418,24 @@ void Window::Swap()
     }
     else if (nextResult != VK_SUCCESS && nextResult != VK_SUBOPTIMAL_KHR)
     {
-        throw std::runtime_error("failed to acquire swap chain image!");
+        fmtx::Error("Failed to acquire swap chain image");
+        active = false;
+        return;
     }
     inFlightFences.Reset(currentFrame, device);
 
     commandBuffers.Reset(currentFrame);
     if (commandBuffers.Begin(currentFrame) != VK_SUCCESS)
     {
-        throw std::runtime_error("failed to begin recording command buffer!");
+        fmtx::Error("Failed to begin recording command buffer");
+        active = false;
+        return;
     }
 
     commandBuffers.ClearColor({0.0f, 0.0f, 0.0f, 1.0f});
     commandBuffers.ClearDepthStencil();
     commandBuffers.CmdBeginRenderPass(currentFrame, renderPass, swapChainFramebuffers[imageIndex], swapChain.extent);
-
-    vkCmdBindPipeline(commandBuffers.handles[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.handle);
-
+    commandBuffers.CmdBindGraphicsPipeline(currentFrame, graphicsPipeline);
     commandBuffers.CmdViewport(currentFrame, {0, 0}, swapChain.extent);
     commandBuffers.CmdScissor(currentFrame, {0, 0}, swapChain.extent);
 
@@ -451,15 +453,17 @@ void Window::Swap()
     VkDescriptorSet bindDescriptorSets[] = {descriptorPool.descriptorSets[currentFrame].handle};
     vkCmdBindDescriptorSets(commandBuffers.handles[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.layout, 0, 1, bindDescriptorSets, 0, nullptr);
 
-    vkCmdBindVertexBuffers(commandBuffers.handles[currentFrame], 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(commandBuffers.handles[currentFrame], indexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+    commandBuffers.CmdBindVertexBuffer(currentFrame, vertexBuffer);
+    commandBuffers.CmdBindIndexBuffer(currentFrame, indexBuffer);
 
     vkCmdDrawIndexed(commandBuffers.handles[currentFrame], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
     commandBuffers.CmdEndRenderPass(currentFrame);
     if (commandBuffers.End(currentFrame) != VK_SUCCESS)
     {
-        throw std::runtime_error("failed to record command buffer!");
+        fmtx::Error("Failed to record command buffer");
+        active = false;
+        return;
     }
     // end
 
@@ -480,7 +484,9 @@ void Window::Swap()
 
     if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, inFlightFences.handles[currentFrame]) != VK_SUCCESS)
     {
-        throw std::runtime_error("failed to submit draw command buffer!");
+        fmtx::Error("Failed to submit draw command buffer");
+        active = false;
+        return;
     }
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -511,7 +517,9 @@ void Window::Swap()
     }
     else if (presentResult != VK_SUCCESS)
     {
-        throw std::runtime_error("failed to present swap chain image!");
+        fmtx::Error("Failed to present swap chain image");
+        active = false;
+        return;
     }
 
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;

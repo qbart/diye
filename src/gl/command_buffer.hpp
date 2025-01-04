@@ -5,6 +5,8 @@
 #include "command_pool.hpp"
 #include "render_pass.hpp"
 #include "framebuffer.hpp"
+#include "pipeline.hpp"
+#include "buffer.hpp"
 
 namespace gl
 {
@@ -27,6 +29,9 @@ namespace gl
         void CmdEndRenderPass(uint32_t cmdBufferIndex);
         void CmdViewport(uint32_t cmdBufferIndex, VkOffset2D offset, VkExtent2D size, float minDepth = 0, float maxDepth = 1);
         void CmdScissor(uint32_t cmdBufferIndex, VkOffset2D offset, VkExtent2D size);
+        void CmdBindGraphicsPipeline(uint32_t cmdBufferIndex, const Pipeline &pipeline);
+        void CmdBindVertexBuffer(uint32_t cmdBufferIndex, const Buffer &buffer, VkDeviceSize offset = 0);
+        void CmdBindIndexBuffer(uint32_t cmdBufferIndex, const Buffer &buffer, VkDeviceSize offset = 0);
 
     private:
         std::vector<VkClearValue> clearValues;
