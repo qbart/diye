@@ -4,7 +4,7 @@
 #include "gl.hpp"
 #include "geometry.hpp"
 #include "shader.hpp"
-#include "image.hpp"
+#include "io/image.hpp"
 
 std::vector<Vec2> TileQuadUV(float TileX, float TileY)
 {
@@ -103,7 +103,7 @@ public:
         projLoc = gl.GetUniformLocation(program, "projection");
 
         fmt::println("Loading textures");
-        Image tileset;
+        io::Image tileset;
         if (!tileset.Load("../res/debug.png"))
         {
             fmt::print("Failed to load image {}\n", "res/cliffs_city_tileset.png");

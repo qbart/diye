@@ -88,8 +88,8 @@ bool Window::InitGL()
     if (!depthImageView.Create(device, depthImage, physicalDevice.depthFormat))
         return false;
 
-    shaderModules.vert = gl::CreateShaderModule(device, BinaryFile::Load("dummy.vert.spv")->Bytes());
-    shaderModules.frag = gl::CreateShaderModule(device, BinaryFile::Load("dummy.frag.spv")->Bytes());
+    shaderModules.vert = gl::CreateShaderModule(device, io::BinaryFile::Load("dummy.vert.spv")->Bytes());
+    shaderModules.frag = gl::CreateShaderModule(device, io::BinaryFile::Load("dummy.frag.spv")->Bytes());
     if (shaderModules.vert == VK_NULL_HANDLE || shaderModules.frag == VK_NULL_HANDLE)
     {
         fmtx::Error("Failed to create shader modules");
@@ -237,7 +237,7 @@ bool Window::InitGL()
 
     gl::Buffer imageStagingBuffer;
     gl::Memory imageStagingMemory;
-    Image rawImage;
+    io::Image rawImage;
     if (!rawImage.Load("texture.png"))
     {
         fmtx::Error("Failed to load image");

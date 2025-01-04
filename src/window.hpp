@@ -3,7 +3,7 @@
 #include "deps/sdl.hpp"
 #include "gl/vulkan.hpp"
 #include "input.hpp"
-#include "image.hpp"
+#include "io/image.hpp"
 
 class Window
 {

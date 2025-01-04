@@ -5,22 +5,26 @@
 #include <memory>
 #include <vector>
 
-class BinaryFile
+namespace io
 {
-public:
-    using Ptr = std::shared_ptr<BinaryFile>;
-    static Ptr Load(const std::string &filename);
-
-    bool IsEmpty() const
+    class BinaryFile
     {
-        return data.empty();
-    }
+    public:
+        using Ptr = std::shared_ptr<BinaryFile>;
+        static Ptr Load(const std::string &filename);
 
-    const std::vector<char> &Bytes() const
-    {
-        return data;
-    }
+        bool IsEmpty() const
+        {
+            return data.empty();
+        }
 
-private:
-    std::vector<char> data;
-};
+        const std::vector<char> &Bytes() const
+        {
+            return data;
+        }
+
+    private:
+        std::vector<char> data;
+    };
+
+}

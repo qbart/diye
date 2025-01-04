@@ -30,12 +30,12 @@ add_executable(${PROJECT_NAME}
     src/geometry/half_edge.cpp
     src/geometry/half_edge_mesh.cpp
     src/io/binary.cpp
+    src/io/image.cpp
 
     src/experiments/experiment.cpp
 
     src/debug_draw_renderer.cpp
     src/gl.cpp
-    src/image.cpp
     src/input.cpp
     src/ui.cpp
     src/window.cpp

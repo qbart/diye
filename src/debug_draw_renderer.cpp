@@ -2,7 +2,7 @@
 #define DEBUG_DRAW_IMPLEMENTATION
 #include "deps/debug_draw.hpp"
 #include "debug_draw_renderer.hpp"
-#include "image.hpp"
+#include "io/image.hpp"
 
 DebugDrawRenderer::DebugDrawRenderer() : mvpMatrix(1.0f), linePointProgram(0), linePointProgram_MvpMatrixLocation(-1), textProgram(0), textProgram_GlyphTextureLocation(-1), textProgram_ScreenDimensions(-1), linePointVAO(0), linePointVBO(0), textVAO(0), textVBO(0)
 {

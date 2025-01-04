@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/all.hpp"
-#include "image.hpp"
+#include "io/image.hpp"
 #include <GL/glew.h>
 #include <sstream>
 #include <iostream>
@@ -253,7 +253,7 @@ struct GL
 		glTexParameteri((uint)target, (uint)name, (uint)param);
 	}
 
-	void TextureImage2D(TextureType target, const Image &image)
+	void TextureImage2D(TextureType target, const io::Image &image)
 	{
 		PixelFormat format = PixelFormat::RGBA;
 		if (image.Channels == 3)
@@ -501,7 +501,7 @@ struct GL
 	void Defaults();
 	Shader CreateAndCompileShader(ShaderType type, const std::string &src);
 	Program CreateDefaultProgram(const std::string &vertex, const std::string &frag);
-	Texture CreateDefaultTexture(const Image &image);
+	Texture CreateDefaultTexture(const io::Image &image);
 };
 
 struct Bytes
