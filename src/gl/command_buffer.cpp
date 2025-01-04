@@ -102,4 +102,20 @@ namespace gl
         scissor.extent = size;
         vkCmdSetScissor(handles[cmdBufferIndex], 0, 1, &scissor);
     }
+
+    void CommandBuffer::CmdBindGraphicsPipeline(uint32_t cmdBufferIndex, const Pipeline &pipeline)
+    {
+        vkCmdBindPipeline(handles[cmdBufferIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.handle);
+    }
+
+    void CommandBuffer::CmdBindVertexBuffer(uint32_t cmdBufferIndex, const Buffer &buffer, VkDeviceSize offset)
+    {
+        VkDeviceSize offsets[] = {offset};
+        vkCmdBindVertexBuffers(handles[cmdBufferIndex], 0, 1, &buffer.handle, offsets);
+    }
+
+    void CommandBuffer::CmdBindIndexBuffer(uint32_t cmdBufferIndex, const Buffer &buffer, VkDeviceSize offset)
+    {
+        vkCmdBindIndexBuffer(handles[cmdBufferIndex], buffer.handle, offset, VK_INDEX_TYPE_UINT32);
+    }
 }
