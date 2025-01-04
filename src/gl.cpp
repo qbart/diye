@@ -76,7 +76,7 @@ GL::Program GL::CreateDefaultProgram(const std::string &vertex, const std::strin
 	return program;
 }
 
-GL::Texture GL::CreateDefaultTexture(const Image &image)
+GL::Texture GL::CreateDefaultTexture(const io::Image &image)
 {
     auto id = GenTexture();
     BindTexture(GL::TextureType::Texture2D, id);
