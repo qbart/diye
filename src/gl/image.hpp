@@ -16,6 +16,7 @@ namespace gl
 
         Image();
         void Usage(VkImageUsageFlags usage);
+        void UsageDepthOnly();
         bool Create(const Device &device, VkExtent2D extent, VkFormat format);
         void Destroy(const Device &device);
         void BindMemory(const Device &device, const Memory &memory, VkDeviceSize offset);

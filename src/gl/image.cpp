@@ -21,6 +21,11 @@ namespace gl
         createInfo.usage = usage;
     }
 
+    void Image::UsageDepthOnly()
+    {
+        Usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    }
+
     bool Image::Create(const Device &device, VkExtent2D extent, VkFormat format)
     {
         createInfo.extent.width = extent.width;
