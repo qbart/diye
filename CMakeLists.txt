@@ -9,6 +9,7 @@ add_executable(${PROJECT_NAME}
     src/gl/surface.cpp
     src/gl/physical_device.cpp
     src/gl/device.cpp
+    src/gl/queue.cpp
     src/gl/swap_chain.cpp
     src/gl/shader_modules.cpp
     src/gl/render_pass.cpp

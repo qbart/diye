@@ -2,6 +2,7 @@
 
 #include "core.hpp"
 #include "physical_device.hpp"
+#include "queue.hpp"
 
 namespace gl
 {
@@ -10,8 +11,8 @@ namespace gl
     public:
         VkDeviceCreateInfo createInfo;
         VkDevice handle;
-        VkQueue graphicsQueue;
-        VkQueue presentQueue;
+        Queue graphicsQueue;
+        Queue presentQueue;
         std::vector<const char *> requiredExtensions;
         std::vector<const char *> validationLayers;
 

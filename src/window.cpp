@@ -205,7 +205,7 @@ bool Window::InitGL()
         return false;
     vertexBuffer.BindMemory(device, vertexBufferMemory, 0);
 
-    gl::CopyBuffer(device, shortLivedCommandPool.handle, device.graphicsQueue, stagingBuffer, vertexBuffer, stagingBuffer.Size());
+    gl::CopyBuffer(device, shortLivedCommandPool.handle, device.graphicsQueue.handle, stagingBuffer, vertexBuffer, stagingBuffer.Size());
 
     stagingBuffer.Destroy(device);
     stagingBufferMemory.Free(device);
@@ -230,7 +230,7 @@ bool Window::InitGL()
 
     indexBuffer.BindMemory(device, indexBufferMemory, 0);
 
-    gl::CopyBuffer(device, shortLivedCommandPool.handle, device.graphicsQueue, indexStagingBuffer, indexBuffer, indexStagingBuffer.Size());
+    gl::CopyBuffer(device, shortLivedCommandPool.handle, device.graphicsQueue.handle, indexStagingBuffer, indexBuffer, indexStagingBuffer.Size());
 
     indexStagingBuffer.Destroy(device);
     indexStagingBufferMemory.Free(device);
@@ -264,9 +264,9 @@ bool Window::InitGL()
         return false;
 
     texture.BindMemory(device, textureMemory, 0);
-    texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    texture.CopyFromBuffer(device, shortLivedCommandPool, device.graphicsQueue, imageStagingBuffer, rawImage.Extent());
-    texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue.handle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    texture.CopyFromBuffer(device, shortLivedCommandPool, device.graphicsQueue.handle, imageStagingBuffer, rawImage.Extent());
+    texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue.handle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     imageStagingBuffer.Destroy(device);
     imageStagingMemory.Free(device);
@@ -409,7 +409,7 @@ void Window::Swap()
 
     inFlightFences.Wait(currentFrame, device);
     uint32_t imageIndex;
-    VkResult nextResult = vkAcquireNextImageKHR(device.handle, swapChain.handle, UINT64_MAX, imageAvailableSemaphores.handles[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult nextResult = swapChain.AcquireNextImage(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
     if (nextResult == VK_ERROR_OUT_OF_DATE_KHR)
     {
         fmtx::Warn("Vulkan acquire next image returned out of date");
@@ -419,7 +419,7 @@ void Window::Swap()
     else if (nextResult != VK_SUCCESS && nextResult != VK_SUBOPTIMAL_KHR)
     {
         fmtx::Error("Failed to acquire swap chain image");
-        active = false;
+        Close();
         return;
     }
     inFlightFences.Reset(currentFrame, device);
@@ -432,16 +432,6 @@ void Window::Swap()
         return;
     }
 
-    commandBuffers.ClearColor({0.0f, 0.0f, 0.0f, 1.0f});
-    commandBuffers.ClearDepthStencil();
-    commandBuffers.CmdBeginRenderPass(currentFrame, renderPass, swapChainFramebuffers[imageIndex], swapChain.extent);
-    commandBuffers.CmdBindGraphicsPipeline(currentFrame, graphicsPipeline);
-    commandBuffers.CmdViewport(currentFrame, {0, 0}, swapChain.extent);
-    commandBuffers.CmdScissor(currentFrame, {0, 0}, swapChain.extent);
-
-    VkBuffer vertexBuffers[] = {vertexBuffer.handle};
-    VkDeviceSize offsets[] = {0};
-
     float time = SDL_GetTicks() / 1000.0f;
     auto model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     auto view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -450,57 +440,42 @@ void Window::Swap()
     ubos[currentFrame].mvp = proj * view * model;
 
     uniformBuffersMemory[currentFrame].CopyRaw(device, &ubos[currentFrame], sizeof(ubos[currentFrame]));
-    VkDescriptorSet bindDescriptorSets[] = {descriptorPool.descriptorSets[currentFrame].handle};
-    vkCmdBindDescriptorSets(commandBuffers.handles[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline.layout, 0, 1, bindDescriptorSets, 0, nullptr);
-
+    commandBuffers.ClearColor({0.0f, 0.0f, 0.0f, 1.0f});
+    commandBuffers.ClearDepthStencil();
+    commandBuffers.CmdBeginRenderPass(currentFrame, renderPass, swapChainFramebuffers[imageIndex], swapChain.extent);
+    commandBuffers.CmdBindGraphicsPipeline(currentFrame, graphicsPipeline);
+    commandBuffers.CmdViewport(currentFrame, {0, 0}, swapChain.extent);
+    commandBuffers.CmdScissor(currentFrame, {0, 0}, swapChain.extent);
+    commandBuffers.CmdBindDescriptorSet(currentFrame, graphicsPipeline, descriptorPool.descriptorSets[currentFrame].handle);
     commandBuffers.CmdBindVertexBuffer(currentFrame, vertexBuffer);
     commandBuffers.CmdBindIndexBuffer(currentFrame, indexBuffer);
-
-    vkCmdDrawIndexed(commandBuffers.handles[currentFrame], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+    commandBuffers.CmdDrawIndexed(currentFrame, static_cast<uint32_t>(indices.size()));
 
     commandBuffers.CmdEndRenderPass(currentFrame);
     if (commandBuffers.End(currentFrame) != VK_SUCCESS)
     {
         fmtx::Error("Failed to record command buffer");
-        active = false;
+        Close();
         return;
     }
     // end
 
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-    VkSemaphore waitSemaphores[] = {imageAvailableSemaphores.handles[currentFrame]};
-    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffers.handles[currentFrame];
-
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores.handles[currentFrame]};
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
-
-    if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, inFlightFences.handles[currentFrame]) != VK_SUCCESS)
+    device.graphicsQueue.Clear();
+    device.graphicsQueue.AddWaitSemaphore(imageAvailableSemaphores.handles[currentFrame]);
+    device.graphicsQueue.AddSignalSemaphore(renderFinishedSemaphores.handles[currentFrame]);
+    device.graphicsQueue.AddWaitStage(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+    if (device.graphicsQueue.Submit(commandBuffers.handles[currentFrame], inFlightFences.handles[currentFrame]) != VK_SUCCESS)
     {
         fmtx::Error("Failed to submit draw command buffer");
-        active = false;
+        Close();
         return;
     }
-    VkPresentInfoKHR presentInfo{};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
-
-    VkSwapchainKHR swapChains[] = {swapChain.handle};
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapChains;
-    presentInfo.pImageIndices = &imageIndex;
-    presentInfo.pResults = nullptr; // Optional
-
-    VkResult presentResult = vkQueuePresentKHR(device.presentQueue, &presentInfo);
+    device.presentQueue.Clear();
+    device.presentQueue.AddWaitSemaphore(renderFinishedSemaphores.handles[currentFrame]);
+    device.presentQueue.AddSwapChain(swapChain.handle);
+    device.presentQueue.AddImageIndex(imageIndex);
+    VkResult presentResult = device.presentQueue.Present();
 
     if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || resized)
     {
@@ -518,7 +493,7 @@ void Window::Swap()
     else if (presentResult != VK_SUCCESS)
     {
         fmtx::Error("Failed to present swap chain image");
-        active = false;
+        Close();
         return;
     }
 
@@ -595,6 +570,7 @@ void Window::PollEvents()
 void Window::Close()
 {
     isOpen = false;
+    active = false;
 }
 
 void Window::Debug()
