@@ -109,4 +109,9 @@ namespace gl
         if (handle != VK_NULL_HANDLE)
             vkDestroySwapchainKHR(device.handle, handle, nullptr);
     }
+
+    VkResult SwapChain::AcquireNextImage(const Device &device, uint32_t *imageIndex, VkSemaphore semaphore, VkFence fence) const
+    {
+        return vkAcquireNextImageKHR(device.handle, handle, UINT64_MAX, semaphore, fence, imageIndex);
+    }
 }

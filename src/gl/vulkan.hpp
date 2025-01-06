@@ -12,6 +12,7 @@
 #include "surface.hpp"
 #include "physical_device.hpp"
 #include "device.hpp"
+#include "queue.hpp"
 #include "swap_chain.hpp"
 #include "shader_modules.hpp"
 #include "render_pass.hpp"

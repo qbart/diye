@@ -108,6 +108,11 @@ namespace gl
         vkCmdBindPipeline(handles[cmdBufferIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.handle);
     }
 
+    void CommandBuffer::CmdBindDescriptorSet(uint32_t cmdBufferIndex, const Pipeline &pipeline, VkDescriptorSet descriptorSet)
+    {
+        vkCmdBindDescriptorSets(handles[cmdBufferIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.layout, 0, 1, &descriptorSet, 0, nullptr);
+    }
+
     void CommandBuffer::CmdBindVertexBuffer(uint32_t cmdBufferIndex, const Buffer &buffer, VkDeviceSize offset)
     {
         VkDeviceSize offsets[] = {offset};
@@ -117,5 +122,10 @@ namespace gl
     void CommandBuffer::CmdBindIndexBuffer(uint32_t cmdBufferIndex, const Buffer &buffer, VkDeviceSize offset)
     {
         vkCmdBindIndexBuffer(handles[cmdBufferIndex], buffer.handle, offset, VK_INDEX_TYPE_UINT32);
+    }
+
+    void CommandBuffer::CmdDrawIndexed(uint32_t cmdBufferIndex, uint32_t indexCount)
+    {
+        vkCmdDrawIndexed(handles[cmdBufferIndex], indexCount, 1, 0, 0, 0);
     }
 }

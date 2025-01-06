@@ -2,6 +2,7 @@
 
 #include <set>
 #include <vector>
+#include "queue.hpp"
 
 namespace gl
 {
@@ -52,8 +53,8 @@ namespace gl
             return false;
         }
 
-        vkGetDeviceQueue(handle, physicalDevice.queueFamilyIndices.graphicsFamily.value(), 0, &graphicsQueue);
-        vkGetDeviceQueue(handle, physicalDevice.queueFamilyIndices.presentFamily.value(), 0, &presentQueue);
+        vkGetDeviceQueue(handle, physicalDevice.queueFamilyIndices.graphicsFamily.value(), 0, &graphicsQueue.handle);
+        vkGetDeviceQueue(handle, physicalDevice.queueFamilyIndices.presentFamily.value(), 0, &presentQueue.handle);
 
         fmtx::Info("Logical device created");
 
