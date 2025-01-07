@@ -4,6 +4,7 @@
 #include <memory>
 #include "deps/imgui.hpp"
 #include "io/binary.hpp"
+#include "io/obj.hpp"
 #include "deps/fmt.hpp"
 #include <array>
 
@@ -186,6 +187,23 @@ bool Window::InitGL()
         0, 1, 2, 2, 3, 0,
         4, 5, 6, 6, 7, 4};
 
+    io::OBJ obj;
+    if (!obj.Load("viking_room.obj"))
+    {
+        fmtx::Error("Failed to load obj");
+        return false;
+    }
+    auto mesh = obj.GetMesh();
+    vertices.clear();
+    indices.clear();
+    vertices.reserve(mesh.vertices.size());
+    indices.reserve(mesh.indices.size());
+    for (const auto &v : mesh.vertices)
+        vertices.push_back({v.pos, v.color, v.texCoord});
+
+    for (const auto &i : mesh.indices)
+        indices.push_back(i);
+
     stagingBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     if (!stagingBuffer.Create(device, sizeof(vertices[0]) * vertices.size()))
         return false;
@@ -238,11 +256,12 @@ bool Window::InitGL()
     gl::Buffer imageStagingBuffer;
     gl::Memory imageStagingMemory;
     io::Image rawImage;
-    if (!rawImage.Load("texture.png"))
+    if (!rawImage.Load("viking_room.png"))
     {
         fmtx::Error("Failed to load image");
         return false;
     }
+
     imageStagingBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     if (!imageStagingBuffer.Create(device, rawImage.Size()))
         return false;

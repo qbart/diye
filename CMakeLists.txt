@@ -32,6 +32,7 @@ add_executable(${PROJECT_NAME}
     src/geometry/half_edge_mesh.cpp
     src/io/binary.cpp
     src/io/image.cpp
+    src/io/obj.cpp
 
     src/experiments/experiment.cpp
 
