@@ -18,7 +18,8 @@
       ]
     },
     "imguizmo",
-    "vulkan-sdk-components"
+    "vulkan-sdk-components",
+    "tinyobjloader"
   ]
 }
 
