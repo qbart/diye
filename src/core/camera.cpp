@@ -21,6 +21,8 @@ void Camera::SetPerspective(float fov, uint32 width, uint32 height, float zNear,
     mode = Perspective;
 
     projection = glm::perspectiveFov(glm::radians(fov), (float)width, (float)height, zNear, zFar);
+    projection[1][1] *= -1; // Vulkan flip-Y
+
     UpdateMatrix();
 }
 
@@ -148,6 +150,7 @@ void Camera::UpdateMatrix()
     translationMat = glm::translate(translationMat, -transform.position);
 
     Mat4 rotationMat = glm::mat4_cast(transform.rotation);
+    // Mat4 rotationMat = glm::mat4_cast(glm::inverse(transform.rotation));
 
     view = rotationMat * translationMat;
     viewProjection = projection * view;
