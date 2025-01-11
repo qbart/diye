@@ -108,6 +108,13 @@ namespace gl
         return -1;
     }
 
+    VkFilter PhysicalDevice::TrySampledImageFilterLinear(VkFormat format) const
+    {
+        VkFormatProperties formatProperties;
+        vkGetPhysicalDeviceFormatProperties(handle, format, &formatProperties);
+        return formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
+    }
+
     std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device)
     {
         uint32_t count = 0;

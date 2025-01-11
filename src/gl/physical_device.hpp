@@ -24,6 +24,7 @@ namespace gl
         VkPhysicalDevice handle;
         VkPhysicalDeviceProperties properties;
         VkPhysicalDeviceFeatures features;
+        VkFormatProperties formatProperties;
         std::vector<VkExtensionProperties> extensions;
         std::vector<VkQueueFamilyProperties> queueFamilies;
         QueueFamilyIndices queueFamilyIndices;
@@ -39,6 +40,7 @@ namespace gl
         void QuerySwapChainSupport(const Surface &surface);
         void QueryQueueFamilies(const Surface &surface);
         int FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+        VkFilter TrySampledImageFilterLinear(VkFormat format) const;
     };
 
     std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device);

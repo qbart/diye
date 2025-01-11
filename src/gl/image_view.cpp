@@ -17,6 +17,7 @@ namespace gl
     {
         createInfo.image = image.handle;
         createInfo.format = format;
+        createInfo.subresourceRange.levelCount = image.createInfo.mipLevels;
         if (vkCreateImageView(device.handle, &createInfo, nullptr, &handle) == VK_SUCCESS)
         {
             return true;
