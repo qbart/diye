@@ -231,7 +231,7 @@ bool Window::InitGL()
     indexStagingBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     if (!indexStagingBuffer.Create(device, sizeof(indices[0]) * indices.size()))
         return false;
-    VkMemoryRequirements indexMemRequirements = indexStagingBuffer.MemoryRequirements(device);
+    auto indexMemRequirements = indexStagingBuffer.MemoryRequirements(device);
     if (!indexStagingBufferMemory.Allocate(physicalDevice, device, indexMemRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
         return false;
 
@@ -266,8 +266,7 @@ bool Window::InitGL()
     if (!imageStagingBuffer.Create(device, rawImage.Size()))
         return false;
 
-    auto imageMemRequirements = imageStagingBuffer.MemoryRequirements(device);
-    if (!imageStagingMemory.Allocate(physicalDevice, device, imageMemRequirements, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+    if (!imageStagingMemory.Allocate(physicalDevice, device, imageStagingBuffer.MemoryRequirements(device), VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
         return false;
 
     imageStagingBuffer.BindMemory(device, imageStagingMemory, 0);
@@ -275,26 +274,30 @@ bool Window::InitGL()
     imageStagingMemory.CopyRaw(device, rawImage.GetPixelData(), rawImage.Size());
     imageStagingMemory.Unmap(device);
 
-    texture.Usage(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+    texture.MipLevels(rawImage.RecommendedMipLevels());
+    texture.Usage(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
     if (!texture.Create(device, rawImage.Extent(), VK_FORMAT_R8G8B8A8_SRGB))
         return false;
-
-    if (!textureMemory.Allocate(physicalDevice, device, imageMemRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+    if (!textureMemory.Allocate(physicalDevice, device, texture.MemoryRequirements(device), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
         return false;
 
     texture.BindMemory(device, textureMemory, 0);
-    texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue.handle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     texture.CopyFromBuffer(device, shortLivedCommandPool, device.graphicsQueue.handle, imageStagingBuffer, rawImage.Extent());
-    texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue.handle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    // texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue.handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     imageStagingBuffer.Destroy(device);
     imageStagingMemory.Free(device);
+
+    texture.GenerateMipmaps(device, shortLivedCommandPool, device.graphicsQueue.handle, physicalDevice.TrySampledImageFilterLinear(VK_FORMAT_R8G8B8A8_SRGB));
 
     if (!textureView.Create(device, texture, VK_FORMAT_R8G8B8A8_SRGB))
         return false;
 
     textureSampler.MaxAnisotropy(physicalDevice);
     textureSampler.LinearFilter();
+    textureSampler.LinearMipmap();
+    textureSampler.MaxLod(rawImage.RecommendedMipLevels());
     if (!textureSampler.Create(device))
         return false;
 

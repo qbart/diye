@@ -33,6 +33,11 @@ namespace io
                 static_cast<uint32_t>(Height)};
         }
 
+        uint32_t RecommendedMipLevels() const
+        {
+            return static_cast<uint32>(std::floor(std::log2(std::max(Width, Height)))) + 1;
+        }
+
     public:
         int32 Width, Height, Channels;
 

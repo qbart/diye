@@ -16,7 +16,7 @@ namespace gl
         createInfo.unnormalizedCoordinates = VK_FALSE;
         createInfo.compareEnable = VK_FALSE;
         createInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        createInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        createInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
         createInfo.mipLodBias = 0.0f;
         createInfo.minLod = 0.0f;
         createInfo.maxLod = 0.0f;
@@ -53,9 +53,30 @@ namespace gl
         createInfo.magFilter = filter;
     }
 
+
+    void Sampler::MipmapMode(VkSamplerMipmapMode mode)
+    {
+        createInfo.mipmapMode = mode;
+    }
+
+    void Sampler::MinLod(float lod)
+    {
+        createInfo.minLod = lod;
+    }
+
+    void Sampler::MaxLod(float lod)
+    {
+        createInfo.maxLod = lod;
+    }
+
     void Sampler::LinearFilter()
     {
         MinFilter(VK_FILTER_LINEAR);
         MagFilter(VK_FILTER_LINEAR);
+    }
+
+    void Sampler::LinearMipmap()
+    {
+        MipmapMode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
     }
 }
