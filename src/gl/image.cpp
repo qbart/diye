@@ -26,6 +26,11 @@ namespace gl
         createInfo.mipLevels = mipLevels;
     }
 
+    void Image::Samples(VkSampleCountFlagBits samples)
+    {
+        createInfo.samples = samples;
+    }
+
     void Image::UsageDepthOnly()
     {
         Usage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);

@@ -115,6 +115,38 @@ namespace gl
         return formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
     }
 
+    std::vector<VkSampleCountFlagBits> PhysicalDevice::GetSupportedSampleCounts() const
+    {
+        auto result = std::vector<VkSampleCountFlagBits>();
+        VkSampleCountFlags counts = properties.limits.framebufferDepthSampleCounts & properties.limits.framebufferColorSampleCounts;
+        if (counts & VK_SAMPLE_COUNT_64_BIT)
+            result.push_back(VK_SAMPLE_COUNT_64_BIT);
+
+        if (counts & VK_SAMPLE_COUNT_32_BIT)
+            result.push_back(VK_SAMPLE_COUNT_32_BIT);
+
+        if (counts & VK_SAMPLE_COUNT_16_BIT)
+            result.push_back(VK_SAMPLE_COUNT_16_BIT);
+        
+        if (counts & VK_SAMPLE_COUNT_8_BIT)
+            result.push_back(VK_SAMPLE_COUNT_8_BIT);
+
+        if (counts & VK_SAMPLE_COUNT_4_BIT)
+        result.push_back(VK_SAMPLE_COUNT_4_BIT);
+
+        if (counts & VK_SAMPLE_COUNT_2_BIT)
+            result.push_back(VK_SAMPLE_COUNT_2_BIT);
+        
+        result.push_back(VK_SAMPLE_COUNT_1_BIT);
+        
+        return result;
+    }
+
+    VkSampleCountFlagBits PhysicalDevice::GetMaxUsableSampleCount() const
+    {
+        return GetSupportedSampleCounts().front();
+    }
+
     std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device)
     {
         uint32_t count = 0;

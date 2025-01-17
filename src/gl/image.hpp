@@ -17,6 +17,7 @@ namespace gl
         Image();
         void Usage(VkImageUsageFlags usage);
         void MipLevels(uint32_t mipLevels);
+        void Samples(VkSampleCountFlagBits samples);
         void UsageDepthOnly();
         bool Create(const Device &device, VkExtent2D extent, VkFormat format);
         void Destroy(const Device &device);

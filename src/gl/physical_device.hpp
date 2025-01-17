@@ -41,6 +41,8 @@ namespace gl
         void QueryQueueFamilies(const Surface &surface);
         int FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
         VkFilter TrySampledImageFilterLinear(VkFormat format) const;
+        std::vector<VkSampleCountFlagBits> GetSupportedSampleCounts() const;
+        VkSampleCountFlagBits GetMaxUsableSampleCount() const;
     };
 
     std::vector<VkExtensionProperties> GetSupportedPhysicalDeviceExtensions(const VkPhysicalDevice &device);
