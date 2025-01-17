@@ -44,7 +44,7 @@ namespace gl
         void AddDynamicViewport(int numViewports = 1);
         void AddDynamicScissor(int numScissors = 1);
         VkPipelineColorBlendAttachmentState &AddColorBlendAttachment();
-        void SetMultisample();
+        void SetMultisample(VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
         void SetRasterization(VkFrontFace frontFace, VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT);
         void SetInputAssembly(VkPrimitiveTopology topology);
         void SetVertexInput();

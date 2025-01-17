@@ -87,8 +87,11 @@ private:
     gl::Buffer indexStagingBuffer;
     gl::Memory indexStagingBufferMemory;
     gl::Image texture;
+    gl::Image color;
     gl::Memory textureMemory;
+    gl::Memory colorMemory;
     gl::ImageView textureView;
+    gl::ImageView colorView;
     gl::Image depthImage;
     gl::Memory depthImageMemory;
     gl::ImageView depthImageView;

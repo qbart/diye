@@ -14,12 +14,15 @@ namespace gl
         std::vector<VkAttachmentReference> colorAttachmentRefs;
         VkAttachmentDescription depthAttachment;
         VkAttachmentReference depthAttachmentRef;
+        std::vector<VkAttachmentReference> resolveAttachmentRefs;
+        std::vector<VkAttachmentDescription> resolveAttachments;
 
         RenderPass();
         bool Create(const gl::Device &device, const ShaderModules &modules);
         void Destroy(const gl::Device &device);
         VkAttachmentDescription &AddColorAttachment(VkFormat format);
         VkAttachmentDescription &SetDepthAttachment(VkFormat format);
+        VkAttachmentDescription &AddResolveAttachment(VkFormat format);
         bool HasDepthAttachment() const;
 
     private:
