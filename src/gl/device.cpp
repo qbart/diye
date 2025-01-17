@@ -7,6 +7,7 @@
 namespace gl
 {
     Device::Device() : handle(VK_NULL_HANDLE),
+                       deviceFeatures({}),
                        graphicsQueue(VK_NULL_HANDLE),
                        presentQueue(VK_NULL_HANDLE),
                        createInfo({})
@@ -15,6 +16,8 @@ namespace gl
         createInfo.pNext = nullptr;
         createInfo.enabledExtensionCount = 0;
         createInfo.enabledLayerCount = 0;
+
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
 
 #ifdef __APPLE__
         requiredExtensions.emplace_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
@@ -41,8 +44,6 @@ namespace gl
             queueCreateInfos.push_back(queueCreateInfo);
         }
 
-        VkPhysicalDeviceFeatures deviceFeatures{};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
         createInfo.pEnabledFeatures = &deviceFeatures;
@@ -98,5 +99,10 @@ namespace gl
     void Device::UpdateDescriptorSets(const std::vector<VkWriteDescriptorSet> &descriptorWrites)
     {
         vkUpdateDescriptorSets(handle, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+
+    void Device::EnableSampleRateShading()
+    {
+        deviceFeatures.sampleRateShading = VK_TRUE;
     }
 }

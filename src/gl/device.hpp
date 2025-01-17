@@ -10,6 +10,7 @@ namespace gl
     {
     public:
         VkDeviceCreateInfo createInfo;
+        VkPhysicalDeviceFeatures deviceFeatures;
         VkDevice handle;
         Queue graphicsQueue;
         Queue presentQueue;
@@ -24,5 +25,6 @@ namespace gl
         void SetRequiredExtensions(const CStrings &extensions);
         void EnableValidationLayers();
         void UpdateDescriptorSets(const std::vector<VkWriteDescriptorSet> &descriptorWrites);
+        void EnableSampleRateShading();
     };
 };
