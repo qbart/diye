@@ -63,7 +63,6 @@ bool Window::InitGL()
         fmtx::Error("Failed to select physical device");
         return false;
     }
-    auto msaaSamples = physicalDevice.GetMaxUsableSampleCount();
 
     device.RequireSwapchainExtension();
     device.EnableValidationLayers();
@@ -80,17 +79,6 @@ bool Window::InitGL()
             return false;
     }
 
-    color.Samples(msaaSamples);
-    color.Usage(VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
-    if (!color.Create(device, swapChain.extent, swapChain.imageFormat))
-        return false;
-    if (!colorMemory.Allocate(physicalDevice, device, color.MemoryRequirements(device), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-        return false;
-    color.BindMemory(device, colorMemory, 0);
-    if (!colorView.Create(device, color, swapChain.imageFormat))
-        return false;
-
-    depthImage.Samples(msaaSamples);
     depthImage.UsageDepthOnly();
     if (!depthImage.Create(device, swapChain.extent, physicalDevice.depthFormat))
         return false;
@@ -108,9 +96,8 @@ bool Window::InitGL()
         fmtx::Error("Failed to create shader modules");
         return false;
     }
-    renderPass.AddColorAttachment(swapChain.imageFormat).samples = msaaSamples;
-    renderPass.SetDepthAttachment(physicalDevice.depthFormat).samples = msaaSamples;
-    renderPass.AddResolveAttachment(swapChain.imageFormat);
+    renderPass.AddColorAttachment(swapChain.imageFormat).finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    renderPass.SetDepthAttachment(physicalDevice.depthFormat);
     if (!renderPass.Create(device, shaderModules))
         return false;
 
@@ -118,9 +105,8 @@ bool Window::InitGL()
     for (auto i = 0; i < swapChain.images.size(); i++)
     {
         swapChainFramebuffers[i].ClearAttachments();
-        swapChainFramebuffers[i].AddAttachment(colorView);
-        swapChainFramebuffers[i].AddAttachment(depthImageView);
         swapChainFramebuffers[i].AddAttachment(imageViews[i]);
+        swapChainFramebuffers[i].AddAttachment(depthImageView);
         if (!swapChainFramebuffers[i].Create(device, renderPass, swapChain.extent))
             return false;
     }
@@ -147,7 +133,7 @@ bool Window::InitGL()
     graphicsPipeline.AddDynamicScissor();
     graphicsPipeline.AddColorBlendAttachment();
     graphicsPipeline.SetDepthStencil();
-    graphicsPipeline.SetMultisample(msaaSamples);
+    graphicsPipeline.SetMultisample();
     graphicsPipeline.SetRasterization(VK_FRONT_FACE_COUNTER_CLOCKWISE);
     graphicsPipeline.SetInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
     graphicsPipeline.SetVertexInput();
@@ -371,9 +357,6 @@ void Window::ShutdownGL()
     depthImageView.Destroy(device);
     depthImage.Destroy(device);
     depthImageMemory.Free(device);
-    colorView.Destroy(device);
-    color.Destroy(device);
-    colorMemory.Free(device);
     for (auto i = 0; i < imageViews.size(); i++)
         imageViews[i].Destroy(device);
     swapChain.Destroy(device);
@@ -390,10 +373,6 @@ void Window::RecreateSwapChain()
     // clean swap chain
     for (int i = 0; i < swapChainFramebuffers.size(); i++)
         swapChainFramebuffers[i].Destroy(device);
-
-    colorView.Destroy(device);
-    color.Destroy(device);
-    colorMemory.Free(device);
 
     depthImageView.Destroy(device);
     depthImage.Destroy(device);
@@ -422,15 +401,6 @@ void Window::RecreateSwapChain()
             fmtx::Error("Failed to recreate image views");
     }
 
-    // recreate color image
-    if (!color.Create(device, swapChain.extent, swapChain.imageFormat))
-        fmtx::Error("Failed to recreate color image");
-    if (!colorMemory.Allocate(physicalDevice, device, color.MemoryRequirements(device), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-        fmtx::Error("Failed to allocate color image memory");
-    color.BindMemory(device, colorMemory, 0);
-    if (!colorView.Create(device, color, swapChain.imageFormat))
-        fmtx::Error("Failed to recreate color image view");
-
     // recreate depth image
     depthImage.UsageDepthOnly();
     if (!depthImage.Create(device, swapChain.extent, physicalDevice.depthFormat))
@@ -447,9 +417,8 @@ void Window::RecreateSwapChain()
     for (int i = 0; i < swapChainFramebuffers.size(); i++)
     {
         swapChainFramebuffers[i].ClearAttachments();
-        swapChainFramebuffers[i].AddAttachment(colorView);
-        swapChainFramebuffers[i].AddAttachment(depthImageView);
         swapChainFramebuffers[i].AddAttachment(imageViews[i]);
+        swapChainFramebuffers[i].AddAttachment(depthImageView);
         if (!swapChainFramebuffers[i].Create(device, renderPass, swapChain.extent))
             fmtx::Error("Failed to recreate framebuffers");
     }
