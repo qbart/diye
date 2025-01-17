@@ -108,8 +108,9 @@ bool Window::InitGL()
         fmtx::Error("Failed to create shader modules");
         return false;
     }
-    renderPass.AddColorAttachment(swapChain.imageFormat);
-    renderPass.SetDepthAttachment(physicalDevice.depthFormat);
+    renderPass.AddColorAttachment(swapChain.imageFormat).samples = msaaSamples;
+    renderPass.SetDepthAttachment(physicalDevice.depthFormat).samples = msaaSamples;
+    renderPass.AddResolveAttachment(swapChain.imageFormat);
     if (!renderPass.Create(device, shaderModules))
         return false;
 
@@ -298,7 +299,6 @@ bool Window::InitGL()
     texture.BindMemory(device, textureMemory, 0);
     texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     texture.CopyFromBuffer(device, shortLivedCommandPool, device.graphicsQueue.handle, imageStagingBuffer, rawImage.Extent());
-    // texture.TransitionLayout(device, shortLivedCommandPool, device.graphicsQueue.handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     imageStagingBuffer.Destroy(device);
     imageStagingMemory.Free(device);
