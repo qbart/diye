@@ -19,15 +19,16 @@ int main()
         fmt::print("Failed to init app\n");
         return 1;
     }
-    // UI ui(window->Get());
+    // UI ui(window.Get());
 
     Camera camera;
-    camera.SetPosition(Vec3(0.0f, 5.0f, 5.0f));
+    // camera.SetPosition(Vec3(0.0f, 5.0f, 5.0f));
     // camera.LookAt(ZERO);
     camera.SetPosition(Vec3(2.0f, 2.0f, 2.0f));
     camera.LookAt(ZERO);
 
     Transform transform;
+    transform.Rotate(-90);
 
     // fmt::println("Initializing debug renderer");
     // DebugDrawRenderer debug;
@@ -47,39 +48,8 @@ int main()
     {
         // ---------- inputs -----------
         window.PollEvents();
+        window.FreeCameraControls(camera, dt);
         app.RequestRecreateSwapChain(window.WasResized());
-
-        if (window.KeyJustReleased(SDLK_ESCAPE))
-            window.Close();
-
-        if (window.KeyDown(SDLK_w))
-            camera.MoveForward(5 * dt);
-
-        if (window.KeyDown(SDLK_s))
-            camera.MoveBackward(5 * dt);
-
-        if (window.KeyDown(SDLK_a))
-            camera.MoveLeft(5 * dt);
-
-        if (window.KeyDown(SDLK_d))
-            camera.MoveRight(5 * dt);
-
-        if (window.MouseButtonDown(SDL_BUTTON_RIGHT) && window.KeyDown(SDLK_LALT))
-        {
-            auto md = window.MouseRelativePosition();
-            camera.OrbitAround(UP, ZERO, md.x * 2 * dt);
-            camera.OrbitAround(LEFT, ZERO, -md.y * 2 * dt);
-        }
-        else if (window.MouseButtonDown(SDL_BUTTON_RIGHT))
-        {
-            auto md = window.MouseRelativePosition();
-            camera.LookAround(md.y * 10 * dt, md.x * 10 * dt);
-        }
-        if (window.MouseWheelScrolled())
-        {
-            auto mw = window.MouseWheel();
-            camera.MoveForward(window.MouseWheel().y * dt * 5);
-        }
 
         // ---------- update -----------
         ticks.Update();
@@ -109,7 +79,6 @@ int main()
         if (!app.BeginFrame())
             window.Close();
 
-        // transform.rotation = Mathf::Rotate(Mat4(1), 90 * time, UP);
         auto mvp = camera.MVP(transform.ModelMatrix());
         if (!app.Render(mvp))
             window.Close();

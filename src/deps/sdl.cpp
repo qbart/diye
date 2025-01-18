@@ -103,7 +103,6 @@ namespace sdl
     }
 };
 
-
 namespace sdl
 {
     Window::Window() : active(false),
@@ -263,4 +262,40 @@ namespace sdl
 
         return false;
     }
+
+    void Window::FreeCameraControls(Camera &camera, float dt)
+    {
+        if (KeyJustReleased(SDLK_ESCAPE))
+            Close();
+
+        if (KeyDown(SDLK_w))
+            camera.MoveForward(5 * dt);
+
+        if (KeyDown(SDLK_s))
+            camera.MoveBackward(5 * dt);
+
+        if (KeyDown(SDLK_a))
+            camera.MoveLeft(5 * dt);
+
+        if (KeyDown(SDLK_d))
+            camera.MoveRight(5 * dt);
+
+        if (MouseButtonDown(SDL_BUTTON_RIGHT) && KeyDown(SDLK_LALT))
+        {
+            auto md = MouseRelativePosition();
+            camera.OrbitAround(UP, ZERO, md.x * 2 * dt);
+            camera.OrbitAround(LEFT, ZERO, -md.y * 2 * dt);
+        }
+        else if (MouseButtonDown(SDL_BUTTON_RIGHT))
+        {
+            auto md = MouseRelativePosition();
+            camera.LookAround(md.y * 10 * dt, md.x * 10 * dt);
+        }
+        if (MouseWheelScrolled())
+        {
+            auto mw = MouseWheel();
+            camera.MoveForward(MouseWheel().y * dt * 5);
+        }
+    }
+
 }

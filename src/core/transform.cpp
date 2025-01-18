@@ -1,5 +1,5 @@
 #include "transform.hpp"
-#include <stdexcept>
+#include "math.hpp"
 
 Transform::Transform() : localPosition(Vec3(0, 0, 0)),
 						 position(Vec3(0, 0, 0)),
@@ -52,9 +52,6 @@ Mat4 Transform::ModelMatrix(Space mode) const
 	case Space::WorldOnly:
 		translationMat = glm::translate(translationMat, position);
 		break;
-
-	default:
-		throw std::runtime_error("Invalid space mode in Transform::ModelMatrix");
 	}
 
 	Mat4 rotationMat = glm::mat4_cast(rotation);
@@ -64,4 +61,9 @@ Mat4 Transform::ModelMatrix(Space mode) const
 
 	// apply in order: scale, rotate, translate
 	return translationMat * rotationMat * scaleMat;
+}
+
+void Transform::Rotate(float angleDeg, const Vec3 &axis)
+{
+    rotation = Mathf::Rotate(rotation, angleDeg, axis);
 }

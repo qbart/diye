@@ -79,6 +79,7 @@ namespace sdl
         bool WasResized() const { return resized; }
         bool IsActive() const { return active; }
         void SetResized(bool r) { resized = r; }
+        void FreeCameraControls(Camera &camera, float dt);
 
     private:
         bool active;

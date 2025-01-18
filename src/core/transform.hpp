@@ -21,6 +21,7 @@ public:
 	void Update();
 	const Mat4 &GetModelMatrix() const { return matrix; };
 	Mat4 ModelMatrix(Space mode = Space::World) const;
+	void Rotate(float angleDeg, const Vec3 &axis = UP);
 
 public:
 	Vec3 localPosition;
