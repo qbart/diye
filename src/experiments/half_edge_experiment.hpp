@@ -30,6 +30,8 @@ public:
     Transform transform;
     Window *window;
 
+    bool debug = false;
+
 public:
     int Init(Window *window) override
     {
@@ -95,10 +97,17 @@ public:
     void Update(float dt) override
     {
         transform.Update();
+        if (window->KeyJustReleased(SDLK_TAB))
+        {
+            debug = !debug;
+        }
     }
 
     void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) override
     {
+        if (!debug)
+            return;
+
         auto camPos = camera.Position();
 
         auto onDebugDrawLine = [&](const HalfEdgeMesh::DrawLine &line)
@@ -136,6 +145,9 @@ public:
 
     void Render(const Camera &camera) override
     {
+        if (debug)
+            return;
+
         if (mesh.Vertices.size() > 0)
         {
             auto model = transform.GetModelMatrix();
