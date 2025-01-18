@@ -28,10 +28,10 @@ public:
     GL::Location camPositionLoc;
     GL::Location camDistanceLoc;
     Transform transform;
-    Window::Ptr window;
+    Window *window;
 
 public:
-    int Init(Window::Ptr window) override
+    int Init(Window *window) override
     {
         this->window = window;
         fmt::println("Initializing HalfEdgeExperiment");

@@ -1,6 +1,6 @@
 #include "experiment.hpp"
 
-int EmptyExperiment::Init(Window::Ptr window)
+int EmptyExperiment::Init(Window *window)
 {
     return 0;
 }
