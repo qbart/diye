@@ -39,7 +39,6 @@ add_executable(${PROJECT_NAME}
 
     src/debug_draw_renderer.cpp
     src/gl.cpp
-    src/input.cpp
     src/ui/ui.cpp
     src/window.cpp
 

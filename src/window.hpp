@@ -1,7 +1,8 @@
 #pragma once
 
 #include "deps/sdl.hpp"
-#include "input.hpp"
+#include "core/all.hpp"
+#include <unordered_map>
 
 class Window
 {
@@ -15,12 +16,13 @@ public:
     void Close();
     bool IsOpen() const { return isOpen; }
     const Dimension &Size() const { return size; }
-    Input GetInput() { return Input(inputs); }
     Vec2 MousePosition() const { return mousePos; }
     Vec2 MouseRelativePosition() const { return mouseRelPos; }
     Vec2 MouseWheel() const { return mouseWheel; }
     bool MouseButtonDown(uint8 button) const { return HashMapHasKey(mouseInputs, button) && mouseInputs.at(button); }
     bool MouseWheelScrolled() const { return SDL_GetTicks64() - lastTimeWheeled < 100; }
+    bool KeyJustReleased(int key);
+    bool KeyDown(int key);
     bool WasResized() const { return resized; }
     bool IsActive() const { return active; }
     void SetResized(bool r) { resized = r; }
@@ -35,6 +37,7 @@ private:
 
     SDL_Event event;
     HashMap<int32, bool> inputs;
+    HashMap<int32, bool> wasDown;
     HashMap<uint8, bool> mouseInputs;
     Vec2 mousePos;
     Vec2 mouseRelPos;

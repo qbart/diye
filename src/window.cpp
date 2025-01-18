@@ -119,3 +119,26 @@ void Window::Close()
     isOpen = false;
     active = false;
 }
+
+bool Window::KeyJustReleased(int key)
+{
+    if (KeyDown(key))
+        wasDown[key] = true;
+    else if (wasDown.find(key) != wasDown.end() && wasDown[key])
+    {
+        wasDown[key] = false;
+        return true;
+    }
+
+    return false;
+}
+
+bool Window::KeyDown(int key)
+{
+    const auto val = inputs.find(key);
+    if (val != inputs.end())
+    {
+        return val->second;
+    }
+    return false;
+}
