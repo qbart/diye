@@ -62,6 +62,7 @@ namespace sdl
         Window();
         ~Window();
         bool Init(int w, int h, const std::string &title);
+        void Shutdown();
 
         SDL_Window *Get() const { return wnd; }
         void PollEvents();

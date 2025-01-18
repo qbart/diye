@@ -25,7 +25,10 @@ namespace gl
     bool App::Init(SDL_Window *wnd)
     {
         this->wnd = wnd;
-        return InitGL();
+        bool ok = InitGL();
+        if (!ok)
+            ShutdownGL();
+        return ok;
     }
 
     void App::Shutdown()

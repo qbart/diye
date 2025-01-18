@@ -11,19 +11,20 @@ int main()
     gl::App app;
     if (!window.Init(1600, 1000, "app"))
     {
-        fmt::print("Failed to create window\n");
+        fmtx::Error("Failed to create window");
         return 1;
     }
+    fmtx::Success("Window initialized");
+
     if (!app.Init(window.Get()))
     {
-        fmt::print("Failed to init app\n");
+        fmtx::Error("Failed to init Vulkan");
         return 1;
     }
+    fmtx::Success("Vulkan initialized");
     // UI ui(window.Get());
 
     Camera camera;
-    // camera.SetPosition(Vec3(0.0f, 5.0f, 5.0f));
-    // camera.LookAt(ZERO);
     camera.SetPosition(Vec3(2.0f, 2.0f, 2.0f));
     camera.LookAt(ZERO);
 
@@ -36,11 +37,11 @@ int main()
     sdl::Ticks ticks;
     float dt = 0;
 
-    fmt::println("Entering main loop");
+    fmtx::Debug("Entering main loop");
     auto experiment = std::make_unique<EmptyExperiment>();
     if (experiment->Init(&window) != 0)
     {
-        fmt::print("Failed to init experiment\n");
+        fmtx::Error("Failed to init experiment");
         return -1;
     }
 
@@ -49,7 +50,6 @@ int main()
         // ---------- inputs -----------
         window.PollEvents();
         window.FreeCameraControls(camera, dt);
-        app.RequestRecreateSwapChain(window.WasResized());
 
         // ---------- update -----------
         ticks.Update();
@@ -59,9 +59,16 @@ int main()
         // experiment->Update(dt);
 
         // ---------- render -----------
-        // gl.Viewport(size.w, size.h);
-        // gl.ClearDepthBuffer();
-        // gl.ClearColorBuffer(Vec3(0.3f, 0.3f, 0.3f));
+        app.RequestRecreateSwapChain(window.WasResized());
+        if (!app.BeginFrame())
+            window.Close();
+
+        auto mvp = camera.MVP(transform.ModelMatrix());
+        if (!app.Render(mvp))
+            window.Close();
+
+        if (!app.EndFrame())
+            window.Close();
         // experiment->Render(camera);
 
         // ---------- render:debug -----------
@@ -76,15 +83,7 @@ int main()
         // experiment->RenderUI(camera, ui);
         // ui.EndFrame();
         // ui.Draw();
-        if (!app.BeginFrame())
-            window.Close();
 
-        auto mvp = camera.MVP(transform.ModelMatrix());
-        if (!app.Render(mvp))
-            window.Close();
-
-        if (!app.EndFrame())
-            window.Close();
     }
     app.Shutdown();
 

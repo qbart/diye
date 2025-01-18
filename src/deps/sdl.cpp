@@ -119,8 +119,7 @@ namespace sdl
 
     Window::~Window()
     {
-        sdl::DestroyWindow(wnd);
-        sdl::Quit();
+        Shutdown();
     }
 
     bool Window::Init(int w, int h, const std::string &title)
@@ -142,6 +141,12 @@ namespace sdl
         isOpen = true;
 
         return true;
+    }
+
+    void Window::Shutdown()
+    {
+        sdl::DestroyWindow(wnd);
+        sdl::Quit();
     }
 
     void Window::PollEvents()
