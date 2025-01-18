@@ -29,7 +29,7 @@ public:
     GL::Location camPositionLoc;
     GL::Location camDistanceLoc;
     Transform transform;
-    Window *window;
+    sdl::Window *window;
 
     bool debug = false;
     Ray ray;
@@ -37,7 +37,7 @@ public:
     Transform extrudeTransform;
 
 public:
-    int Init(Window *window) override
+    int Init(sdl::Window *window) override
     {
         this->window = window;
         fmt::println("Initializing HalfEdgeExperiment");

@@ -13,7 +13,7 @@ public:
     Experiment &operator=(const Experiment &) = default;
     Experiment(Experiment &&) = default;
     virtual ~Experiment() = default;
-    virtual int Init(Window *window) = 0;
+    virtual int Init(sdl::Window *window) = 0;
     virtual void Update(float dt) = 0;
     virtual void Render(const Camera &camera) = 0;
     virtual void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) = 0;
@@ -24,7 +24,7 @@ public:
 class EmptyExperiment : public Experiment
 {
 public:
-    int Init(Window *window) override;
+    int Init(sdl::Window *window) override;
     void Update(float dt) override;
     void Render(const Camera &camera) override;
     void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) override;

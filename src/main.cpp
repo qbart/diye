@@ -8,7 +8,7 @@
 
 int main()
 {
-    Window window;
+    sdl::Window window;
     gl::App app;
     if (!window.Init(1600, 1000, "app"))
     {
