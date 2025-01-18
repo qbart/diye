@@ -1,6 +1,5 @@
-#include <fmt/core.h>
-
-#include "window.hpp"
+#include "deps/sdl.hpp"
+#include "deps/fmt.hpp"
 #include "ui/ui.hpp"
 #include "debug_draw_renderer.hpp"
 #include "experiments/experiment.hpp"

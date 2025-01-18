@@ -3,7 +3,7 @@
 #include "../core/all.hpp"
 #include "../ui/ui.hpp"
 #include "../debug_draw_renderer.hpp"
-#include "../window.hpp"
+#include "../deps/sdl.hpp"
 
 class Experiment
 {
