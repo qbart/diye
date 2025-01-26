@@ -1,7 +1,5 @@
 #include "ui.hpp"
 
-#include "roboto.inc"
-
 static void imgui_check_vk_result(VkResult err)
 {
     if (err == 0)
@@ -35,15 +33,10 @@ bool UI::Init(SDL_Window *wnd, const gl::App &app)
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    // ImGui::StyleColorsDark();
-    ImGui::StyleColorsClassic();
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsClassic();
     auto &style = ImGui::GetStyle();
     auto &colors = style.Colors;
-    // style.ScaleAllSizes(1);
-    ImFontConfig fontConfig;
-    fontConfig.FontDataOwnedByAtlas = false;
-    auto roboto = io.Fonts->AddFontFromMemoryTTF((void *)g_RobotoRegular, sizeof(g_RobotoRegular), 20.0f, &fontConfig);
-    io.FontDefault = roboto;
 
     if (!ImGui_ImplSDL2_InitForVulkan(wnd))
     {
