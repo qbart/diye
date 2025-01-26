@@ -43,8 +43,10 @@ namespace io
             {
                 Vertex vertex{};
                 vertex.pos = {
-                    attrib.vertices[3 * index.vertex_index + 0],  // X stays same
-                    attrib.vertices[3 * index.vertex_index + 2],  // Y becomes Z
+                    attrib.vertices[3 * index.vertex_index + 0], // X stays same
+                    // attrib.vertices[3 * index.vertex_index + 1],  // Y becomes Z
+                    // attrib.vertices[3 * index.vertex_index + 2]}; // Z becomes -Y
+                    attrib.vertices[3 * index.vertex_index + 2],   // Y becomes Z
                     -attrib.vertices[3 * index.vertex_index + 1]}; // Z becomes -Y
 
                 vertex.texCoord = {

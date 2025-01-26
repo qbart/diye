@@ -39,7 +39,7 @@ int main()
 
     Transform transform;
     transform.Rotate(-90);
-
+    
     // fmt::println("Initializing debug renderer");
     // DebugDrawRenderer debug;
 
@@ -78,9 +78,8 @@ int main()
 
         ui.BeginFrame(size);
         // experiment->RenderUI(camera, ui);
-        // ui.Grid(camera);
-        // ui.TranslateGizmo(camera, transform);
-        ui.Demo();
+        ui.Grid(camera);
+
         ui.EndFrame();
 
         app.commandBuffers.Reset(app.Frame());

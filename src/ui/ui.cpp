@@ -127,7 +127,10 @@ void UI::CmdDraw(VkCommandBuffer cmd)
 
 void UI::Grid(const Camera &camera)
 {
-    ImGuizmo::DrawGrid(glm::value_ptr(camera.View()), glm::value_ptr(camera.Projection()), glm::value_ptr(glm::mat4(1.f)), 100.f);
+    auto projection = camera.Projection();
+    projection[1][1] *= -1;
+
+    ImGuizmo::DrawGrid(glm::value_ptr(camera.View()), glm::value_ptr(projection), glm::value_ptr(glm::mat4(1.f)), 100.f);
 }
 
 void UI::Demo()
@@ -170,6 +173,9 @@ void UI::Text(const Vec2 &pos, const std::string &text, const Vec4 &color)
 
 bool UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
 {
+    auto projection = camera.Projection();
+    projection[1][1] *= -1; // convert back to OpenGL coords
+
     auto skew = Vec3(0.f);
     auto perspective = Vec4(0.0f);
     auto rotation = transform.rotation;
@@ -185,7 +191,7 @@ bool UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
 
     bool changed = ImGuizmo::Manipulate(
         glm::value_ptr(camera.View()),
-        glm::value_ptr(camera.Projection()),
+        glm::value_ptr(projection),
         ImGuizmo::OPERATION::TRANSLATE,
         mode,
         glm::value_ptr(mat));
@@ -197,6 +203,9 @@ bool UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
 
 bool UI::RotationGizmo(const Camera &camera, Transform &transform)
 {
+    auto projection = camera.Projection();
+    projection[1][1] *= -1; // convert back to OpenGL coords
+
     auto mat = transform.ModelMatrix(Transform::Space::World);
     auto skew = Vec3(0.0f);
     auto perspective = Vec4(0.0f);
@@ -205,7 +214,7 @@ bool UI::RotationGizmo(const Camera &camera, Transform &transform)
     auto scale = transform.scale;
     bool changed = ImGuizmo::Manipulate(
         glm::value_ptr(camera.View()),
-        glm::value_ptr(camera.Projection()),
+        glm::value_ptr(projection),
         ImGuizmo::OPERATION::ROTATE,
         ImGuizmo::MODE::LOCAL,
         glm::value_ptr(mat));
@@ -217,6 +226,9 @@ bool UI::RotationGizmo(const Camera &camera, Transform &transform)
 
 bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
 {
+    auto projection = camera.Projection();
+    projection[1][1] *= -1; // convert back to OpenGL coords
+
     auto mat = transform.ModelMatrix(Transform::Space::World);
     auto skew = Vec3(0.0f);
     auto perspective = Vec4(0.0f);
@@ -224,7 +236,7 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
     auto position = transform.position;
     bool changed = ImGuizmo::Manipulate(
         glm::value_ptr(camera.View()),
-        glm::value_ptr(camera.Projection()),
+        glm::value_ptr(projection),
         ImGuizmo::OPERATION::SCALE,
         ImGuizmo::MODE::WORLD,
         glm::value_ptr(mat));
