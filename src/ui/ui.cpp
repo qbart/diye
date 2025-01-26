@@ -1,37 +1,110 @@
 #include "ui.hpp"
 
-UI::UI(SDL_Window *wnd) : wnd(wnd)
+#include "roboto.inc"
+
+static void imgui_check_vk_result(VkResult err)
 {
-    ptr = ImGui::CreateContext();
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    ImGui::StyleColorsDark();
+    if (err == 0)
+        return;
 
-    auto &style = ImGui::GetStyle();
-    auto &colors = style.Colors;
+    fmtx::Info("Aborting...");
+    char buffer[256];
+    sprintf(buffer, "[ui] Error: VkResult = %d", err);
+    fmtx::Error(fmt::format("%s", buffer));
+    if (err < 0)
+        abort();
+}
 
-    style.ScaleAllSizes(2);
-
-    // auto robotopath = std::string(FONTS_PATH) + "Roboto-Regular.ttf";
-    // auto io = ctx.io();
-    // io.Fonts->AddFontFromFileTTF(robotopath.c_str(), 24);
-    // io.Fonts->AddFontFromFileTTF(robotopath.c_str(), 16);
-    // ctx.fonts[24] = 0;
-    // ctx.fonts[16] = 1;
-
-    ImGui_ImplSDL2_InitForOpenGL(wnd, nullptr);
-    // ImGui_ImplVulkan_Init()
+UI::UI() : wnd(nullptr),
+           ptr(nullptr),
+           app(nullptr)
+{
 }
 
 UI::~UI()
 {
+    Shutdown();
+}
+
+bool UI::Init(SDL_Window *wnd, const gl::App &app)
+{
+    this->wnd = wnd;
+    this->app = &app;
+
+    ptr = ImGui::CreateContext();
+    auto &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    // ImGui::StyleColorsDark();
+    ImGui::StyleColorsClassic();
+    auto &style = ImGui::GetStyle();
+    auto &colors = style.Colors;
+    // style.ScaleAllSizes(1);
+    ImFontConfig fontConfig;
+    fontConfig.FontDataOwnedByAtlas = false;
+    auto roboto = io.Fonts->AddFontFromMemoryTTF((void *)g_RobotoRegular, sizeof(g_RobotoRegular), 20.0f, &fontConfig);
+    io.FontDefault = roboto;
+
+    if (!ImGui_ImplSDL2_InitForVulkan(wnd))
+    {
+        fmtx::Error("Failed to init ImGui for SDL2");
+        return false;
+    }
+
+    ImGui_ImplVulkan_InitInfo init_info = {};
+    init_info.Instance = app.instance.handle;
+    init_info.PhysicalDevice = app.physicalDevice.handle;
+    init_info.Device = app.device.handle;
+    init_info.Queue = app.device.graphicsQueue.handle;
+    init_info.DescriptorPool = app.descriptorPool.handle;
+    init_info.MinImageCount = app.MaxFramesInFlight();
+    init_info.ImageCount = app.MaxFramesInFlight();
+    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.RenderPass = app.renderPass.handle;
+    init_info.CheckVkResultFn = imgui_check_vk_result;
+
+    if (!ImGui_ImplVulkan_Init(&init_info))
+    {
+        fmtx::Error("Failed to init ImGui for Vulkan");
+        return false;
+    }
+
+    if (!ImGui_ImplVulkan_CreateFontsTexture())
+    {
+        fmtx::Error("Failed to create font texture for ImGui");
+        return false;
+    }
+
+    app.device.WaitIdle();
+
+    return true;
+}
+
+void UI::Shutdown()
+{
+    if (wnd != nullptr)
+    {
+        fmtx::Info("Shutting down UI system");
+        app->device.WaitIdle();
+
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+    }
+
     // Terminate
     if (ptr != nullptr)
     {
-        ImGui_ImplVulkan_Shutdown();
-        ImGui_ImplSDL2_Shutdown();
+        fmtx::Debug("Destroying ImGui context");
         ImGui::DestroyContext();
-        ptr = nullptr;
     }
+
+    ptr = nullptr;
+    wnd = nullptr;
+}
+
+void UI::ProcessEvent(const SDL_Event &event)
+{
+    ImGui_ImplSDL2_ProcessEvent(&event);
 }
 
 void UI::BeginFrame(const Dimension &size)
@@ -45,12 +118,18 @@ void UI::BeginFrame(const Dimension &size)
 
 void UI::EndFrame()
 {
+    // auto &io = ImGui::GetIO();
     ImGui::Render();
+    // if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    // {
+    //     ImGui::UpdatePlatformWindows();
+    //     ImGui::RenderPlatformWindowsDefault();
+    // }
 }
 
-void UI::Draw()
+void UI::CmdDraw(VkCommandBuffer cmd)
 {
-    // ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
 }
 
 void UI::Grid(const Camera &camera)

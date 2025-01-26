@@ -5,6 +5,8 @@
 #include "fmt.hpp"
 #include <array>
 
+#include "../ui/ui.hpp"
+
 namespace sdl
 {
     std::string GetError()
@@ -145,11 +147,17 @@ namespace sdl
 
     void Window::Shutdown()
     {
-        sdl::DestroyWindow(wnd);
-        sdl::Quit();
+        if (wnd != nullptr)
+        {
+            fmtx::Info("Shutting down window");
+
+            sdl::DestroyWindow(wnd);
+            sdl::Quit();
+            wnd = nullptr;
+        }
     }
 
-    void Window::PollEvents()
+    void Window::PollEvents(UI *const ui)
     {
         SetResized(false);
         SDL_Event event;
@@ -212,7 +220,8 @@ namespace sdl
                 break;
             }
 
-            // ImGui_ImplSDL2_ProcessEvent(&event);
+            if (ui != nullptr)
+                ui->ProcessEvent(event);
         }
     }
 

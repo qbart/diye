@@ -9,6 +9,10 @@ int main()
 {
     sdl::Window window;
     gl::App app;
+    UI ui;
+
+    app.WithUI(true);
+
     if (!window.Init(1600, 1000, "app"))
     {
         fmtx::Error("Failed to create window");
@@ -22,7 +26,12 @@ int main()
         return 1;
     }
     fmtx::Success("Vulkan initialized");
-    // UI ui(window.Get());
+
+    if (!ui.Init(window.Get(), app))
+    {
+        fmtx::Error("Failed to init UI");
+        return 1;
+    }
 
     Camera camera;
     camera.SetPosition(Vec3(2.0f, 2.0f, 2.0f));
@@ -48,7 +57,7 @@ int main()
     while (window.IsOpen())
     {
         // ---------- inputs -----------
-        window.PollEvents();
+        window.PollEvents(&ui);
         window.FreeCameraControls(camera, dt);
 
         // ---------- update -----------
@@ -67,6 +76,33 @@ int main()
         if (!app.Render(mvp))
             window.Close();
 
+        ui.BeginFrame(size);
+        // experiment->RenderUI(camera, ui);
+        // ui.Grid(camera);
+        // ui.TranslateGizmo(camera, transform);
+        ui.Demo();
+        ui.EndFrame();
+
+        app.commandBuffers.Reset(app.Frame());
+        app.commandBuffers.Begin(app.Frame());
+        app.commandBuffers.ClearColor({0.0f, 0.0f, 0.0f, 1.0f});
+        app.commandBuffers.ClearDepthStencil();
+        app.commandBuffers.CmdBeginRenderPass(app.Frame(), app.renderPass, app.swapChainFramebuffers[app.ImageIndex()], app.swapChain.extent);
+        {
+            app.uniformBuffersMemory[app.Frame()].CopyRaw(app.device, &app.ubos[app.Frame()], sizeof(app.ubos[app.Frame()]));
+            app.commandBuffers.CmdBindGraphicsPipeline(app.Frame(), app.graphicsPipeline);
+            app.commandBuffers.CmdViewport(app.Frame(), {0, 0}, app.swapChain.extent);
+            app.commandBuffers.CmdScissor(app.Frame(), {0, 0}, app.swapChain.extent);
+            app.commandBuffers.CmdBindDescriptorSet(app.Frame(), app.graphicsPipeline, app.descriptorPool.descriptorSets[app.Frame()].handle);
+            app.commandBuffers.CmdBindVertexBuffer(app.Frame(), app.vertexBuffer);
+            app.commandBuffers.CmdBindIndexBuffer(app.Frame(), app.indexBuffer);
+            app.commandBuffers.CmdDrawIndexed(app.Frame(), static_cast<uint32_t>(app.indices.size()));
+
+            ui.CmdDraw(app.commandBuffers.handles[app.Frame()]);
+        }
+        app.commandBuffers.CmdEndRenderPass(app.Frame());
+        app.commandBuffers.End(app.Frame());
+
         if (!app.EndFrame())
             window.Close();
         // experiment->Render(camera);
@@ -77,15 +113,10 @@ int main()
         // debug.Grid(-5.0f, 5.0f, -0.005f, 0.25f, BLACK);
         // experiment->RenderDebug(camera, debug);
         // debug.End();
-
-        // ---------- render:ui -----------
-        // ui.BeginFrame(size);
-        // experiment->RenderUI(camera, ui);
-        // ui.EndFrame();
-        // ui.Draw();
-
     }
+    ui.Shutdown();
     app.Shutdown();
+    window.Shutdown();
 
     return 0;
 }

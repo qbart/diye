@@ -23,6 +23,7 @@ namespace gl
         ~App();
 
         void MaxFramesInFlight(int maxFrames);
+        int MaxFramesInFlight() const { return maxFramesInFlight; }
         bool Init(SDL_Window *wnd);
         void Shutdown();
         bool Render(Mat4 mvp);
@@ -31,6 +32,7 @@ namespace gl
         bool EndFrame();
         void RequestRecreateSwapChain(bool recreate) { needRecreateSwapChain = recreate; }
         uint32_t ImageIndex() const { return imageIndex; }
+        void WithUI(bool withUI) { this->withUI = withUI; }
 
     private:
         bool InitGL();
@@ -44,7 +46,9 @@ namespace gl
 
         std::uint32_t imageIndex;
         std::uint32_t currentFrame;
+        bool withUI;
 
+    public:
         gl::Instance instance;
         gl::Device device;
         gl::Surface surface;

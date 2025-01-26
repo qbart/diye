@@ -54,6 +54,7 @@ namespace sdl
     };
 };
 
+class UI;
 namespace sdl
 {
     class Window
@@ -65,7 +66,7 @@ namespace sdl
         void Shutdown();
 
         SDL_Window *Get() const { return wnd; }
-        void PollEvents();
+        void PollEvents(UI * const ui = nullptr);
         void Close();
         bool IsOpen() const { return isOpen; }
         const Dimension &Size() const { return size; }

@@ -6,12 +6,16 @@
 
 #include "../core/all.hpp"
 #include "../deps/imgui.hpp"
+#include "../gl/app.hpp"
+#include "../gl/vulkan.hpp"
 
 class AnimationCurveWidget
 {
 public:
     std::string Name;
 };
+
+static void imgui_check_vk_result(VkResult err);
 
 class UI
 {
@@ -43,11 +47,14 @@ public:
     };
 
 public:
-    UI(SDL_Window *wnd);
+    UI();
     ~UI();
+    bool Init(SDL_Window *wnd, const gl::App &app);
+    void Shutdown();
+    void ProcessEvent(const SDL_Event &event);
     void BeginFrame(const Dimension &size);
     void EndFrame();
-    void Draw();
+    void CmdDraw(VkCommandBuffer cmd);
     void Grid(const Camera &camera);
     void Demo();
     void PushFont(uint size);
@@ -68,7 +75,8 @@ private:
     ImVec2 screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &mappedRect) const;
 
 private:
-    SDL_Window *wnd = nullptr;
-    ImGuiContext *ptr = nullptr;
+    SDL_Window *wnd;
+    const gl::App *app;
+    ImGuiContext *ptr;
     std::unordered_map<uint, uint> fonts;
 };

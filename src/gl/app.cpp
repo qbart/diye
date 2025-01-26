@@ -9,7 +9,8 @@ namespace gl
                  needRecreateSwapChain(false),
                  imageIndex(0),
                  currentFrame(0),
-                 maxFramesInFlight(2)
+                 maxFramesInFlight(2),
+                 withUI(false)
     {
     }
 
@@ -33,6 +34,7 @@ namespace gl
 
     void App::Shutdown()
     {
+        fmtx::Info("Shutting down Vulkan");
         ShutdownGL();
     }
 
@@ -385,9 +387,15 @@ namespace gl
         if (!textureSampler.Create(device))
             return false;
 
+        int withUITextures = 1;
+        if (withUI)
+        {
+            descriptorPool.createInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+            withUITextures = 2;
+        }
         descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, maxFramesInFlight);
-        descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxFramesInFlight);
-        descriptorPool.MaxSets(maxFramesInFlight);
+        descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxFramesInFlight * withUITextures);
+        descriptorPool.MaxSets(maxFramesInFlight * withUITextures);
 
         if (!descriptorPool.Create(device))
             return false;
