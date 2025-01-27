@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
     src/gl/sampler.cpp
     src/gl/descriptor_pool.cpp
     src/gl/app.cpp
+    src/gl/debug_renderer.cpp
     src/core/transform.cpp
     src/core/math.cpp
     src/core/camera.cpp
@@ -38,7 +39,6 @@ add_executable(${PROJECT_NAME}
 
     src/experiments/experiment.cpp
 
-    src/debug_draw_renderer.cpp
     src/gl.cpp
     src/ui/ui.cpp
 
