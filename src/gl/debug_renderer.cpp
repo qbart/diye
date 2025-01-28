@@ -37,7 +37,8 @@ namespace gl
     DebugRenderer::DebugRenderer() : store(nullptr),
                                      ctx(nullptr),
                                      memory(nullptr),
-                                     device(nullptr)
+                                     device(nullptr),
+                                     style(Style::Filled)
     {
     }
 
@@ -139,6 +140,7 @@ namespace gl
     void DebugRenderer::Begin()
     {
         imdd_reset(store);
+        style = Style::Filled;
     }
 
     void DebugRenderer::End(VkCommandBuffer commandBuffer)
@@ -155,14 +157,14 @@ namespace gl
 
     void DebugRenderer::Filled(bool filled)
     {
-        // style = filled ? IMDD_STYLE_FILLED : IMDD_STYLE_WIRE;
+        style = filled ? Style::Filled : Style::Wire;
     }
 
     void DebugRenderer::Point(const Vec3 &p, const Vec3 &color, float size) const
     {
         imdd_v4 min = {p.x - size / 2, p.y - size / 2, p.z - size / 2, 0};
         imdd_v4 max = {p.x + size / 2, p.y + size / 2, p.z + size / 2, 0};
-        imdd_aabb(store, IMDD_STYLE_FILLED, IMDD_ZMODE_TEST, min, max, toColor(color));
+        imdd_aabb(store, imdd_style_enum_t(style), IMDD_ZMODE_TEST, min, max, toColor(color));
     }
 
     void DebugRenderer::Circle(const Vec3 &center, const Vec3 &planeNormal, float radius, const Vec3 &color) const
@@ -172,7 +174,34 @@ namespace gl
 
     void DebugRenderer::Sphere(const Vec3 &p, float radius, const Vec3 &color) const
     {
-        imdd_sphere(store, IMDD_STYLE_WIRE, IMDD_ZMODE_TEST, imdd_v4({p.x, p.y, p.z, radius}), toColor(color));
+        imdd_sphere(store, imdd_style_enum_t(style), IMDD_ZMODE_TEST, imdd_v4({p.x, p.y, p.z, radius}), toColor(color));
+    }
+
+    void DebugRenderer::Plane(const Vec3 &origin, const Vec3 &normal, float size, const Vec3 &color, float normalSize, const Vec3 &normalColor) const
+    {
+        auto d = Mathf::Normalize(normal);
+        auto rotAxis = UP;
+        if (fabs(d.y) > fabs(d.z))
+            rotAxis = FORWARD;
+        Quat q = Mathf::Rotate(Quat(1, 0, 0, 0), 90, rotAxis);
+        Vec3 a = Mathf::Normalize(d * q);
+        Vec3 b = Mathf::Normalize(Mathf::Cross(d, a));
+
+        auto halfSize = size * 0.5f;
+
+        Line(origin + a * halfSize + b * halfSize, origin + a * halfSize - b * halfSize, color);
+        Line(origin + a * halfSize - b * halfSize, origin - a * halfSize - b * halfSize, color);
+        Line(origin - a * halfSize - b * halfSize, origin - a * halfSize + b * halfSize, color);
+        Line(origin - a * halfSize + b * halfSize, origin + a * halfSize + b * halfSize, color);
+
+        if (normalSize > 0)
+            Line(origin, origin + normal * normalSize, normalColor);
+    }
+
+    void DebugRenderer::Arrow(const Vec3 &from, const Vec3 &to, const Vec3 &color) const
+    {
+        Cylinder(from, to - from, color, 0.003f, Mathf::Distance(from, to)-0.05f);
+        Cone(to - Mathf::Normalize(to - from)*0.05f, to - from, color, 0.02f, 0.05f);
     }
 
     void DebugRenderer::Line(const Vec3 &from, const Vec3 &to, const Vec3 &color) const
@@ -186,7 +215,22 @@ namespace gl
     {
         imdd_v4 min = {center.x - size.x / 2, center.y - size.y / 2, center.z - size.z / 2, 0};
         imdd_v4 max = {center.x + size.x / 2, center.y + size.y / 2, center.z + size.z / 2, 0};
-        imdd_aabb(store, IMDD_STYLE_WIRE, IMDD_ZMODE_TEST, min, max, toColor(color));
+        imdd_aabb(store, imdd_style_enum_t(style), IMDD_ZMODE_TEST, min, max, toColor(color));
+    }
+
+    void DebugRenderer::AxisTriad(const Mat4 &transform) const
+    {
+        Vec4 from = transform * Vec4(0, 0, 0, 1);
+        Vec4 to = transform * Vec4(1, 0, 0, 1);
+        Line(Vec3(from), Vec3(to), RED);
+
+        from = transform * Vec4(0, 0, 0, 1);
+        to = transform * Vec4(0, 1, 0, 1);
+        Line(Vec3(from), Vec3(to), GREEN);
+
+        from = transform * Vec4(0, 0, 0, 1);
+        to = transform * Vec4(0, 0, 1, 1);
+        Line(Vec3(from), Vec3(to), BLUE);
     }
 
     void DebugRenderer::Grid(float mins, float maxs, float y, float step, const Vec3 &color) const
@@ -214,6 +258,12 @@ namespace gl
         }
     }
 
+    void DebugRenderer::GridSimple(float mins, float maxs, float y) const
+    {
+        Grid(mins, maxs, y, 0.25f, BLACK);
+        Grid(mins, maxs, y, 1.f, GRAY);
+    }
+
     void DebugRenderer::Cone(const Vec3 &origin, const Vec3 &dir, const Vec3 &color, float radius, float length) const
     {
         auto d = Mathf::Normalize(dir);
@@ -229,7 +279,7 @@ namespace gl
         imdd_v4 z = toVec(d * -length);
         imdd_v4 apex = toVec(origin + d * length);
 
-        imdd_cone(store, IMDD_STYLE_WIRE, IMDD_ZMODE_TEST, x, y, z, apex, toColor(color));
+        imdd_cone(store, imdd_style_enum_t(style), IMDD_ZMODE_TEST, x, y, z, apex, toColor(color));
     }
 
     void DebugRenderer::Cylinder(const Vec3 &origin, const Vec3 &dir, const Vec3 &color, float radius, float length) const
@@ -244,10 +294,10 @@ namespace gl
 
         imdd_v4 x = toVec(a * radius);
         imdd_v4 y = toVec(b * radius);
-        imdd_v4 z = toVec(d * -length*0.5f);
+        imdd_v4 z = toVec(d * -length * 0.5f);
         imdd_v4 apex = toVec(origin + d * length * 0.5f);
 
-        imdd_cylinder(store, IMDD_STYLE_WIRE, IMDD_ZMODE_TEST, x, y, z, apex, toColor(color));
+        imdd_cylinder(store, imdd_style_enum_t(style), IMDD_ZMODE_TEST, x, y, z, apex, toColor(color));
     }
 
     uint32_t DebugRenderer::toColor(const Vec3 &color) const
