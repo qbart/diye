@@ -200,8 +200,8 @@ namespace gl
 
     void DebugRenderer::Arrow(const Vec3 &from, const Vec3 &to, const Vec3 &color) const
     {
-        Cylinder(from, to - from, color, 0.003f, Mathf::Distance(from, to)-0.05f);
-        Cone(to - Mathf::Normalize(to - from)*0.05f, to - from, color, 0.02f, 0.05f);
+        Cylinder(from, to - from, color, 0.003f, Mathf::Distance(from, to) - 0.05f);
+        Cone(to - Mathf::Normalize(to - from) * 0.05f, to - from, color, 0.02f, 0.05f);
     }
 
     void DebugRenderer::Line(const Vec3 &from, const Vec3 &to, const Vec3 &color) const
@@ -218,19 +218,30 @@ namespace gl
         imdd_aabb(store, imdd_style_enum_t(style), IMDD_ZMODE_TEST, min, max, toColor(color));
     }
 
-    void DebugRenderer::AxisTriad(const Mat4 &transform) const
+    void DebugRenderer::AxisTriad(const Mat4 &transform, float size) const
     {
         Vec4 from = transform * Vec4(0, 0, 0, 1);
         Vec4 to = transform * Vec4(1, 0, 0, 1);
-        Line(Vec3(from), Vec3(to), RED);
+        Vec3 dir = Vec3(to - from);
+        Line(Vec3(from), Vec3(from) + dir * size, RED);
 
         from = transform * Vec4(0, 0, 0, 1);
         to = transform * Vec4(0, 1, 0, 1);
-        Line(Vec3(from), Vec3(to), GREEN);
+        dir = Vec3(to - from);
+        Line(Vec3(from), Vec3(from) + dir * size, GREEN);
 
         from = transform * Vec4(0, 0, 0, 1);
         to = transform * Vec4(0, 0, 1, 1);
-        Line(Vec3(from), Vec3(to), BLUE);
+        dir = Vec3(to - from);
+        Line(Vec3(from), Vec3(from) + dir * size, BLUE);
+    }
+
+    void DebugRenderer::Frustum(const Camera &camera, const Vec3 &color) const
+    {
+        float coneSize = 0.2f;
+        auto dir = camera.ViewDir();
+        Cone(camera.Position() + dir*coneSize, -dir, color, 0.1f, coneSize);
+        Point(camera.Position(), WHITE, 0.01f);
     }
 
     void DebugRenderer::Grid(float mins, float maxs, float y, float step, const Vec3 &color) const

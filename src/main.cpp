@@ -49,7 +49,6 @@ int main()
     Transform transform;
     transform.Rotate(-90);
     // transform.position = Vec3(0, 0.5f, 0);
-    
 
     sdl::Ticks ticks;
     float dt = 0;
@@ -98,14 +97,7 @@ int main()
         app.commandBuffers.ClearDepthStencil();
 
         debug.Begin();
-        debug.Grid(-5.0f, 5.0f, -0.005f, 0.25f, BLACK);
-        debug.Grid(-5.0f, 5.0f, -0.005f, 1.f, GRAY);
-        debug.Sphere(Vec3(1, 0, 0), 0.05f, RED);
-        debug.Sphere(Vec3(0, 1, 0), 0.05f, GREEN);
-        debug.Sphere(Vec3(0, 0, 1), 0.05f, BLUE);
-        // debug.Cylinder(transform.position, UP, PURPLE, transform.scale.x, transform.scale.y);
-        debug.Circle(transform.position, UP, transform.scale.x, YELLOW);
-        // debug.Cone(transform.position, UP, MAGENTA, transform.scale.x, transform.scale.y);
+        debug.GridSimple(-5.0f, 5.0f); //, -0.005f);
         debug.End(app.commandBuffers.handles[app.Frame()]);
 
         app.commandBuffers.CmdBeginRenderPass(app.Frame(), app.renderPass, app.swapChainFramebuffers[app.ImageIndex()], app.swapChain.extent);

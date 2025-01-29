@@ -38,8 +38,8 @@ namespace gl
         void Arrow(const Vec3 &from, const Vec3 &to, const Vec3 &color = RED) const;
         void Line(const Vec3 &from, const Vec3 &to, const Vec3 &color = WHITE) const;
         void Box(const Vec3 &center, const Vec3 &size, const Vec3 &color = CYAN) const;
-        void AxisTriad(const Mat4 &transform) const;
-        // void Frustum(const Camera &camera, const Vec3 &color = PURPLE) const;
+        void AxisTriad(const Mat4 &transform, float size = 1.f) const;
+        void Frustum(const Camera &camera, const Vec3 &color = PURPLE) const;
         void Grid(float mins = -50.f, float maxs = 50.f, float y = 0, float step = 1.f, const Vec3 &color = GRAY) const;
         void GridSimple(float mins = -5.f, float maxs = 5.f, float y = 0) const;
         void Cone(const Vec3 &origin, const Vec3 &dir, const Vec3 &color = MAGENTA, float radius = 0.5f, float length = 1.0f) const;
