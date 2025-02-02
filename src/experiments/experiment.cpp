@@ -13,7 +13,7 @@ void EmptyExperiment::Render(const Camera &camera)
 {
 }
 
-void EmptyExperiment::RenderDebug(const Camera &camera, const DebugDrawRenderer &g)
+void EmptyExperiment::RenderDebug(const Camera &camera)
 {
 }
 

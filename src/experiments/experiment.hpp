@@ -2,7 +2,6 @@
 
 #include "../core/all.hpp"
 #include "../ui/ui.hpp"
-#include "../debug_draw_renderer.hpp"
 #include "../deps/sdl.hpp"
 
 class Experiment
@@ -16,7 +15,7 @@ public:
     virtual int Init(sdl::Window *window) = 0;
     virtual void Update(float dt) = 0;
     virtual void Render(const Camera &camera) = 0;
-    virtual void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) = 0;
+    virtual void RenderDebug(const Camera &camera) = 0;
     virtual void RenderUI(const Camera &camera, UI &ui) = 0;
     virtual void Shutdown() = 0;
 };
@@ -27,7 +26,7 @@ public:
     int Init(sdl::Window *window) override;
     void Update(float dt) override;
     void Render(const Camera &camera) override;
-    void RenderDebug(const Camera &camera, const DebugDrawRenderer &g) override;
+    void RenderDebug(const Camera &camera) override;
     void RenderUI(const Camera &camera, UI &ui) override;
     void Shutdown() override;
 };

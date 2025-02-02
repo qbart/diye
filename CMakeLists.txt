@@ -39,7 +39,6 @@ add_executable(${PROJECT_NAME}
 
     src/experiments/experiment.cpp
 
-    src/gl.cpp
     src/ui/ui.cpp
 
     src/main.cpp

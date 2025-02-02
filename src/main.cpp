@@ -61,8 +61,6 @@ int main()
         return -1;
     }
 
-    transform.scale.x = 1;
-
     while (window.IsOpen())
     {
         // ---------- inputs -----------
@@ -86,8 +84,9 @@ int main()
             window.Close();
 
         ui.BeginFrame(size);
-        ui.ScaleGizmo(camera, transform);
+        // ui.ScaleGizmo(camera, transform);
         // ui.TranslateGizmo(camera, transform);
+        // ui.RotationGizmo(camera, transform);
         // experiment->RenderUI(camera, ui);
         ui.EndFrame();
 
