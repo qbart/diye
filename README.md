@@ -21,21 +21,21 @@ Plan for the next release:
 
 ### OBJ Loader and rotation gizmo
 
-![Screenshot](.github/viking_scene.png)
+![Screenshot](.github/docs/viking_scene.png)
 
 ### Debug primitives renderer
 
-![Screenshot](.github/debug.png)
+![Screenshot](.github/docs/debug.png)
 
 ### ImGui integration
 
-![Screenshot](.github/imgui.png)
+![Screenshot](.github/docs/imgui.png)
 
 ### Animation Curve with Editor
 
-Watch video [here](.github/curve.mp4)
+Watch video [here](.github/docs/curve.mp4)
 
-![Screenshot](.github/curve.png)
+![Screenshot](.github/docs/curve.png)
 
 ## Development
 
