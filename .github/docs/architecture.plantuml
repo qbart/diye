@@ -1,0 +1,42 @@
+@startuml
+
+package core {
+    card Math
+    card Transform
+    card Camera
+    card Timer
+    card AnimationCurve
+    card Logger
+}
+
+package io {
+    card BinaryFile
+    card Image
+    card OBJ
+}
+
+package gl {
+    card VulkanPrimitives
+    card VulkanApp
+    card DebugRenderer
+} 
+
+package geometry {
+    card Mesh
+}
+
+package ui {
+    card TranslateGizmo
+    card ScaleGizmo
+    card RotateGizmo
+    card AnimationCurveEditor
+    card ImguiComponents 
+}
+
+package sdl {
+    card Window
+    card Inputs
+}
+
+@enduml
+
