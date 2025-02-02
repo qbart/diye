@@ -17,6 +17,26 @@ Plan for the next release:
 - [ ] RenderDoc integration
 - [ ] OSX compilation without errors
 
+## Screenshots
+
+### OBJ Loader and rotation gizmo
+
+![Screenshot](.github/viking_scene.png)
+
+### Debug primitives renderer
+
+![Screenshot](.github/debug.png)
+
+### ImGui integration
+
+![Screenshot](.github/imgui.png)
+
+### Animation Curve with Editor
+
+Watch video [here](.github/curve.mp4)
+
+![Screenshot](.github/curve.png)
+
 ## Development
 
 Make sure to go through the setup steps before starting development.
@@ -41,9 +61,13 @@ Set `CXX` to:
 
 ## Setup
 
+Init CMake:
+
 ```
 cmake --preset debug .
 ``` 
+
+Copy assets to build directory and download modified viking model from https://vulkan-tutorial.com/Loading_models.
 
 ## Dependencies
 
