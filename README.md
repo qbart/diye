@@ -15,7 +15,7 @@ Plan for the next release:
 - [ ] Half-Edge data structure with simple set of operations
 - [ ] Vulkan Allocator
 - [ ] RenderDoc integration
-- [ ] OSX compilation without errors
+- [x] OSX compilation without errors
 
 ## Screenshots
 
