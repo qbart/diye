@@ -69,6 +69,22 @@ cmake --preset debug .
 
 Copy assets to build directory and download modified viking model from https://vulkan-tutorial.com/Loading_models.
 
+### Ubuntu
+
+Install dependencies:
+
+```bash
+sudo apt install libxrandr-dev libtool autoconf automake pkg-config libwayland-dev
+```
+
+Then install vulkan SDK and configure vulkan sdk root.
+
+You might need to use for Clang before setting up the project:
+
+```
+export CFLAGS="$CFLAGS -Wno-error=unterminated-string-initialization"
+```
+
 ## Dependencies
 
 Libraries:

@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.29)
 
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
 project(diye)
 
 add_executable(${PROJECT_NAME}
@@ -61,7 +65,7 @@ find_package(Vulkan REQUIRED)
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMDD_NO_SIMD=1")
-    
+
     find_library(COCOA_LIBRARY Cocoa REQUIRED)
     find_library(IOKIT_LIBRARY IOKit REQUIRED)
     find_library(COREVIDEO_LIBRARY CoreVideo REQUIRED)
@@ -81,6 +85,17 @@ if(APPLE)
         SDL2::SDL2main
         $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
         Vulkan::Vulkan
+    )
+elseif (LINUX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        fmt::fmt
+        GLEW::GLEW
+        glm::glm
+        imgui::imgui
+        imguizmo::imguizmo
+        SDL2::SDL2
+        SDL2::SDL2main
+        SDL2_image
     )
 else()
     # For non-macOS systems, you can specify general linking here
