@@ -175,8 +175,15 @@ namespace gl
         if (!depthImageView.Create(device, depthImage, physicalDevice.depthFormat))
             return false;
 
-        shaderModules.vert = gl::CreateShaderModule(device, io::BinaryFile::Load("dummy.vert.spv")->Bytes());
-        shaderModules.frag = gl::CreateShaderModule(device, io::BinaryFile::Load("dummy.frag.spv")->Bytes());
+        auto shaderVert = io::BinaryFile::Load("dummy.vert.spv");
+        auto shaderFrag = io::BinaryFile::Load("dummy.frag.spv");
+        if (shaderVert->IsEmpty() || shaderFrag->IsEmpty())
+        {
+            fmtx::Error("Failed to load shader files");
+            return false;
+        }
+        shaderModules.vert = gl::CreateShaderModule(device, shaderVert->Bytes());
+        shaderModules.frag = gl::CreateShaderModule(device, shaderFrag->Bytes());
         if (shaderModules.vert == VK_NULL_HANDLE || shaderModules.frag == VK_NULL_HANDLE)
         {
             fmtx::Error("Failed to create shader modules");

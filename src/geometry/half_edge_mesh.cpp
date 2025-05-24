@@ -1,4 +1,5 @@
 #include "half_edge_mesh.hpp"
+#include <algorithm>
 #include <map>
 
 HalfEdgeMesh::Ptr HalfEdgeMesh::NewPlane()

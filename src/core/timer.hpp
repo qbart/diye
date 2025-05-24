@@ -50,7 +50,7 @@ private:
     bool triggered = false;
 };
 
-inline Timer operator"" _ms(unsigned long long ms)
+inline Timer operator""_ms(unsigned long long ms)
 {
     return Timer(ms / 1000.0f);
 }

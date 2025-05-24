@@ -87,6 +87,8 @@ if(APPLE)
         Vulkan::Vulkan
     )
 elseif (LINUX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMDD_NO_SIMD=1")
+
     target_link_libraries(${PROJECT_NAME} PRIVATE
         fmt::fmt
         GLEW::GLEW
