@@ -294,7 +294,7 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
         ImVec2 size = ImVec2(600, 600);
         ImGuiWindow *win = ImGui::GetCurrentWindowRead();
         ImRect winbb(win->DC.CursorPos, win->DC.CursorPos + size);
-        if (!ImGui::ItemAdd(winbb, NULL))
+        if (!ImGui::ItemAdd(winbb, 0))
         {
             ImGui::End(); // win
             return false;
@@ -618,7 +618,7 @@ bool UI::AnimationCurvePreview(const AnimationCurve &curve)
 
     ImVec2 previewSize = ImVec2(70, 70);
     ImRect winbb(win->DC.CursorPos, win->DC.CursorPos + previewSize);
-    if (!ImGui::ItemAdd(winbb, NULL))
+    if (!ImGui::ItemAdd(winbb, 0))
         return false;
     ImGui::ItemSize(winbb, 0);
 

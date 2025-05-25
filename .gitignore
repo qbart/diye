@@ -328,3 +328,4 @@ imgui.ini
 *.ninja_log
 /res/
 /src/experiments/game.hpp
+/.cache/

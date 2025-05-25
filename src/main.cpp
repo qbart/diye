@@ -108,7 +108,7 @@ int main()
             app.commandBuffers.CmdBindDescriptorSet(app.Frame(), app.graphicsPipeline, app.descriptorPool.descriptorSets[app.Frame()].handle);
             app.commandBuffers.CmdBindVertexBuffer(app.Frame(), app.vertexBuffer);
             app.commandBuffers.CmdBindIndexBuffer(app.Frame(), app.indexBuffer);
-            // app.commandBuffers.CmdDrawIndexed(app.Frame(), static_cast<uint32_t>(app.indices.size()));
+            app.commandBuffers.CmdDrawIndexed(app.Frame(), static_cast<uint32_t>(app.indices.size()));
 
             debug.CmdDraw(camera, app.commandBuffers.handles[app.Frame()]);
             ui.CmdDraw(app.commandBuffers.handles[app.Frame()]);
