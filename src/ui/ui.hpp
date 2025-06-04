@@ -9,6 +9,32 @@
 #include "../gl/app.hpp"
 #include "../gl/vulkan.hpp"
 
+enum class ObjectOperation
+{
+    None,
+    Translate,
+    Rotate,
+    Scale,
+};
+
+enum class ObjectTransformMode
+{
+    Local,
+    World,
+};
+
+enum class ObjectTransformAxis
+{
+    XYZ,
+    X,
+    Y,
+    Z,
+    XY,
+    XZ,
+    YZ,
+};
+
+
 class AnimationCurveWidget
 {
 public:
@@ -61,6 +87,11 @@ public:
     void PopFont();
     std::string ContextMenu(const std::vector<std::string> &items);
     void Text(const Vec2 &pos, const std::string &text, const Vec4 &color = WHITE);
+    bool TransformGizmo(const Camera &camera,
+                        Transform &transform,
+                        ObjectOperation operation = ObjectOperation::None,
+                        ObjectTransformMode mode = ObjectTransformMode::World,
+                        ObjectTransformAxis axis = ObjectTransformAxis::XYZ);
     bool TranslateGizmo(const Camera &camera, Transform &transform, bool local = false);
     bool RotationGizmo(const Camera &camera, Transform &transform);
     bool ScaleGizmo(const Camera &camera, Transform &transform);

@@ -168,8 +168,36 @@ std::string UI::ContextMenu(const std::vector<std::string> &items)
 void UI::Text(const Vec2 &pos, const std::string &text, const Vec4 &color)
 {
     ImGui::SetCursorPos(ImVec2(pos.x, pos.y));
-    ImGui::TextColored(ImColor(color), text.c_str());
+    ImGui::TextColored(ImColor(color), "%s", text.c_str());
 }
+
+bool UI::TransformGizmo(const Camera &camera,
+                        Transform &transform,
+                        ObjectOperation operation,
+                        ObjectTransformMode mode,
+                        ObjectTransformAxis axis)
+{
+    if (operation == ObjectOperation::None)
+        return false;
+
+    auto local = (mode == ObjectTransformMode::Local);
+
+    switch (operation)
+    {
+        case ObjectOperation::Translate:
+            return TranslateGizmo(camera, transform, local);
+        case ObjectOperation::Rotate:
+            return RotationGizmo(camera, transform);
+        case ObjectOperation::Scale:
+            return ScaleGizmo(camera, transform);
+
+        default:
+            return false;
+
+    }
+    return false;
+}
+
 
 bool UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
 {
@@ -458,15 +486,15 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
 
             MouseCallback callback;
             callback.OnHover = [i, &affectedAnchor]()
-            {
-                affectedAnchor = i;
-                // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 25),
-                //                   captionColor,
-                //                   fmt::format("OutTangent: {}", curve[i].OutTangent).c_str());
-                // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 45),
-                //                   captionColor,
-                //                   fmt::format("InTangent: {}", curve[i].InTangent).c_str());
-            };
+                {
+                    affectedAnchor = i;
+                    // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 25),
+                    //                   captionColor,
+                    //                   fmt::format("OutTangent: {}", curve[i].OutTangent).c_str());
+                    // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 45),
+                    //                   captionColor,
+                    //                   fmt::format("InTangent: {}", curve[i].InTangent).c_str());
+                };
 
             DragHandleStyle dragHandleStyle;
             dragHandleStyle.Color = tangentColor;
@@ -475,15 +503,15 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
             if (curve.HasOutTangent(i))
             {
                 callback.OnDoubleClick = [i, &tangentSplitJoin, &dominantTangent]()
-                {
-                    tangentSplitJoin = i;
-                    dominantTangent = AnimationCurve::Tangent::Out;
-                };
+                    {
+                        tangentSplitJoin = i;
+                        dominantTangent = AnimationCurve::Tangent::Out;
+                    };
                 callback.OnHover = [&]()
-                {
-                    auto pos = screenPosFrom01(curve.OutTangent(i), bb, true);
-                    drawList->AddText(ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str());
-                };
+                    {
+                        auto pos = screenPosFrom01(curve.OutTangent(i), bb, true);
+                        drawList->AddText(ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str());
+                    };
                 if (!curve[i].Locked)
                     dragHandleStyle.Color = outTangentColor;
                 if (DragHandle("AnimationCurveDragTangentOut", outTangentPos, movedOutTangent, dragHandleStyle, callback))
@@ -495,15 +523,15 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
             if (curve.HasInTangent(i))
             {
                 callback.OnDoubleClick = [i, &tangentSplitJoin, &dominantTangent]()
-                {
-                    tangentSplitJoin = i;
-                    dominantTangent = AnimationCurve::Tangent::In;
-                };
+                    {
+                        tangentSplitJoin = i;
+                        dominantTangent = AnimationCurve::Tangent::In;
+                    };
                 callback.OnHover = [&]()
-                {
-                    auto pos = screenPosFrom01(curve.InTangent(i), bb, true);
-                    drawList->AddText(ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str());
-                };
+                    {
+                        auto pos = screenPosFrom01(curve.InTangent(i), bb, true);
+                        drawList->AddText(ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str());
+                    };
                 if (!curve[i].Locked)
                     dragHandleStyle.Color = inTangentColor;
                 if (DragHandle("AnimationCurveDragTangentIn", inTangentPos, movedInTangent, dragHandleStyle, callback))
@@ -525,15 +553,15 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
 
             MouseCallback callback;
             callback.OnHover = [i, &pos, &curve, drawList]()
-            {
-                drawList->AddText(ImVec2(pos.x - 10, pos.y - 25),
-                                  captionColor,
-                                  fmt::format("{},{}", curve[i].Time, curve[i].Value).c_str());
-            };
+                {
+                    drawList->AddText(ImVec2(pos.x - 10, pos.y - 25),
+                                      captionColor,
+                                      fmt::format("{},{}", curve[i].Time, curve[i].Value).c_str());
+                };
             callback.OnDoubleClick = [i, &deleted]()
-            {
-                deleted = i;
-            };
+                {
+                    deleted = i;
+                };
 
             DragHandleStyle dragHandleStyle;
             dragHandleStyle.Color = anchorColor;

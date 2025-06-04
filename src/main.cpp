@@ -5,6 +5,7 @@
 #include "gl/app.hpp"
 #include "gl/debug_renderer.hpp"
 
+
 int main()
 {
     sdl::Window window;
@@ -61,11 +62,39 @@ int main()
         return -1;
     }
 
+    ObjectOperation currentOperation = ObjectOperation::None;
+    ObjectTransformMode currentTransformMode = ObjectTransformMode::World;
+    ObjectTransformAxis currentTransformAxis = ObjectTransformAxis::XYZ;
+
     while (window.IsOpen())
     {
         // ---------- inputs -----------
         window.PollEvents(&ui);
         window.FreeCameraControls(camera, dt);
+        if (window.KeyJustReleased(SDLK_g))
+        {
+            if (currentOperation == ObjectOperation::Translate)
+            {
+                if (currentTransformMode == ObjectTransformMode::World)
+                    currentTransformMode = ObjectTransformMode::Local;
+                else if (currentTransformMode == ObjectTransformMode::Local)
+                    currentTransformMode = ObjectTransformMode::World;
+            }
+
+            currentOperation = ObjectOperation::Translate;
+        }
+        else if (window.KeyJustReleased(SDLK_r))
+        {
+
+            currentOperation = ObjectOperation::Rotate;
+            currentTransformMode = ObjectTransformMode::World;
+        }
+        // else if (window.KeyJustReleased(SDLK_s))
+        // {
+        //     currentOperation = ObjectOperation::Scale;
+        //     currentTransformMode = ObjectTransformMode::World;
+        // }
+
 
         // ---------- update -----------
         ticks.Update();
@@ -84,9 +113,13 @@ int main()
             window.Close();
 
         ui.BeginFrame(size);
-        // ui.ScaleGizmo(camera, transform);
-        // ui.TranslateGizmo(camera, transform);
-        // ui.RotationGizmo(camera, transform);
+        ui.TransformGizmo(
+            camera,
+            transform,
+            currentOperation,
+            currentTransformMode,
+            currentTransformAxis
+        );
         // experiment->RenderUI(camera, ui);
         ui.EndFrame();
 

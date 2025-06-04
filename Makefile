@@ -1,6 +1,6 @@
 .PHONY: build
 build:
-	@cmake --build build/
+	@cmake --build build/ && cd build && ./diye || cd ..
 
 .PHONY: init
 init: clean
