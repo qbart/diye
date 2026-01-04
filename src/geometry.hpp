@@ -189,7 +189,7 @@ auto TiledMesh(float w, float h)
 	float tileH = 16.0f / 288.0f;
 	float z = 0;
 	Geometry mesh;
-	int capacity = w * h * 6;	
+	int capacity = w * h * 6;
 	mesh.Vertices.reserve(capacity);
 	mesh.Indices.reserve(capacity);
 	mesh.UVs.reserve(capacity);

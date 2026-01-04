@@ -1,11 +1,13 @@
 ninja_required_version = 1.3
 
 rule compile
-  command = glslc -fshader-stage=$stage $in -o ../../../build/$out
-  description = Compiling $in to SPIR-V
+  command = slangc $in -profile spirv_1_5 -target spirv -entry $entry -stage $stage -o ../../../build/$out
 
-build dummy.vert.spv: compile vert.glsl
-    stage = vertex
 
-build dummy.frag.spv: compile frag.glsl
-    stage = fragment
+build dummy.vert.spv: compile dummy.slang
+  stage = vertex
+  entry = vsMain
+
+build dummy.frag.spv: compile dummy.slang
+  stage = fragment
+  entry = fsMain
