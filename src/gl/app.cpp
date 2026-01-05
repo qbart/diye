@@ -43,6 +43,7 @@ namespace gl
         inFlightFences.Wait(currentFrame, device);
 
         VkResult nextResult = swapChain.AcquireNextImageWithTimeout(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
+        // VkResult nextResult = swapChain.AcquireNextImage(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
         if (nextResult == VK_TIMEOUT)
         {
             fmtx::Error("Failed to acquire swap chain image - timeout");
