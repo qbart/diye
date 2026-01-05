@@ -12,9 +12,9 @@ You can even copy single file or function to your project if you like (link attr
 
 Plan for the next release:
 
-- [ ] Half-Edge data structure with simple set of operations
 - [ ] Vulkan Allocator
 - [ ] RenderDoc integration
+- [x] Slang
 - [x] OSX compilation without errors
 
 ## Screenshots
@@ -48,6 +48,7 @@ Useful links:
 - https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-cmd
 - https://vulkan-tutorial.com/Development_environment
 - https://github.com/ninja-build/ninja/releases
+- https://github.com/shader-slang/slang
 
 Add to user env `PATH`:
 
@@ -110,4 +111,5 @@ Stack:
 ## Timeline
 
 Releases:
+- 2026.Q1: Use Slang as default shading language, fixed sync issues.
 - 2025.Q1: Initial release with basic rendering, UI, camera, debug primitives renderer, input and OBJ loader
