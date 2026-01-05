@@ -9,6 +9,12 @@ namespace gl
     class App
     {
     public:
+        enum class State {
+            Ok,
+            Continue,
+            Error,
+        };
+
         struct Vertex
         {
             Vec3 pos;
@@ -27,9 +33,9 @@ namespace gl
         bool Init(SDL_Window *wnd);
         void Shutdown();
         bool Render(Mat4 mvp);
-        bool BeginFrame();
+        State BeginFrame();
         std::uint32_t Frame() const { return currentFrame; }
-        bool EndFrame();
+        State EndFrame();
         void RequestRecreateSwapChain(bool recreate) { needRecreateSwapChain = recreate; }
         uint32_t ImageIndex() const { return imageIndex; }
         void WithUI(bool withUI) { this->withUI = withUI; }
@@ -65,7 +71,6 @@ namespace gl
         gl::Semaphore imageAvailableSemaphores;
         gl::Semaphore renderFinishedSemaphores;
         gl::Fence inFlightFences;
-        std::vector<VkFence> imagesInFlight;
 
         std::vector<Vertex> vertices;
         std::vector<uint32> indices;

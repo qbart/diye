@@ -9,7 +9,7 @@ namespace gl
                  needRecreateSwapChain(false),
                  imageIndex(0),
                  currentFrame(0),
-                 maxFramesInFlight(2),
+                 maxFramesInFlight(1),
                  withUI(false)
     {
     }
@@ -38,48 +38,42 @@ namespace gl
         ShutdownGL();
     }
 
-    bool App::BeginFrame()
+    App::State App::BeginFrame()
     {
         inFlightFences.Wait(currentFrame, device);
+
         VkResult nextResult = swapChain.AcquireNextImage(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
         if (nextResult == VK_ERROR_OUT_OF_DATE_KHR)
         {
             fmtx::Warn("Vulkan acquire next image returned out of date");
             RecreateSwapChain();
-            return false;
+            return State::Continue;
         }
         else if (nextResult != VK_SUCCESS && nextResult != VK_SUBOPTIMAL_KHR)
         {
             fmtx::Error("Failed to acquire swap chain image");
-            return false;
+            return State::Error;
         }
 
-        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
-        {
-            vkWaitForFences(device.handle, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-        }
-
-            // Mark the image as now being used by this frame
-        imagesInFlight[imageIndex] = inFlightFences.handles[currentFrame];
         inFlightFences.Reset(currentFrame, device);
 
-        return true;
+        return State::Ok;
     }
 
-    bool App::EndFrame()
+    App::State App::EndFrame()
     {
         device.graphicsQueue.Clear();
         device.graphicsQueue.AddWaitSemaphore(imageAvailableSemaphores.handles[currentFrame]);
-        device.graphicsQueue.AddSignalSemaphore(renderFinishedSemaphores.handles[imageIndex]);
+        device.graphicsQueue.AddSignalSemaphore(renderFinishedSemaphores.handles[currentFrame]);
         device.graphicsQueue.AddWaitStage(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
         if (device.graphicsQueue.Submit(commandBuffers.handles[currentFrame], inFlightFences.handles[currentFrame]) != VK_SUCCESS)
         {
             fmtx::Error("Failed to submit draw command buffer");
-            return false;
+            return State::Error;
         }
 
         device.presentQueue.Clear();
-        device.presentQueue.AddWaitSemaphore(renderFinishedSemaphores.handles[imageIndex]);
+        device.presentQueue.AddWaitSemaphore(renderFinishedSemaphores.handles[currentFrame]);
         device.presentQueue.AddSwapChain(swapChain.handle);
         device.presentQueue.AddImageIndex(imageIndex);
         VkResult presentResult = device.presentQueue.Present();
@@ -95,16 +89,17 @@ namespace gl
         else if (presentResult == VK_SUBOPTIMAL_KHR)
         {
             fmtx::Warn(fmt::format("Vulkan queue present returned suboptimal"));
+            needRecreateSwapChain = false;
             RecreateSwapChain();
         }
         else if (presentResult != VK_SUCCESS)
         {
             fmtx::Error("Failed to present swap chain image");
-            return false;
+            return State::Error;
         }
 
-        currentFrame = (currentFrame + 1) % maxFramesInFlight;
-        return true;
+        // currentFrame = (currentFrame + 1) % maxFramesInFlight;
+        return State::Ok;
     }
 
     bool App::Render(Mat4 mvp)
@@ -165,8 +160,6 @@ namespace gl
 
         if (!swapChain.Create(device, surface, physicalDevice))
             return false;
-
-        imagesInFlight.resize(swapChain.images.size(), VK_NULL_HANDLE);
 
         imageViews.resize(swapChain.images.size());
         for (size_t i = 0; i < swapChain.images.size(); i++)
@@ -272,7 +265,7 @@ namespace gl
         if (!imageAvailableSemaphores.Create(device, maxFramesInFlight))
             return false;
 
-        if (!renderFinishedSemaphores.Create(device, swapChain.images.size()))
+        if (!renderFinishedSemaphores.Create(device, maxFramesInFlight))
             return false;
 
         if (!inFlightFences.Create(device, maxFramesInFlight))
@@ -511,16 +504,6 @@ namespace gl
             }
         }
 
-        renderFinishedSemaphores.Destroy(device);
-        if (!renderFinishedSemaphores.Create(device, swapChain.images.size()))
-        {
-            fmtx::Error("Failed to recreate renderFinishedSemaphores");
-            result = false;
-        }
-
-        imagesInFlight.clear();
-        imagesInFlight.resize(swapChain.images.size(), VK_NULL_HANDLE);
-
         return result;
     }
 
@@ -544,7 +527,6 @@ namespace gl
         imageAvailableSemaphores.Destroy(device);
         renderFinishedSemaphores.Destroy(device);
         inFlightFences.Destroy(device);
-        imagesInFlight.clear();
 
         shortLivedCommandPool.Destroy(device);
         commandPool.Destroy(device);

@@ -37,7 +37,7 @@ namespace gl
 
     void Queue::AddSwapChain(VkSwapchainKHR swapChain)
     {
-        swapChains.push_back(swapChain); 
+        swapChains.push_back(swapChain);
     }
 
     void Queue::AddImageIndex(uint32_t imageIndex)
@@ -49,9 +49,11 @@ namespace gl
     {
         submitInfo.waitSemaphoreCount = waitSemaphores.size();
         submitInfo.pWaitSemaphores = waitSemaphores.data();
+        submitInfo.pWaitDstStageMask = waitStages.data();
+
         submitInfo.signalSemaphoreCount = signalSemaphores.size();
         submitInfo.pSignalSemaphores = signalSemaphores.data();
-        submitInfo.pWaitDstStageMask = waitStages.data();
+
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
@@ -62,8 +64,10 @@ namespace gl
     {
         presentInfo.waitSemaphoreCount = waitSemaphores.size();
         presentInfo.pWaitSemaphores = waitSemaphores.data();
+
         presentInfo.swapchainCount = swapChains.size();
         presentInfo.pSwapchains = swapChains.data();
+
         presentInfo.pImageIndices = imageIndices.data();
         presentInfo.pResults = nullptr;
 

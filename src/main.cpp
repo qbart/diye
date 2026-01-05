@@ -105,14 +105,23 @@ int main()
 
         // ---------- render -----------
         app.RequestRecreateSwapChain(window.WasResized());
-        if (!app.BeginFrame())
+        auto beginStatus = app.BeginFrame();
+        if (beginStatus == gl::App::State::Error)
+        {
+            window.Close();
+            break;
+        }
+        else if (beginStatus == gl::App::State::Continue)
         {
             continue;
         }
 
         auto mvp = camera.MVP(transform.ModelMatrix());
         if (!app.Render(mvp))
+        {
             window.Close();
+            break;
+        }
 
         // ui.BeginFrame(size);
         // ui.TransformGizmo(
@@ -151,8 +160,11 @@ int main()
         app.commandBuffers.CmdEndRenderPass(app.Frame());
         app.commandBuffers.End(app.Frame());
 
-        if (!app.EndFrame())
+        if (app.EndFrame() == gl::App::State::Error)
+        {
             window.Close();
+            break;
+        }
         // experiment->Render(camera);
 
         // ---------- render:debug -----------
