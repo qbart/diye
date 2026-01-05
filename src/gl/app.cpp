@@ -9,7 +9,7 @@ namespace gl
                  needRecreateSwapChain(false),
                  imageIndex(0),
                  currentFrame(0),
-                 maxFramesInFlight(1),
+                 maxFramesInFlight(2),
                  withUI(false)
     {
     }
@@ -69,7 +69,7 @@ namespace gl
     {
         device.graphicsQueue.Clear();
         device.graphicsQueue.AddWaitSemaphore(imageAvailableSemaphores.handles[currentFrame]);
-        device.graphicsQueue.AddSignalSemaphore(renderFinishedSemaphores.handles[currentFrame]);
+        device.graphicsQueue.AddSignalSemaphore(renderFinishedSemaphores.handles[imageIndex]);
         device.graphicsQueue.AddWaitStage(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
         if (device.graphicsQueue.Submit(commandBuffers.handles[currentFrame], inFlightFences.handles[currentFrame]) != VK_SUCCESS)
         {
@@ -78,7 +78,7 @@ namespace gl
         }
 
         device.presentQueue.Clear();
-        device.presentQueue.AddWaitSemaphore(renderFinishedSemaphores.handles[currentFrame]);
+        device.presentQueue.AddWaitSemaphore(renderFinishedSemaphores.handles[imageIndex]);
         device.presentQueue.AddSwapChain(swapChain.handle);
         device.presentQueue.AddImageIndex(imageIndex);
         VkResult presentResult = device.presentQueue.Present();
@@ -270,7 +270,7 @@ namespace gl
         if (!imageAvailableSemaphores.Create(device, maxFramesInFlight))
             return false;
 
-        if (!renderFinishedSemaphores.Create(device, maxFramesInFlight))
+        if (!renderFinishedSemaphores.Create(device, swapChain.images.size()))
             return false;
 
         if (!inFlightFences.Create(device, maxFramesInFlight))
@@ -507,6 +507,13 @@ namespace gl
                 fmtx::Error("Failed to recreate framebuffers");
                 result = false;
             }
+        }
+
+        renderFinishedSemaphores.Destroy(device);
+        if (!renderFinishedSemaphores.Create(device, swapChain.images.size()))
+        {
+            fmtx::Error("Failed to recreate renderFinishedSemaphores");
+            result = false;
         }
 
         return result;

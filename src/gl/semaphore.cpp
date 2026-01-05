@@ -31,5 +31,7 @@ namespace gl
         {
             vkDestroySemaphore(device.handle, handle, nullptr);
         }
+
+        handles.clear();
     }
 }
