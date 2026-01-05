@@ -103,7 +103,7 @@ namespace gl
             return State::Error;
         }
 
-        // currentFrame = (currentFrame + 1) % maxFramesInFlight;
+        currentFrame = (currentFrame + 1) % maxFramesInFlight;
         return State::Ok;
     }
 

@@ -69,7 +69,9 @@ int main()
     while (window.IsOpen())
     {
         // ---------- inputs -----------
+        window.PollEvents(nullptr);
         // window.PollEvents(&ui);
+
         window.FreeCameraControls(camera, dt);
         if (window.KeyJustReleased(SDLK_g))
         {
@@ -100,6 +102,7 @@ int main()
         ticks.Update();
         dt = ticks.DeltaTime();
         auto size = window.Size();
+
         camera.UpdatePerspective(size);
         // experiment->Update(dt);
 

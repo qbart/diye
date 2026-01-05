@@ -117,7 +117,7 @@ namespace gl
 
     VkResult SwapChain::AcquireNextImageWithTimeout(const Device &device, uint32_t *imageIndex, VkSemaphore semaphore, VkFence fence) const
     {
-        uint64_t timeout = 5000000;
+        uint64_t timeout = 16'666'666ull;
         return vkAcquireNextImageKHR(device.handle, handle, timeout, semaphore, fence, imageIndex);
     }
 }
