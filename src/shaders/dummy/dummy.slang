@@ -6,10 +6,10 @@ struct UniformBufferObject
 [[vk::binding(0, 0)]]
 ConstantBuffer<UniformBufferObject> ubo;
 
-[[vk::binding(0, 1)]]
+[[vk::binding(1, 0)]]
 Texture2D texBaseColor;
 
-[[vk::binding(0, 2)]]
+[[vk::binding(2, 0)]]
 SamplerState linearSampler;
 
 // ----- VERTEX -----

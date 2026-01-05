@@ -10,9 +10,9 @@ int main()
 {
     sdl::Window window;
     gl::App app;
-    UI ui;
+    // UI ui;
 
-    app.WithUI(true);
+    app.WithUI(false);
 
     if (!window.Init(1600, 1000, "app"))
     {
@@ -28,11 +28,11 @@ int main()
     }
     fmtx::Success("Vulkan initialized");
 
-    if (!ui.Init(window.Get(), app))
-    {
-        fmtx::Error("Failed to init UI");
-        return 1;
-    }
+    // if (!ui.Init(window.Get(), app))
+    // {
+    //     fmtx::Error("Failed to init UI");
+    //     return 1;
+    // }
     fmtx::Success("UI initialized");
 
     gl::DebugRenderer debug;
@@ -69,7 +69,7 @@ int main()
     while (window.IsOpen())
     {
         // ---------- inputs -----------
-        window.PollEvents(&ui);
+        // window.PollEvents(&ui);
         window.FreeCameraControls(camera, dt);
         if (window.KeyJustReleased(SDLK_g))
         {
@@ -112,16 +112,16 @@ int main()
         if (!app.Render(mvp))
             window.Close();
 
-        ui.BeginFrame(size);
-        ui.TransformGizmo(
-            camera,
-            transform,
-            currentOperation,
-            currentTransformMode,
-            currentTransformAxis
-        );
-        // experiment->RenderUI(camera, ui);
-        ui.EndFrame();
+        // ui.BeginFrame(size);
+        // ui.TransformGizmo(
+        //     camera,
+        //     transform,
+        //     currentOperation,
+        //     currentTransformMode,
+        //     currentTransformAxis
+        // );
+        // // experiment->RenderUI(camera, ui);
+        // ui.EndFrame();
 
         app.commandBuffers.Reset(app.Frame());
         app.commandBuffers.Begin(app.Frame());
@@ -144,7 +144,7 @@ int main()
             app.commandBuffers.CmdDrawIndexed(app.Frame(), static_cast<uint32_t>(app.indices.size()));
 
             debug.CmdDraw(camera, app.commandBuffers.handles[app.Frame()]);
-            ui.CmdDraw(app.commandBuffers.handles[app.Frame()]);
+            // ui.CmdDraw(app.commandBuffers.handles[app.Frame()]);
         }
         app.commandBuffers.CmdEndRenderPass(app.Frame());
         app.commandBuffers.End(app.Frame());
@@ -162,7 +162,7 @@ int main()
     }
 
     debug.Shutdown();
-    ui.Shutdown();
+    // ui.Shutdown();
     app.Shutdown();
     window.Shutdown();
 

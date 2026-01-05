@@ -237,7 +237,8 @@ namespace gl
         graphicsPipeline.AddVertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv));
         int setLayout = graphicsPipeline.AddDescriptorSetLayout();
         graphicsPipeline.AddDescriptorSetLayoutBinding(setLayout, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
-        graphicsPipeline.AddDescriptorSetLayoutBinding(setLayout, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+        graphicsPipeline.AddDescriptorSetLayoutBinding(setLayout, 1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT);
+        graphicsPipeline.AddDescriptorSetLayoutBinding(setLayout, 2, VK_DESCRIPTOR_TYPE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
 
         if (!graphicsPipeline.CreateDescriptorSetLayouts(device))
             return false;
@@ -401,21 +402,24 @@ namespace gl
             withUITextures = 2;
         }
         descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, maxFramesInFlight);
-        descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, maxFramesInFlight * withUITextures);
+        descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxFramesInFlight * withUITextures);
+        descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER, maxFramesInFlight);
         descriptorPool.MaxSets(maxFramesInFlight * withUITextures);
 
         if (!descriptorPool.Create(device))
             return false;
 
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(2, graphicsPipeline.descriptorSetLayouts[0]);
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(maxFramesInFlight, graphicsPipeline.descriptorSetLayouts[0]);
         if (!descriptorPool.Allocate(device, descriptorSetLayouts, maxFramesInFlight))
             return false;
 
         for (int i = 0; i < maxFramesInFlight; i++)
         {
             descriptorPool.descriptorSets[i].WriteUniformBuffer(0, uniformBuffers[i], 0, sizeof(UniformBufferObject));
-            descriptorPool.descriptorSets[i].WriteCombinedImageSampler(1, textureView, textureSampler);
-            device.UpdateDescriptorSets(descriptorPool.descriptorSets[i].writes);
+            descriptorPool.descriptorSets[i].WriteImage(1, textureView);
+            descriptorPool.descriptorSets[i].WriteSampler(2, textureSampler);
+            descriptorPool.UpdateDescriptorSet(device, i);
+            // device.UpdateDescriptorSets(descriptorPool.descriptorSets[i].writes);
         }
         fmtx::Info("Descriptor sets updated");
 

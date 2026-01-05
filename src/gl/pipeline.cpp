@@ -86,6 +86,24 @@ namespace gl
 
     bool Pipeline::CreateDescriptorSetLayouts(const gl::Device &device)
     {
+
+        for (size_t i = 0; i < descriptorSetLayoutCreateInfos.size(); ++i)
+        {
+            auto& info = descriptorSetLayoutCreateInfos[i];
+
+            auto it = descriptorSetLayoutBindings.find(i);
+            if (it != descriptorSetLayoutBindings.end())
+            {
+                info.bindingCount = static_cast<uint32_t>(it->second.size());
+                info.pBindings    = it->second.data();
+            }
+            else
+            {
+                info.bindingCount = 0;
+                info.pBindings    = nullptr;
+            }
+        }
+
         descriptorSetLayouts.resize(descriptorSetLayoutCreateInfos.size());
         for (int i = 0; i < descriptorSetLayoutCreateInfos.size(); ++i)
         {
@@ -95,6 +113,7 @@ namespace gl
                 return false;
             }
         }
+
         layoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
         layoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
 
@@ -299,7 +318,6 @@ namespace gl
         descriptorSetLayoutBindings[descriptorSetLayout].push_back(layoutBinding);
 
         descriptorSetLayoutCreateInfos[descriptorSetLayout].bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings[descriptorSetLayout].size());
-        descriptorSetLayoutCreateInfos[descriptorSetLayout].pBindings = descriptorSetLayoutBindings[descriptorSetLayout].data();
 
         return descriptorSetLayoutBindings[descriptorSetLayout].back();
     }
