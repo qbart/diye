@@ -10,7 +10,7 @@ int main()
 {
     sdl::Window window;
     gl::App app;
-    // UI ui;
+    UI ui;
 
     app.WithUI(false);
 
@@ -33,7 +33,7 @@ int main()
     //     fmtx::Error("Failed to init UI");
     //     return 1;
     // }
-    fmtx::Success("UI initialized");
+    // fmtx::Success("UI initialized");
 
     gl::DebugRenderer debug;
     if (!debug.Init(app.device, app.physicalDevice, app.renderPass))

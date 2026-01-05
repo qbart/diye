@@ -40,7 +40,7 @@ namespace gl
 
     App::State App::BeginFrame()
     {
-        inFlightFences.Wait(currentFrame, device);
+        device.WaitForFences(1, &inFlightFences.handles[currentFrame]);
 
         VkResult nextResult = swapChain.AcquireNextImageWithTimeout(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
         // VkResult nextResult = swapChain.AcquireNextImage(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
@@ -60,6 +60,13 @@ namespace gl
             fmtx::Error("Failed to acquire swap chain image");
             return State::Error;
         }
+
+        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+        {
+            device.WaitForFences(1, &imagesInFlight[imageIndex]);
+        }
+
+        imagesInFlight[imageIndex] = inFlightFences.handles[currentFrame];
 
         inFlightFences.Reset(currentFrame, device);
 
@@ -271,6 +278,8 @@ namespace gl
         if (!imageAvailableSemaphores.Create(device, maxFramesInFlight))
             return false;
 
+        imagesInFlight.clear();
+        imagesInFlight.resize(swapChain.images.size(), VK_NULL_HANDLE);
         if (!renderFinishedSemaphores.Create(device, swapChain.images.size()))
             return false;
 
@@ -510,6 +519,9 @@ namespace gl
             }
         }
 
+        imagesInFlight.clear();
+        imagesInFlight.resize(swapChain.images.size(), VK_NULL_HANDLE);
+
         renderFinishedSemaphores.Destroy(device);
         if (!renderFinishedSemaphores.Create(device, swapChain.images.size()))
         {
@@ -540,6 +552,7 @@ namespace gl
         imageAvailableSemaphores.Destroy(device);
         renderFinishedSemaphores.Destroy(device);
         inFlightFences.Destroy(device);
+        imagesInFlight.clear();
 
         shortLivedCommandPool.Destroy(device);
         commandPool.Destroy(device);

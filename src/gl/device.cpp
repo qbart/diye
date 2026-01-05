@@ -73,6 +73,11 @@ namespace gl
         return vkDeviceWaitIdle(handle);
     }
 
+    VkResult Device::WaitForFences(uint32_t count, const VkFence *pFences) const
+    {
+        return vkWaitForFences(handle, count, pFences, VK_TRUE, UINT64_MAX);
+    }
+
     void Device::RequireSwapchainExtension()
     {
         requiredExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);

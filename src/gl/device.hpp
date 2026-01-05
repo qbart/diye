@@ -21,6 +21,7 @@ namespace gl
         bool Create(const PhysicalDevice &physicalDevice);
         void Destroy();
         VkResult WaitIdle() const;
+        VkResult WaitForFences(uint32_t count, const VkFence *pFences) const;
         void RequireSwapchainExtension();
         void SetRequiredExtensions(const CStrings &extensions);
         void EnableValidationLayers();
