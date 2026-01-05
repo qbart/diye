@@ -65,6 +65,7 @@ namespace gl
         gl::Semaphore imageAvailableSemaphores;
         gl::Semaphore renderFinishedSemaphores;
         gl::Fence inFlightFences;
+        std::vector<VkFence> imagesInFlight;
 
         std::vector<Vertex> vertices;
         std::vector<uint32> indices;

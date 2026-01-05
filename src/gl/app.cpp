@@ -46,13 +46,21 @@ namespace gl
         {
             fmtx::Warn("Vulkan acquire next image returned out of date");
             RecreateSwapChain();
-            return true;
+            return false;
         }
         else if (nextResult != VK_SUCCESS && nextResult != VK_SUBOPTIMAL_KHR)
         {
             fmtx::Error("Failed to acquire swap chain image");
             return false;
         }
+
+        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+        {
+            vkWaitForFences(device.handle, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+        }
+
+            // Mark the image as now being used by this frame
+        imagesInFlight[imageIndex] = inFlightFences.handles[currentFrame];
         inFlightFences.Reset(currentFrame, device);
 
         return true;
@@ -157,6 +165,8 @@ namespace gl
 
         if (!swapChain.Create(device, surface, physicalDevice))
             return false;
+
+        imagesInFlight.resize(swapChain.images.size(), VK_NULL_HANDLE);
 
         imageViews.resize(swapChain.images.size());
         for (size_t i = 0; i < swapChain.images.size(); i++)
@@ -501,6 +511,9 @@ namespace gl
             }
         }
 
+        imagesInFlight.clear();
+        imagesInFlight.resize(swapChain.images.size(), VK_NULL_HANDLE);
+
         return result;
     }
 
@@ -524,6 +537,8 @@ namespace gl
         imageAvailableSemaphores.Destroy(device);
         renderFinishedSemaphores.Destroy(device);
         inFlightFences.Destroy(device);
+        imagesInFlight.clear();
+
         shortLivedCommandPool.Destroy(device);
         commandPool.Destroy(device);
         for (int i = 0; i < swapChainFramebuffers.size(); i++)
@@ -544,5 +559,6 @@ namespace gl
         device.Destroy();
         surface.Destroy(instance);
         instance.Destroy();
+
     }
 }

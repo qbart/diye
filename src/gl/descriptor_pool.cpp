@@ -144,6 +144,9 @@ namespace gl
 
     bool DescriptorPool::Allocate(const Device &device, const std::vector<VkDescriptorSetLayout> &descriptorSetLayouts, uint32_t count)
     {
+        descriptorSets.clear();
+        descriptorSets.reserve(count);
+
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = handle;

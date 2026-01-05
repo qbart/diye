@@ -106,7 +106,9 @@ int main()
         // ---------- render -----------
         app.RequestRecreateSwapChain(window.WasResized());
         if (!app.BeginFrame())
-            window.Close();
+        {
+            continue;
+        }
 
         auto mvp = camera.MVP(transform.ModelMatrix());
         if (!app.Render(mvp))
