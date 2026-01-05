@@ -42,8 +42,13 @@ namespace gl
     {
         inFlightFences.Wait(currentFrame, device);
 
-        VkResult nextResult = swapChain.AcquireNextImage(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
-        if (nextResult == VK_ERROR_OUT_OF_DATE_KHR)
+        VkResult nextResult = swapChain.AcquireNextImageWithTimeout(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
+        if (nextResult == VK_TIMEOUT)
+        {
+            fmtx::Error("Failed to acquire swap chain image - timeout");
+            return State::Error;
+        }
+        else if (nextResult == VK_ERROR_OUT_OF_DATE_KHR)
         {
             fmtx::Warn("Vulkan acquire next image returned out of date");
             RecreateSwapChain();

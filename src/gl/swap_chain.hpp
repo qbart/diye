@@ -22,5 +22,6 @@ namespace gl
         bool Create(const Device &device, const Surface &surface, const PhysicalDevice &physicalDevice);
         void Destroy(const Device &device);
         VkResult AcquireNextImage(const Device &device, uint32_t *imageIndex, VkSemaphore semaphore, VkFence fence = VK_NULL_HANDLE) const;
+        VkResult AcquireNextImageWithTimeout(const Device &device, uint32_t *imageIndex, VkSemaphore semaphore, VkFence fence = VK_NULL_HANDLE) const;
     };
 }
