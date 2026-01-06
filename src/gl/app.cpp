@@ -9,8 +9,7 @@ namespace gl
                  needRecreateSwapChain(false),
                  imageIndex(0),
                  currentFrame(0),
-                 maxFramesInFlight(2),
-                 withUI(false)
+                 maxFramesInFlight(2)
     {
     }
 
@@ -414,16 +413,10 @@ namespace gl
         if (!textureSampler.Create(device))
             return false;
 
-        int withUITextures = 1;
-        if (withUI)
-        {
-            descriptorPool.createInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-            withUITextures = 2;
-        }
         descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, maxFramesInFlight);
-        descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxFramesInFlight * withUITextures);
+        descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxFramesInFlight);
         descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER, maxFramesInFlight);
-        descriptorPool.MaxSets(maxFramesInFlight * withUITextures);
+        descriptorPool.MaxSets(maxFramesInFlight);
 
         if (!descriptorPool.Create(device))
             return false;
@@ -438,7 +431,6 @@ namespace gl
             descriptorPool.descriptorSets[i].WriteImage(1, textureView);
             descriptorPool.descriptorSets[i].WriteSampler(2, textureSampler);
             descriptorPool.UpdateDescriptorSet(device, i);
-            // device.UpdateDescriptorSets(descriptorPool.descriptorSets[i].writes);
         }
         fmtx::Info("Descriptor sets updated");
 

@@ -38,7 +38,6 @@ namespace gl
         State EndFrame();
         void RequestRecreateSwapChain(bool recreate) { needRecreateSwapChain = recreate; }
         uint32_t ImageIndex() const { return imageIndex; }
-        void WithUI(bool withUI) { this->withUI = withUI; }
 
     private:
         bool InitGL();
@@ -52,7 +51,6 @@ namespace gl
 
         std::uint32_t imageIndex;
         std::uint32_t currentFrame;
-        bool withUI;
 
     public:
         gl::Instance instance;

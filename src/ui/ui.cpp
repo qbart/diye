@@ -44,17 +44,33 @@ bool UI::Init(SDL_Window *wnd, const gl::App &app)
         return false;
     }
 
+    descriptorPool.createInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, app.MaxFramesInFlight());
+    descriptorPool.MaxSets(app.MaxFramesInFlight());
+
+    if (!descriptorPool.Create(app.device))
+    {
+        fmtx::Error("Failed to create descriptorPool for UI");
+        return false;
+    }
+
+    VkPipelineRenderingCreateInfoKHR pipeline{};
+    pipeline.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    pipeline.colorAttachmentCount = 1;
+    pipeline.pColorAttachmentFormats = &app.swapChain.imageFormat;
+
     ImGui_ImplVulkan_InitInfo init_info = {};
     init_info.Instance = app.instance.handle;
     init_info.PhysicalDevice = app.physicalDevice.handle;
     init_info.Device = app.device.handle;
     init_info.Queue = app.device.graphicsQueue.handle;
-    init_info.DescriptorPool = app.descriptorPool.handle;
+    init_info.DescriptorPool = descriptorPool.handle;
     init_info.MinImageCount = app.MaxFramesInFlight();
     init_info.ImageCount = app.MaxFramesInFlight();
     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     init_info.UseDynamicRendering = true;
-    // init_info.RenderPass = app.renderPass.handle;
+    init_info.RenderPass = nullptr;
+    init_info.PipelineRenderingCreateInfo = pipeline;
     init_info.CheckVkResultFn = imgui_check_vk_result;
 
     if (!ImGui_ImplVulkan_Init(&init_info))
@@ -82,6 +98,7 @@ void UI::Shutdown()
         app->device.WaitIdle();
 
         ImGui_ImplVulkan_Shutdown();
+        descriptorPool.Destroy(app->device);
         ImGui_ImplSDL2_Shutdown();
     }
 

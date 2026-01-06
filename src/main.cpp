@@ -12,8 +12,6 @@ int main()
     gl::App app;
     UI ui;
 
-    app.WithUI(false);
-
     if (!window.Init(1600, 1000, "app"))
     {
         fmtx::Error("Failed to create window");

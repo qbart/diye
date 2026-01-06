@@ -13,6 +13,8 @@
     operator glm::vec4() const { return glm::vec4(x, y, z, w); }
 
 #define IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_impl_sdl2.h>

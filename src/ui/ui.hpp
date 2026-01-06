@@ -108,6 +108,7 @@ private:
 private:
     SDL_Window *wnd;
     const gl::App *app;
+    gl::DescriptorPool descriptorPool;
     ImGuiContext *ptr;
     std::unordered_map<uint, uint> fonts;
 };
