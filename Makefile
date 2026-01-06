@@ -21,5 +21,7 @@ assets:
 	@cp assets/* build/
 	@echo "Download viking demo"
 	@curl --output build/viking_room.obj https://vulkan-tutorial.com/resources/viking_room.obj
-	@curl --output build/viking_room.png https://vulkan-tutorial.com/resources/viking_room.png
+	@curl --output build/viking_room-24.png https://vulkan-tutorial.com/resources/viking_room.png
 	@echo "Make sure to convert viking_room.png to 32-bit with alpha channel"
+	@convert build/viking_room-24.png -alpha on -depth 8 build/viking_room.png
+	@file build/viking_room.png
