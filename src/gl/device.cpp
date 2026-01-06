@@ -10,7 +10,8 @@ namespace gl
                        deviceFeatures({}),
                        graphicsQueue(VK_NULL_HANDLE),
                        presentQueue(VK_NULL_HANDLE),
-                       createInfo({})
+                       createInfo({}),
+                       DynamicRenderingEnabled(false)
     {
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.pNext = nullptr;
@@ -42,6 +43,14 @@ namespace gl
             queueCreateInfo.queueCount = 1;
             queueCreateInfo.pQueuePriorities = &queuePriority;
             queueCreateInfos.push_back(queueCreateInfo);
+        }
+
+        if (DynamicRenderingEnabled)
+        {
+            VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{};
+            dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+            dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+            createInfo.pNext = &dynamicRenderingFeature;
         }
 
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -83,6 +92,14 @@ namespace gl
         requiredExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
         createInfo.ppEnabledExtensionNames = requiredExtensions.data();
+    }
+
+    void Device::RequireDynamicRendering()
+    {
+        requiredExtensions.emplace_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
+        createInfo.ppEnabledExtensionNames = requiredExtensions.data();
+        DynamicRenderingEnabled = true;
     }
 
     void Device::SetRequiredExtensions(const CStrings &extensions)

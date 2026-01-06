@@ -53,7 +53,8 @@ bool UI::Init(SDL_Window *wnd, const gl::App &app)
     init_info.MinImageCount = app.MaxFramesInFlight();
     init_info.ImageCount = app.MaxFramesInFlight();
     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-    init_info.RenderPass = app.renderPass.handle;
+    init_info.UseDynamicRendering = true;
+    // init_info.RenderPass = app.renderPass.handle;
     init_info.CheckVkResultFn = imgui_check_vk_result;
 
     if (!ImGui_ImplVulkan_Init(&init_info))

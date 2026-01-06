@@ -167,6 +167,7 @@ namespace gl
         }
 
         device.RequireSwapchainExtension();
+        device.RequireDynamicRendering();
         device.EnableValidationLayers();
         if (!device.Create(physicalDevice))
             return false;

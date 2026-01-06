@@ -16,6 +16,7 @@ namespace gl
         Queue presentQueue;
         std::vector<const char *> requiredExtensions;
         std::vector<const char *> validationLayers;
+        bool DynamicRenderingEnabled;
 
         Device();
         bool Create(const PhysicalDevice &physicalDevice);
@@ -23,6 +24,7 @@ namespace gl
         VkResult WaitIdle() const;
         VkResult WaitForFences(uint32_t count, const VkFence *pFences) const;
         void RequireSwapchainExtension();
+        void RequireDynamicRendering();
         void SetRequiredExtensions(const CStrings &extensions);
         void EnableValidationLayers();
         void UpdateDescriptorSets(const std::vector<VkWriteDescriptorSet> &descriptorWrites);
