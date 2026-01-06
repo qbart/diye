@@ -29,3 +29,12 @@
 #include "sampler.hpp"
 #include "descriptor_pool.hpp"
 
+namespace vk
+{
+void InitFunctions(VkDevice device);
+void ImageTransitionLayout(VkDevice device, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+inline PFN_vkCmdBeginRenderingKHR CmdBeginRenderingKHR = nullptr;
+inline PFN_vkCmdEndRenderingKHR   CmdEndRenderingKHR   = nullptr;
+}
+

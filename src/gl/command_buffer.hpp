@@ -27,6 +27,8 @@ namespace gl
         void ClearDepthStencil();
         void CmdBeginRenderPass(uint32_t cmdBufferIndex, const RenderPass &renderPass, const Framebuffer &framebuffer, VkExtent2D renderAreaExtent);
         void CmdEndRenderPass(uint32_t cmdBufferIndex);
+        void CmdBeginRenderingKHR(uint32_t cmdBufferIndex, VkExtent2D renderAreaExtent, VkImageView imageView);
+        void CmdEndRenderingKHR(uint32_t cmdBufferIndex);
         void CmdViewport(uint32_t cmdBufferIndex, VkOffset2D offset, VkExtent2D size, float minDepth = 0, float maxDepth = 1);
         void CmdScissor(uint32_t cmdBufferIndex, VkOffset2D offset, VkExtent2D size);
         void CmdBindGraphicsPipeline(uint32_t cmdBufferIndex, const Pipeline &pipeline);

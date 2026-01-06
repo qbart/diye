@@ -171,6 +171,8 @@ namespace gl
         if (!device.Create(physicalDevice))
             return false;
 
+        vk::InitFunctions(device.handle);
+
         if (!swapChain.Create(device, surface, physicalDevice))
             return false;
 
@@ -205,7 +207,7 @@ namespace gl
             fmtx::Error("Failed to create shader modules");
             return false;
         }
-        renderPass.AddColorAttachment(swapChain.imageFormat).finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        renderPass.AddColorAttachment(swapChain.imageFormat); //.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
         renderPass.SetDepthAttachment(physicalDevice.depthFormat);
         if (!renderPass.Create(device, shaderModules))
             return false;

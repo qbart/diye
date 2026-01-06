@@ -4,6 +4,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
+#include <vulkan/vulkan_core.h>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/vec2.hpp>
@@ -54,6 +55,11 @@ struct Dimension
     operator Vec2() const
     {
         return Vec2(w, h);
+    }
+
+    operator VkExtent2D() const
+    {
+        return VkExtent2D{uint32_t(w), uint32_t(h)};
     }
 };
 

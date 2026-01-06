@@ -84,7 +84,6 @@ int main()
         }
         else if (window.KeyJustReleased(SDLK_r))
         {
-
             currentOperation = ObjectOperation::Rotate;
             currentTransformMode = ObjectTransformMode::World;
         }
@@ -143,8 +142,8 @@ int main()
         debug.GridSimple(-5.0f, 5.0f); //, -0.005f);
         debug.End(app.commandBuffers.handles[app.Frame()]);
 
-        app.commandBuffers.CmdBeginRenderPass(app.Frame(), app.renderPass, app.swapChainFramebuffers[app.ImageIndex()], app.swapChain.extent);
         {
+            app.commandBuffers.CmdBeginRenderPass(app.Frame(), app.renderPass, app.swapChainFramebuffers[app.ImageIndex()], app.swapChain.extent);
             app.uniformBuffersMemory[app.Frame()].CopyRaw(app.device, &app.ubos[app.Frame()], sizeof(app.ubos[app.Frame()]));
             app.commandBuffers.CmdBindGraphicsPipeline(app.Frame(), app.graphicsPipeline);
             app.commandBuffers.CmdViewport(app.Frame(), {0, 0}, app.swapChain.extent);
@@ -155,9 +154,21 @@ int main()
             app.commandBuffers.CmdDrawIndexed(app.Frame(), static_cast<uint32_t>(app.indices.size()));
 
             debug.CmdDraw(camera, app.commandBuffers.handles[app.Frame()]);
-            // ui.CmdDraw(app.commandBuffers.handles[app.Frame()]);
+            app.commandBuffers.CmdEndRenderPass(app.Frame());
         }
-        app.commandBuffers.CmdEndRenderPass(app.Frame());
+
+        {
+            app.commandBuffers.CmdBeginRenderingKHR(app.Frame(), app.swapChain.extent, app.imageViews[app.ImageIndex()].handle);
+
+            ui.CmdDraw(app.commandBuffers.handles[app.Frame()]);
+            app.commandBuffers.CmdEndRenderingKHR(app.Frame());
+            vk::ImageTransitionLayout(app.device.handle,
+                                      app.commandBuffers.handles[app.Frame()],
+                                      app.swapChain.images[app.ImageIndex()].handle,
+                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        }
+
         app.commandBuffers.End(app.Frame());
 
         if (app.EndFrame() == gl::App::State::Error)

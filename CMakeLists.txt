@@ -33,6 +33,7 @@ add_executable(${PROJECT_NAME}
     src/gl/descriptor_pool.cpp
     src/gl/app.cpp
     src/gl/debug_renderer.cpp
+    src/gl/vulkan.cpp
     src/core/transform.cpp
     src/core/math.cpp
     src/core/camera.cpp

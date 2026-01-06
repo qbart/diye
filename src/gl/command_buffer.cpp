@@ -1,4 +1,5 @@
 #include "command_buffer.hpp"
+#include "vulkan.hpp"
 
 namespace gl
 {
@@ -76,6 +77,35 @@ namespace gl
 
         vkCmdBeginRenderPass(handles[cmdBufferIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         clearValues.clear();
+    }
+
+    void CommandBuffer::CmdBeginRenderingKHR(uint32_t cmdBufferIndex, VkExtent2D renderAreaExtent, VkImageView imageView)
+    {
+        const VkRenderingAttachmentInfoKHR attachmentInfo {
+            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+            .imageView = imageView,
+            .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+        };
+
+        const VkRenderingInfoKHR renderInfo {
+            .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
+            .renderArea = VkRect2D{
+                .offset = {0,0},
+                .extent = renderAreaExtent,
+            },
+            .layerCount = 1,
+            .colorAttachmentCount = 1,
+            .pColorAttachments = &attachmentInfo,
+        };
+
+        vk::CmdBeginRenderingKHR(handles[cmdBufferIndex], &renderInfo);
+    }
+
+    void CommandBuffer::CmdEndRenderingKHR(uint32_t cmdBufferIndex)
+    {
+        vk::CmdEndRenderingKHR(handles[cmdBufferIndex]);
     }
 
     void CommandBuffer::CmdEndRenderPass(uint32_t cmdBufferIndex)

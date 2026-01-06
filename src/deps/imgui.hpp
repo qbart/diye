@@ -14,6 +14,7 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
+#define VK_NO_PROTOTYPES
 
 #include <imgui.h>
 #include <imgui_internal.h>
