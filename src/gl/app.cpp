@@ -135,7 +135,9 @@ namespace gl
         commandBuffers.CmdBindDescriptorSet(currentFrame, graphicsPipeline, descriptorPool.descriptorSets[currentFrame].handle);
         commandBuffers.CmdBindVertexBuffer(currentFrame, vertexBuffer);
         commandBuffers.CmdBindIndexBuffer(currentFrame, indexBuffer);
+        commandBuffers.CmdBeginDebugLabel(currentFrame, "Scene Mesh");
         commandBuffers.CmdDrawIndexed(currentFrame, static_cast<uint32_t>(indices.size()));
+        commandBuffers.CmdEndDebugLabel(currentFrame);
 
         commandBuffers.CmdEndRenderPass(currentFrame);
         if (commandBuffers.End(currentFrame) != VK_SUCCESS)
@@ -266,6 +268,7 @@ namespace gl
 
         if (!graphicsPipeline.Create(device))
             return false;
+        graphicsPipeline.Label(device, "HELLO");
 
         if (!commandPool.Create(device, physicalDevice.queueFamilyIndices.graphicsFamily.value()))
             return false;

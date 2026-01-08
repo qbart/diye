@@ -1,4 +1,5 @@
 #include "pipeline.hpp"
+#include "vulkan.hpp"
 
 namespace gl
 {
@@ -64,6 +65,17 @@ namespace gl
     void Pipeline::Destroy(const gl::Device &device)
     {
         vkDestroyPipeline(device.handle, handle, nullptr);
+    }
+
+    void Pipeline::Label(const gl::Device &device, const char* label)
+    {
+        VkDebugUtilsObjectNameInfoEXT info = {
+          .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+          .objectType = VK_OBJECT_TYPE_PIPELINE,
+          .objectHandle = (uint64_t)handle,
+          .pObjectName = "PBR Pipeline"
+        };
+        vk::SetDebugUtilsObjectNameEXT(device.handle, &info);
     }
 
     bool Pipeline::CreateLayout(const gl::Device &device)

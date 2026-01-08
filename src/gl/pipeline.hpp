@@ -35,6 +35,7 @@ namespace gl
 
         bool Create(const gl::Device &device);
         void Destroy(const gl::Device &device);
+        void Label(const gl::Device &device, const char* label);
         bool CreateLayout(const gl::Device &device);
         void DestroyLayout(const gl::Device &device);
         bool CreateDescriptorSetLayouts(const gl::Device &device);
