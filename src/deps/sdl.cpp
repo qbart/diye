@@ -77,10 +77,18 @@ namespace sdl
         {
             extensions.emplace_back(sdlExtensions[i]);
         }
+
+#ifdef __APPLE__
         extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+#endif
         if (debug)
         {
             extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+
+        for (const auto& ext : extensions)
+        {
+            fmtx::Debug(fmt::format("Vulkan Extension: {}", ext));
         }
 
         delete[] sdlExtensions;

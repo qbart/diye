@@ -36,5 +36,8 @@ void ImageTransitionLayout(VkDevice device, VkCommandBuffer commandBuffer, VkIma
 
 inline PFN_vkCmdBeginRenderingKHR CmdBeginRenderingKHR = nullptr;
 inline PFN_vkCmdEndRenderingKHR   CmdEndRenderingKHR   = nullptr;
+inline PFN_vkCmdBeginDebugUtilsLabelEXT CmdBeginDebugUtilsLabelEXT = nullptr;
+inline PFN_vkCmdEndDebugUtilsLabelEXT   CmdEndDebugUtilsLabelEXT   = nullptr;
+inline PFN_vkCmdInsertDebugUtilsLabelEXT CmdInsertDebugUtilsLabelEXT = nullptr;
+inline PFN_vkSetDebugUtilsObjectNameEXT SetDebugUtilsObjectNameEXT = nullptr;
 }
-

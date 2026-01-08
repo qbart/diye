@@ -36,6 +36,9 @@ namespace gl
         void CmdBindVertexBuffer(uint32_t cmdBufferIndex, const Buffer &buffer, VkDeviceSize offset = 0);
         void CmdBindIndexBuffer(uint32_t cmdBufferIndex, const Buffer &buffer, VkDeviceSize offset = 0);
         void CmdDrawIndexed(uint32_t cmdBufferIndex, uint32_t indexCount);
+        void CmdBeginDebugLabel(uint32_t cmdBufferIndex, const char *label, const float *color = nullptr);
+        void CmdEndDebugLabel(uint32_t cmdBufferIndex);
+        void CmdInsertDebugLabel(uint32_t cmdBufferIndex, const char *label, const float *color = nullptr);
 
     private:
         std::vector<VkClearValue> clearValues;

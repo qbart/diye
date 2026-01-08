@@ -1,6 +1,14 @@
+.PHONY: run
+run: build
+	cd build && ./diye || cd ..
+
 .PHONY: build
 build:
-	@cmake --build build/ && cd build && ./diye || cd ..
+	@cmake --build build/
+
+.PHONY: debug
+debug:
+	@renderdoccmd capture -d build ./build/diye
 
 .PHONY: init
 init: clean

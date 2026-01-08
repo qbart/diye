@@ -119,7 +119,9 @@ gl::Instance::Instance() : debug(false),
     createInfo.pApplicationInfo = &appInfo;
     createInfo.enabledExtensionCount = 0;
     createInfo.ppEnabledExtensionNames = nullptr;
+#ifdef __APPLE__
     createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
     createInfo.enabledLayerCount = 0;
     createInfo.pNext = nullptr;
 }

@@ -158,4 +158,44 @@ namespace gl
     {
         vkCmdDrawIndexed(handles[cmdBufferIndex], indexCount, 1, 0, 0, 0);
     }
+
+    void CommandBuffer::CmdBeginDebugLabel(uint32_t cmdBufferIndex, const char *label, const float *color)
+    {
+        if (vk::CmdBeginDebugUtilsLabelEXT == nullptr || label == nullptr)
+            return;
+
+        VkDebugUtilsLabelEXT labelInfo{};
+        labelInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+        labelInfo.pLabelName = label;
+        const float defaultColor[4] = {0.45f, 0.8f, 0.35f, 1.0f};
+        const float *inputColor = color != nullptr ? color : defaultColor;
+        for (int i = 0; i < 4; ++i)
+            labelInfo.color[i] = inputColor[i];
+
+        vk::CmdBeginDebugUtilsLabelEXT(handles[cmdBufferIndex], &labelInfo);
+    }
+
+    void CommandBuffer::CmdEndDebugLabel(uint32_t cmdBufferIndex)
+    {
+        if (vk::CmdEndDebugUtilsLabelEXT == nullptr)
+            return;
+
+        vk::CmdEndDebugUtilsLabelEXT(handles[cmdBufferIndex]);
+    }
+
+    void CommandBuffer::CmdInsertDebugLabel(uint32_t cmdBufferIndex, const char *label, const float *color)
+    {
+        if (vk::CmdInsertDebugUtilsLabelEXT == nullptr || label == nullptr)
+            return;
+
+        VkDebugUtilsLabelEXT labelInfo{};
+        labelInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+        labelInfo.pLabelName = label;
+        const float defaultColor[4] = {0.3f, 0.5f, 0.9f, 1.0f};
+        const float *inputColor = color != nullptr ? color : defaultColor;
+        for (int i = 0; i < 4; ++i)
+            labelInfo.color[i] = inputColor[i];
+
+        vk::CmdInsertDebugUtilsLabelEXT(handles[cmdBufferIndex], &labelInfo);
+    }
 }

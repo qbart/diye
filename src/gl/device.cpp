@@ -30,6 +30,12 @@ namespace gl
 
     bool Device::Create(const PhysicalDevice &physicalDevice)
     {
+        for (const auto& ext : requiredExtensions)
+            fmtx::Debug(fmt::format("Require extension: {}", ext));
+
+        for (const auto& layer : validationLayers)
+            fmtx::Debug(fmt::format("Validation layer: {}", layer));
+
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
         std::set<uint32_t> uniqueQueueFamilies = {
             physicalDevice.queueFamilyIndices.graphicsFamily.value(),
