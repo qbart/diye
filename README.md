@@ -13,7 +13,7 @@ You can even copy single file or function to your project if you like (link attr
 Plan for the next release:
 
 - [ ] Vulkan Allocator
-- [ ] RenderDoc integration
+- [x] RenderDoc integration
 - [x] Slang
 - [x] OSX compilation without errors
 
@@ -111,5 +111,5 @@ Stack:
 ## Timeline
 
 Releases:
-- 2026.Q1: Use Slang as default shading language, fixed sync issues.
-- 2025.Q1: Initial release with basic rendering, UI, camera, debug primitives renderer, input and OBJ loader
+- 2026.Q1: Use Slang as default shading language, fixed sync issues, add renderdoc integration.
+- 2025.Q1: Initial release with basic rendering, UI, camera, debug primitives renderer, input and OBJ loader.
