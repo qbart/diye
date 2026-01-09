@@ -30,12 +30,13 @@ namespace gl
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
         std::vector<VkDescriptorSetLayoutCreateInfo> descriptorSetLayoutCreateInfos;
         std::unordered_map<int, std::vector<VkDescriptorSetLayoutBinding>> descriptorSetLayoutBindings;
+        std::string label;
 
         Pipeline();
 
         bool Create(const gl::Device &device);
         void Destroy(const gl::Device &device);
-        void Label(const gl::Device &device, const char* label);
+        void Label(const std::string& str);
         bool CreateLayout(const gl::Device &device);
         void DestroyLayout(const gl::Device &device);
         bool CreateDescriptorSetLayouts(const gl::Device &device);

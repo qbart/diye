@@ -12,6 +12,7 @@ namespace gl
     public:
         VkBuffer handle;
         VkBufferCreateInfo createInfo;
+        std::string label;
 
         Buffer();
 

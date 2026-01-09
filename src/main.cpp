@@ -143,6 +143,7 @@ int main()
         debug.End(app.commandBuffers.handles[app.Frame()]);
 
         {
+            app.commandBuffers.CmdInsertDebugLabel(app.Frame(), "MarkedNewFrame", vk::ColorRed);
             app.commandBuffers.CmdBeginRenderPass(app.Frame(), app.renderPass, app.swapChainFramebuffers[app.ImageIndex()], app.swapChain.extent);
             app.uniformBuffersMemory[app.Frame()].CopyRaw(app.device, &app.ubos[app.Frame()], sizeof(app.ubos[app.Frame()]));
             app.commandBuffers.CmdBindGraphicsPipeline(app.Frame(), app.graphicsPipeline);
@@ -151,7 +152,9 @@ int main()
             app.commandBuffers.CmdBindDescriptorSet(app.Frame(), app.graphicsPipeline, app.descriptorPool.descriptorSets[app.Frame()].handle);
             app.commandBuffers.CmdBindVertexBuffer(app.Frame(), app.vertexBuffer);
             app.commandBuffers.CmdBindIndexBuffer(app.Frame(), app.indexBuffer);
+            app.commandBuffers.CmdBeginDebugLabel(app.Frame(), "LoadedMesh", vk::ColorPurple);
             app.commandBuffers.CmdDrawIndexed(app.Frame(), static_cast<uint32_t>(app.indices.size()));
+            app.commandBuffers.CmdEndDebugLabel(app.Frame());
 
             debug.CmdDraw(camera, app.commandBuffers.handles[app.Frame()]);
             app.commandBuffers.CmdEndRenderPass(app.Frame());

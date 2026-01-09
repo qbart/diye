@@ -7,7 +7,7 @@ build:
 	@cmake --build build/
 
 .PHONY: debug
-debug:
+debug: build
 	@renderdoccmd capture -d build ./build/diye
 
 .PHONY: init

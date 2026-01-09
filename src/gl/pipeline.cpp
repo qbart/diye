@@ -55,8 +55,13 @@ namespace gl
         if (vkCreateGraphicsPipelines(device.handle, VK_NULL_HANDLE, 1, &createInfo, nullptr, &handle) == VK_SUCCESS)
         {
             fmtx::Info("Created graphics pipeline");
+
+            if (!label.empty())
+                vk::SetObjectName(device.handle, (uint64_t)handle, VK_OBJECT_TYPE_PIPELINE, label);
+
             return true;
         }
+
 
         fmtx::Error("Failed to create graphics pipeline");
         return false;
@@ -65,17 +70,6 @@ namespace gl
     void Pipeline::Destroy(const gl::Device &device)
     {
         vkDestroyPipeline(device.handle, handle, nullptr);
-    }
-
-    void Pipeline::Label(const gl::Device &device, const char* label)
-    {
-        VkDebugUtilsObjectNameInfoEXT info = {
-          .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-          .objectType = VK_OBJECT_TYPE_PIPELINE,
-          .objectHandle = (uint64_t)handle,
-          .pObjectName = "PBR Pipeline"
-        };
-        vk::SetDebugUtilsObjectNameEXT(device.handle, &info);
     }
 
     bool Pipeline::CreateLayout(const gl::Device &device)

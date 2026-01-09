@@ -13,6 +13,17 @@ void InitFunctions(VkDevice device)
     SetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetDeviceProcAddr(device, "vkSetDebugUtilsObjectNameEXT"));
 }
 
+void SetObjectName(VkDevice device, uint64_t handle, VkObjectType objectType, const std::string& label)
+{
+    VkDebugUtilsObjectNameInfoEXT info = {
+      .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+      .objectType = objectType,
+      .objectHandle = (uint64_t)handle,
+      .pObjectName = label.c_str(),
+    };
+    vk::SetDebugUtilsObjectNameEXT(device, &info);
+}
+
 void ImageTransitionLayout(VkDevice device, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     VkImageMemoryBarrier barrier{};

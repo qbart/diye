@@ -1,5 +1,6 @@
 #include "buffer.hpp"
 #include "memory.hpp"
+#include "vulkan.hpp"
 
 namespace gl
 {
@@ -24,6 +25,10 @@ namespace gl
             fmtx::Error("failed to create buffer");
             return false;
         }
+
+        if (!label.empty())
+            vk::SetObjectName(device.handle, (uint64_t)handle, VK_OBJECT_TYPE_BUFFER, label);
+
         return true;
     }
 

@@ -41,8 +41,8 @@ namespace gl
     {
         device.WaitForFences(1, &inFlightFences.handles[currentFrame]);
 
-        VkResult nextResult = swapChain.AcquireNextImageWithTimeout(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
-        // VkResult nextResult = swapChain.AcquireNextImage(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
+        // VkResult nextResult = swapChain.AcquireNextImageWithTimeout(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
+        VkResult nextResult = swapChain.AcquireNextImage(device, &imageIndex, imageAvailableSemaphores.handles[currentFrame]);
         if (nextResult == VK_TIMEOUT)
         {
             fmtx::Error("Failed to acquire swap chain image - timeout");
@@ -135,9 +135,7 @@ namespace gl
         commandBuffers.CmdBindDescriptorSet(currentFrame, graphicsPipeline, descriptorPool.descriptorSets[currentFrame].handle);
         commandBuffers.CmdBindVertexBuffer(currentFrame, vertexBuffer);
         commandBuffers.CmdBindIndexBuffer(currentFrame, indexBuffer);
-        commandBuffers.CmdBeginDebugLabel(currentFrame, "Scene Mesh");
         commandBuffers.CmdDrawIndexed(currentFrame, static_cast<uint32_t>(indices.size()));
-        commandBuffers.CmdEndDebugLabel(currentFrame);
 
         commandBuffers.CmdEndRenderPass(currentFrame);
         if (commandBuffers.End(currentFrame) != VK_SUCCESS)
@@ -268,7 +266,6 @@ namespace gl
 
         if (!graphicsPipeline.Create(device))
             return false;
-        graphicsPipeline.Label(device, "HELLO");
 
         if (!commandPool.Create(device, physicalDevice.queueFamilyIndices.graphicsFamily.value()))
             return false;
@@ -347,6 +344,7 @@ namespace gl
         stagingBufferMemory.Free(device);
 
         indexStagingBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        indexStagingBuffer.label = "indexStagingBuffer";
         if (!indexStagingBuffer.Create(device, sizeof(indices[0]) * indices.size()))
             return false;
         auto indexMemRequirements = indexStagingBuffer.MemoryRequirements(device);

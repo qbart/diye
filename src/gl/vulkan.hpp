@@ -31,8 +31,16 @@
 
 namespace vk
 {
+inline constexpr float ColorGreen[4]  = {0.45f, 0.80f, 0.35f, 1.0f};
+inline constexpr float ColorBlue[4]   = {0.35f, 0.55f, 0.90f, 1.0f};
+inline constexpr float ColorRed[4]    = {0.90f, 0.30f, 0.30f, 1.0f};
+inline constexpr float ColorYellow[4] = {0.90f, 0.85f, 0.25f, 1.0f};
+inline constexpr float ColorPurple[4] = {0.70f, 0.45f, 0.85f, 1.0f};
+inline constexpr float ColorGray[4]   = {0.60f, 0.60f, 0.60f, 1.0f};
+
 void InitFunctions(VkDevice device);
 void ImageTransitionLayout(VkDevice device, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+void SetObjectName(VkDevice device, uint64_t handle, VkObjectType objectType, const std::string& label);
 
 inline PFN_vkCmdBeginRenderingKHR CmdBeginRenderingKHR = nullptr;
 inline PFN_vkCmdEndRenderingKHR   CmdEndRenderingKHR   = nullptr;
