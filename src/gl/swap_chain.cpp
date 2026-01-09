@@ -1,6 +1,7 @@
 #include "swap_chain.hpp"
 
 #include "image.hpp"
+#include "vulkan.hpp"
 #include <algorithm>
 
 namespace gl
@@ -94,11 +95,13 @@ namespace gl
         vkGetSwapchainImagesKHR(device.handle, handle, &imageCount, imageHandles.data());
         images.reserve(imageCount);
 
-        for (auto &imageHandle : imageHandles)
+        for (int i = 0; i < imageHandles.size(); ++i)
         {
             Image image;
-            image.handle = imageHandle;
+            image.handle = imageHandles[i];
             images.emplace_back(image);
+            auto label = fmt::format("Swapchain Image {}", i);
+            vk::SetObjectName(device.handle, (uint64_t)image.handle, VK_OBJECT_TYPE_IMAGE, label);
         }
 
         return true;

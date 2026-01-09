@@ -30,6 +30,7 @@ namespace gl
         VkDescriptorPoolCreateInfo createInfo;
         std::vector<VkDescriptorPoolSize> descriptorPoolSize;
         std::vector<DescriptorSet> descriptorSets;
+        std::string label;
 
         DescriptorPool();
         bool Create(const Device &device);

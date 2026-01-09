@@ -47,6 +47,7 @@ bool UI::Init(SDL_Window *wnd, const gl::App &app)
     descriptorPool.createInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     descriptorPool.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, app.MaxFramesInFlight());
     descriptorPool.MaxSets(app.MaxFramesInFlight());
+    descriptorPool.label = "UI - DescriptorPool";
 
     if (!descriptorPool.Create(app.device))
     {

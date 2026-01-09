@@ -1,4 +1,5 @@
 #include "image_view.hpp"
+#include "vulkan.hpp"
 
 namespace gl
 {
@@ -20,6 +21,9 @@ namespace gl
         createInfo.subresourceRange.levelCount = image.createInfo.mipLevels;
         if (vkCreateImageView(device.handle, &createInfo, nullptr, &handle) == VK_SUCCESS)
         {
+            if (!label.empty())
+                vk::SetObjectName(device.handle, (uint64_t)handle, VK_OBJECT_TYPE_IMAGE_VIEW, label);
+
             return true;
         }
         else

@@ -38,7 +38,7 @@ inline constexpr float ColorYellow[4] = {0.90f, 0.85f, 0.25f, 1.0f};
 inline constexpr float ColorPurple[4] = {0.70f, 0.45f, 0.85f, 1.0f};
 inline constexpr float ColorGray[4]   = {0.60f, 0.60f, 0.60f, 1.0f};
 
-void InitFunctions(VkDevice device);
+void InitFunctions(VkInstance instance, VkDevice device);
 void ImageTransitionLayout(VkDevice device, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 void SetObjectName(VkDevice device, uint64_t handle, VkObjectType objectType, const std::string& label);
 

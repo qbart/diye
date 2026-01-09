@@ -11,6 +11,7 @@ namespace gl
     public:
         VkImageView handle;
         VkImageViewCreateInfo createInfo;
+        std::string label;
 
         ImageView();
         bool Create(const Device &device, const Image &image, VkFormat format);

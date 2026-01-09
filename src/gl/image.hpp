@@ -13,6 +13,7 @@ namespace gl
     public:
         VkImage handle;
         VkImageCreateInfo createInfo;
+        std::string label;
 
         Image();
         void Usage(VkImageUsageFlags usage);

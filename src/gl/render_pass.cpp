@@ -1,7 +1,7 @@
 #include "render_pass.hpp"
 
 #include "device.hpp"
-#include "swap_chain.hpp"
+#include "vulkan.hpp"
 #include "../deps/fmt.hpp"
 
 gl::RenderPass::RenderPass() : handle(VK_NULL_HANDLE),
@@ -66,6 +66,8 @@ bool gl::RenderPass::Create(const gl::Device &device, const ShaderModules &modul
         return false;
     }
     fmtx::Info("Render pass created");
+    if (!label.empty())
+        vk::SetObjectName(device.handle, (uint64_t)handle, VK_OBJECT_TYPE_RENDER_PASS, label);
 
     return true;
 }
@@ -131,7 +133,7 @@ VkAttachmentDescription &gl::RenderPass::AddResolveAttachment(VkFormat format)
     attachmentRef.attachment = AttachmentsCount() - 1;
     attachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     resolveAttachmentRefs.push_back(attachmentRef);
-    
+
     return resolveAttachments.back();
 }
 

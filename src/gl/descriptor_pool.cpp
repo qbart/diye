@@ -1,5 +1,7 @@
 #include "descriptor_pool.hpp"
 #include "../deps/fmt.hpp"
+#include "vulkan.hpp"
+#include <sys/types.h>
 
 namespace gl
 {
@@ -117,6 +119,9 @@ namespace gl
             return false;
         }
         fmtx::Info("Descriptor pool created");
+        if (!label.empty())
+            vk::SetObjectName(device.handle, (uint64_t)handle, VK_OBJECT_TYPE_DESCRIPTOR_POOL, label);
+
         return true;
     }
 
@@ -163,6 +168,8 @@ namespace gl
                 DescriptorSet descriptorSet;
                 descriptorSet.handle = allocDescriptorSets[i];
                 descriptorSets.emplace_back(descriptorSet);
+                std::string label = fmt::format("DescriptorSet{}", i);
+                vk::SetObjectName(device.handle, (uint64_t)descriptorSet.handle, VK_OBJECT_TYPE_DESCRIPTOR_SET, label);
             }
             fmtx::Info("Descriptor sets allocated");
             return true;

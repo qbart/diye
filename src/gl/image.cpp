@@ -1,4 +1,5 @@
 #include "image.hpp"
+#include "vulkan.hpp"
 
 namespace gl
 {
@@ -43,6 +44,9 @@ namespace gl
         createInfo.format = format;
         if (vkCreateImage(device.handle, &createInfo, nullptr, &handle) == VK_SUCCESS)
         {
+            if (label.empty())
+                vk::SetObjectName(device.handle, (uint64_t)handle, VK_OBJECT_TYPE_IMAGE, label);
+
             return true;
         }
         fmtx::Error("Failed to create image");

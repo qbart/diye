@@ -171,7 +171,7 @@ namespace gl
         if (!device.Create(physicalDevice))
             return false;
 
-        vk::InitFunctions(device.handle);
+        vk::InitFunctions(instance.handle, device.handle);
 
         if (!swapChain.Create(device, surface, physicalDevice))
             return false;
@@ -179,17 +179,20 @@ namespace gl
         imageViews.resize(swapChain.images.size());
         for (size_t i = 0; i < swapChain.images.size(); i++)
         {
+            imageViews[i].label = fmt::format("Swapchain Image View {}", i);
             if (!imageViews[i].Create(device, swapChain.images[i], swapChain.imageFormat))
                 return false;
         }
 
         depthImage.UsageDepthOnly();
+        depthImage.label = "Depth Image";
         if (!depthImage.Create(device, swapChain.extent, physicalDevice.depthFormat))
             return false;
         if (!depthImageMemory.Allocate(physicalDevice, device, depthImage.MemoryRequirements(device), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
             return false;
         depthImage.BindMemory(device, depthImageMemory, 0);
         depthImageView.AspectMaskDepth();
+        depthImageView.label = "Depth Image View";
         if (!depthImageView.Create(device, depthImage, physicalDevice.depthFormat))
             return false;
 
@@ -209,6 +212,7 @@ namespace gl
         }
         renderPass.AddColorAttachment(swapChain.imageFormat); //.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
         renderPass.SetDepthAttachment(physicalDevice.depthFormat);
+        renderPass.label = "ColorPass";
         if (!renderPass.Create(device, shaderModules))
             return false;
 
@@ -229,6 +233,7 @@ namespace gl
         for (auto i = 0; i < maxFramesInFlight; i++)
         {
             uniformBuffers[i].Usage(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+            uniformBuffers[i].label = fmt::format("UBO {}", i);
             if (!uniformBuffers[i].Create(device, uboBufferSize))
                 return false;
             VkMemoryRequirements uboMemRequirements = uniformBuffers[i].MemoryRequirements(device);
@@ -332,6 +337,7 @@ namespace gl
         stagingBufferMemory.Unmap(device);
 
         vertexBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+        vertexBuffer.label = "VertexBuffer";
         if (!vertexBuffer.Create(device, stagingBuffer.Size()))
             return false;
         if (!vertexBufferMemory.Allocate(physicalDevice, device, memRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
@@ -357,6 +363,7 @@ namespace gl
         indexStagingBufferMemory.Unmap(device);
 
         indexBuffer.Usage(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+        indexBuffer.label = "IndexBuffer";
         if (!indexBuffer.Create(device, indexStagingBuffer.Size()))
             return false;
         if (!indexBufferMemory.Allocate(physicalDevice, device, indexMemRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
@@ -474,6 +481,7 @@ namespace gl
         imageViews.resize(swapChain.images.size());
         for (size_t i = 0; i < imageViews.size(); i++)
         {
+            imageViews[i].label = fmt::format("Swapchain Image View {}", i);
             if (!imageViews[i].Create(device, swapChain.images[i], swapChain.imageFormat))
             {
                 fmtx::Error("Failed to recreate image views");

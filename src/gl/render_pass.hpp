@@ -16,6 +16,7 @@ namespace gl
         VkAttachmentReference depthAttachmentRef;
         std::vector<VkAttachmentReference> resolveAttachmentRefs;
         std::vector<VkAttachmentDescription> resolveAttachments;
+        std::string label;
 
         RenderPass();
         bool Create(const gl::Device &device, const ShaderModules &modules);
