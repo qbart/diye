@@ -11,6 +11,7 @@ project(diye)
 add_executable(${PROJECT_NAME}
     src/deps/sdl.cpp
     src/deps/fmt.cpp
+    src/gl/vma.cpp
     src/gl/instance.cpp
     src/gl/surface.cpp
     src/gl/physical_device.cpp
@@ -64,6 +65,7 @@ find_package(imguizmo CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -88,6 +90,7 @@ if(APPLE)
         SDL2::SDL2main
         $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
         Vulkan::Vulkan
+        GPUOpen::VulkanMemoryAllocator
     )
 elseif (LINUX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMDD_NO_SIMD=1")
@@ -101,6 +104,7 @@ elseif (LINUX)
         SDL2::SDL2
         SDL2::SDL2main
         SDL2_image
+        GPUOpen::VulkanMemoryAllocator
     )
 else()
     # For non-macOS systems, you can specify general linking here
@@ -113,5 +117,7 @@ else()
         SDL2::SDL2
         SDL2::SDL2main
         SDL2_image::SDL2_image
+        GPUOpen::VulkanMemoryAllocator
     )
 endif()
+

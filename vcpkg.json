@@ -18,6 +18,7 @@
       ]
     },
     "imguizmo",
+    "vulkan-memory-allocator",
     "vulkan-sdk-components",
     "tinyobjloader"
   ]
