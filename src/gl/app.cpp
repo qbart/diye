@@ -163,6 +163,8 @@ bool App::InitGL()
 
     vk::InitFunctions(instance.handle, device.handle);
 
+    if (!allocator.Create(instance.handle, physicalDevice.handle, device.handle)) return false;
+
     if (!swapChain.Create(device, surface, physicalDevice)) return false;
 
     imageViews.resize(swapChain.images.size());
@@ -593,6 +595,8 @@ void App::ShutdownGL()
     depthImageMemory.Free(device);
     for (auto i = 0; i < imageViews.size(); i++) imageViews[i].Destroy(device);
     swapChain.Destroy(device);
+
+    allocator.Destroy();
     device.Destroy();
     surface.Destroy(instance);
     instance.Destroy();

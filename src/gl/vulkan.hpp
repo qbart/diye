@@ -23,6 +23,7 @@
 #include "shader_modules.hpp"
 #include "surface.hpp"
 #include "swap_chain.hpp"
+#include "vma.hpp"
 #include <optional>
 #include <string>
 #include <vector>

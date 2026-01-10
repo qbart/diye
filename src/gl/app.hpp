@@ -56,6 +56,7 @@ private:
 public:
     gl::Instance instance;
     gl::Device device;
+    gl::Allocator allocator;
     gl::Surface surface;
     gl::PhysicalDevice physicalDevice;
     gl::SwapChain swapChain;
