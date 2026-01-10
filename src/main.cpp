@@ -1,10 +1,9 @@
-#include "deps/sdl.hpp"
 #include "deps/fmt.hpp"
-#include "ui/ui.hpp"
+#include "deps/sdl.hpp"
 #include "experiments/experiment.hpp"
 #include "gl/app.hpp"
 #include "gl/debug_renderer.hpp"
-
+#include "ui/ui.hpp"
 
 int main()
 {
@@ -60,7 +59,7 @@ int main()
         return -1;
     }
 
-    ObjectOperation currentOperation = ObjectOperation::None;
+    ObjectOperation currentOperation         = ObjectOperation::None;
     ObjectTransformMode currentTransformMode = ObjectTransformMode::World;
     ObjectTransformAxis currentTransformAxis = ObjectTransformAxis::XYZ;
 
@@ -84,7 +83,7 @@ int main()
         }
         else if (window.KeyJustReleased(SDLK_r))
         {
-            currentOperation = ObjectOperation::Rotate;
+            currentOperation     = ObjectOperation::Rotate;
             currentTransformMode = ObjectTransformMode::World;
         }
         // else if (window.KeyJustReleased(SDLK_s))
@@ -93,10 +92,9 @@ int main()
         //     currentTransformMode = ObjectTransformMode::World;
         // }
 
-
         // ---------- update -----------
         ticks.Update();
-        dt = ticks.DeltaTime();
+        dt        = ticks.DeltaTime();
         auto size = window.Size();
 
         camera.UpdatePerspective(size);
@@ -123,13 +121,7 @@ int main()
         }
 
         ui.BeginFrame(size);
-        ui.TransformGizmo(
-            camera,
-            transform,
-            currentOperation,
-            currentTransformMode,
-            currentTransformAxis
-        );
+        ui.TransformGizmo(camera, transform, currentOperation, currentTransformMode, currentTransformAxis);
         // experiment->RenderUI(camera, ui);
         ui.EndFrame();
 
@@ -143,12 +135,18 @@ int main()
         debug.End(app.commandBuffers.handles[app.Frame()]);
 
         {
-            app.commandBuffers.CmdBeginRenderPass(app.Frame(), app.renderPass, app.swapChainFramebuffers[app.ImageIndex()], app.swapChain.extent);
-            app.uniformBuffersMemory[app.Frame()].CopyRaw(app.device, &app.ubos[app.Frame()], sizeof(app.ubos[app.Frame()]));
+            app.commandBuffers.CmdBeginRenderPass(
+                app.Frame(), app.renderPass, app.swapChainFramebuffers[app.ImageIndex()], app.swapChain.extent
+            );
+            app.uniformBuffersMemory[app.Frame()].CopyRaw(
+                app.device, &app.ubos[app.Frame()], sizeof(app.ubos[app.Frame()])
+            );
             app.commandBuffers.CmdBindGraphicsPipeline(app.Frame(), app.graphicsPipeline);
             app.commandBuffers.CmdViewport(app.Frame(), {0, 0}, app.swapChain.extent);
             app.commandBuffers.CmdScissor(app.Frame(), {0, 0}, app.swapChain.extent);
-            app.commandBuffers.CmdBindDescriptorSet(app.Frame(), app.graphicsPipeline, app.descriptorPool.descriptorSets[app.Frame()].handle);
+            app.commandBuffers.CmdBindDescriptorSet(
+                app.Frame(), app.graphicsPipeline, app.descriptorPool.descriptorSets[app.Frame()].handle
+            );
             app.commandBuffers.CmdBindVertexBuffer(app.Frame(), app.vertexBuffer);
             app.commandBuffers.CmdBindIndexBuffer(app.Frame(), app.indexBuffer);
             app.commandBuffers.CmdDrawIndexed(app.Frame(), static_cast<uint32_t>(app.indices.size()));
@@ -158,15 +156,19 @@ int main()
         }
 
         {
-            app.commandBuffers.CmdBeginRenderingKHR(app.Frame(), app.swapChain.extent, app.imageViews[app.ImageIndex()].handle);
+            app.commandBuffers.CmdBeginRenderingKHR(
+                app.Frame(), app.swapChain.extent, app.imageViews[app.ImageIndex()].handle
+            );
 
             ui.CmdDraw(app.commandBuffers.handles[app.Frame()]);
             app.commandBuffers.CmdEndRenderingKHR(app.Frame());
-            vk::ImageTransitionLayout(app.device.handle,
-                                      app.commandBuffers.handles[app.Frame()],
-                                      app.swapChain.images[app.ImageIndex()].handle,
-                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+            vk::ImageTransitionLayout(
+                app.device.handle,
+                app.commandBuffers.handles[app.Frame()],
+                app.swapChain.images[app.ImageIndex()].handle,
+                VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+            );
         }
 
         app.commandBuffers.End(app.Frame());

@@ -1,33 +1,33 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
-#include <vulkan/vulkan_beta.h>
-#include <string>
-#include <vector>
-#include <optional>
 #include "../deps/fmt.hpp"
 #include "../deps/sdl.hpp"
-#include "core.hpp"
-#include "instance.hpp"
-#include "surface.hpp"
-#include "physical_device.hpp"
-#include "device.hpp"
-#include "queue.hpp"
-#include "swap_chain.hpp"
-#include "shader_modules.hpp"
-#include "render_pass.hpp"
-#include "pipeline.hpp"
 #include "buffer.hpp"
-#include "memory.hpp"
-#include "command_pool.hpp"
 #include "command_buffer.hpp"
-#include "semaphore.hpp"
+#include "command_pool.hpp"
+#include "core.hpp"
+#include "descriptor_pool.hpp"
+#include "device.hpp"
 #include "fence.hpp"
+#include "framebuffer.hpp"
 #include "image.hpp"
 #include "image_view.hpp"
-#include "framebuffer.hpp"
+#include "instance.hpp"
+#include "memory.hpp"
+#include "physical_device.hpp"
+#include "pipeline.hpp"
+#include "queue.hpp"
+#include "render_pass.hpp"
 #include "sampler.hpp"
-#include "descriptor_pool.hpp"
+#include "semaphore.hpp"
+#include "shader_modules.hpp"
+#include "surface.hpp"
+#include "swap_chain.hpp"
+#include <optional>
+#include <string>
+#include <vector>
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_beta.h>
 
 namespace vk
 {
@@ -39,13 +39,19 @@ inline constexpr float ColorPurple[4] = {0.70f, 0.45f, 0.85f, 1.0f};
 inline constexpr float ColorGray[4]   = {0.60f, 0.60f, 0.60f, 1.0f};
 
 void InitFunctions(VkInstance instance, VkDevice device);
-void ImageTransitionLayout(VkDevice device, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
-void SetObjectName(VkDevice device, uint64_t handle, VkObjectType objectType, const std::string& label);
+void ImageTransitionLayout(
+    VkDevice device,
+    VkCommandBuffer commandBuffer,
+    VkImage image,
+    VkImageLayout oldLayout,
+    VkImageLayout newLayout
+);
+void SetObjectName(VkDevice device, uint64_t handle, VkObjectType objectType, const std::string &label);
 
-inline PFN_vkCmdBeginRenderingKHR CmdBeginRenderingKHR = nullptr;
-inline PFN_vkCmdEndRenderingKHR   CmdEndRenderingKHR   = nullptr;
-inline PFN_vkCmdBeginDebugUtilsLabelEXT CmdBeginDebugUtilsLabelEXT = nullptr;
-inline PFN_vkCmdEndDebugUtilsLabelEXT   CmdEndDebugUtilsLabelEXT   = nullptr;
+inline PFN_vkCmdBeginRenderingKHR CmdBeginRenderingKHR               = nullptr;
+inline PFN_vkCmdEndRenderingKHR CmdEndRenderingKHR                   = nullptr;
+inline PFN_vkCmdBeginDebugUtilsLabelEXT CmdBeginDebugUtilsLabelEXT   = nullptr;
+inline PFN_vkCmdEndDebugUtilsLabelEXT CmdEndDebugUtilsLabelEXT       = nullptr;
 inline PFN_vkCmdInsertDebugUtilsLabelEXT CmdInsertDebugUtilsLabelEXT = nullptr;
-inline PFN_vkSetDebugUtilsObjectNameEXT SetDebugUtilsObjectNameEXT = nullptr;
-}
+inline PFN_vkSetDebugUtilsObjectNameEXT SetDebugUtilsObjectNameEXT   = nullptr;
+} // namespace vk

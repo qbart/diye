@@ -5,12 +5,12 @@
 
 namespace gl
 {
-    struct ShaderModules
-    {
-        VkShaderModule vert;
-        VkShaderModule frag;
-    };
+struct ShaderModules
+{
+    VkShaderModule vert;
+    VkShaderModule frag;
+};
 
-    VkShaderModule CreateShaderModule(const gl::Device &device, const std::vector<char> &code);
-    void DestroyShaderModule(const gl::Device &device, const VkShaderModule &handle);
-}
+VkShaderModule CreateShaderModule(const gl::Device &device, const std::vector<char> &code);
+void DestroyShaderModule(const gl::Device &device, const VkShaderModule &handle);
+} // namespace gl

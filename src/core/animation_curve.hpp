@@ -1,8 +1,8 @@
 #pragma once
 
-#include "types.hpp"
 #include "math.hpp"
 #include "timer.hpp"
+#include "types.hpp"
 
 class AnimationCurve
 {
@@ -38,7 +38,7 @@ public:
     void EnableLinearInterpolation(bool value);
     void AddKey(float time, float value);
     float Evaluate(float t) const;
-    float Evaluate(const Timer& timer) const;
+    float Evaluate(const Timer &timer) const;
     const std::vector<Point> &Points() const { return points; }
     void RemoveKeyframe(int i);
     void SetPoint(int i, float t, float v);
@@ -55,18 +55,9 @@ public:
     inline int PointCount() const { return points.size(); }
     inline bool HasOutTangent(int i) const { return i <= points.size() - 2; }
     inline bool HasInTangent(int i) const { return i >= 1; }
-    inline float Time() const
-    {
-        return EndTime() - StartTime();
-    }
-    inline float StartTime() const
-    {
-        return points.front().Time;
-    }
-    inline float EndTime() const
-    {
-        return points.back().Time;
-    }
+    inline float Time() const { return EndTime() - StartTime(); }
+    inline float StartTime() const { return points.front().Time; }
+    inline float EndTime() const { return points.back().Time; }
     inline int Segments() const { return points.size() - 1; }
 
 private:

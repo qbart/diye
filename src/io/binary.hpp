@@ -2,29 +2,23 @@
 
 #include <fstream>
 #include <memory>
-#include <memory>
 #include <vector>
 
 namespace io
 {
-    class BinaryFile
-    {
-    public:
-        using Ptr = std::shared_ptr<BinaryFile>;
-        static Ptr Load(const std::string &filename);
 
-        bool IsEmpty() const
-        {
-            return data.empty();
-        }
+class BinaryFile
+{
+public:
+    using Ptr = std::shared_ptr<BinaryFile>;
+    static Ptr Load(const std::string &filename);
 
-        const std::vector<char> &Bytes() const
-        {
-            return data;
-        }
+    bool IsEmpty() const { return data.empty(); }
 
-    private:
-        std::vector<char> data;
-    };
+    const std::vector<char> &Bytes() const { return data; }
 
-}
+private:
+    std::vector<char> data;
+};
+
+} // namespace io

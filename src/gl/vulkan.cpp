@@ -5,43 +5,60 @@ namespace vk
 
 void InitFunctions(VkInstance instance, VkDevice device)
 {
-    CmdBeginRenderingKHR = reinterpret_cast<PFN_vkCmdBeginRenderingKHR>(vkGetDeviceProcAddr(device, "vkCmdBeginRenderingKHR"));
-    CmdEndRenderingKHR = reinterpret_cast<PFN_vkCmdEndRenderingKHR>( vkGetDeviceProcAddr(device, "vkCmdEndRenderingKHR"));
-    CmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetDeviceProcAddr(device, "vkCmdBeginDebugUtilsLabelEXT"));
-    CmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetDeviceProcAddr(device, "vkCmdEndDebugUtilsLabelEXT"));
-    CmdInsertDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdInsertDebugUtilsLabelEXT>(vkGetDeviceProcAddr(device, "vkCmdInsertDebugUtilsLabelEXT"));
-    SetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT"));
+    CmdBeginRenderingKHR = reinterpret_cast<PFN_vkCmdBeginRenderingKHR>(
+        vkGetDeviceProcAddr(device, "vkCmdBeginRenderingKHR")
+    );
+    CmdEndRenderingKHR = reinterpret_cast<PFN_vkCmdEndRenderingKHR>(
+        vkGetDeviceProcAddr(device, "vkCmdEndRenderingKHR")
+    );
+    CmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(
+        vkGetDeviceProcAddr(device, "vkCmdBeginDebugUtilsLabelEXT")
+    );
+    CmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(
+        vkGetDeviceProcAddr(device, "vkCmdEndDebugUtilsLabelEXT")
+    );
+    CmdInsertDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdInsertDebugUtilsLabelEXT>(
+        vkGetDeviceProcAddr(device, "vkCmdInsertDebugUtilsLabelEXT")
+    );
+    SetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(
+        vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT")
+    );
 }
 
-
-void SetObjectName(VkDevice device, uint64_t handle, VkObjectType objectType, const std::string& label)
+void SetObjectName(VkDevice device, uint64_t handle, VkObjectType objectType, const std::string &label)
 {
     VkDebugUtilsObjectNameInfoEXT info = {
-      .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-      .objectType = objectType,
-      .objectHandle = (uint64_t)handle,
-      .pObjectName = label.c_str(),
+        .sType        = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .objectType   = objectType,
+        .objectHandle = (uint64_t)handle,
+        .pObjectName  = label.c_str(),
     };
     vk::SetDebugUtilsObjectNameEXT(device, &info);
 }
 
-void ImageTransitionLayout(VkDevice device, VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
+void ImageTransitionLayout(
+    VkDevice device,
+    VkCommandBuffer commandBuffer,
+    VkImage image,
+    VkImageLayout oldLayout,
+    VkImageLayout newLayout
+)
 {
     VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.oldLayout = oldLayout;
-    barrier.newLayout = newLayout;
+    barrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout           = oldLayout;
+    barrier.newLayout           = newLayout;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = image;
+    barrier.image               = image;
     if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
     else
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseMipLevel   = 0;
+    barrier.subresourceRange.levelCount     = 1;
     barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
+    barrier.subresourceRange.layerCount     = 1;
 
     VkPipelineStageFlags pipelineSrcStageMask;
     VkPipelineStageFlags pipelineDstStageMask;
@@ -65,7 +82,8 @@ void ImageTransitionLayout(VkDevice device, VkCommandBuffer commandBuffer, VkIma
     else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
     {
         barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
+                                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
         pipelineSrcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         pipelineDstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
@@ -85,13 +103,8 @@ void ImageTransitionLayout(VkDevice device, VkCommandBuffer commandBuffer, VkIma
     }
 
     vkCmdPipelineBarrier(
-        commandBuffer,
-        pipelineSrcStageMask,
-        pipelineDstStageMask,
-        0,
-        0, nullptr,
-        0, nullptr,
-        1, &barrier);
+        commandBuffer, pipelineSrcStageMask, pipelineDstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier
+    );
 }
 
-}
+} // namespace vk

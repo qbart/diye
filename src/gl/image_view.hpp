@@ -6,17 +6,17 @@
 
 namespace gl
 {
-    class ImageView
-    {
-    public:
-        VkImageView handle;
-        VkImageViewCreateInfo createInfo;
-        std::string label;
+class ImageView
+{
+public:
+    VkImageView handle;
+    VkImageViewCreateInfo createInfo;
+    std::string label;
 
-        ImageView();
-        bool Create(const Device &device, const Image &image, VkFormat format);
-        void AspectMask(VkImageAspectFlags flags);
-        void AspectMaskDepth();
-        void Destroy(const Device &device);
-    };
-}
+    ImageView();
+    bool Create(const Device &device, const Image &image, VkFormat format);
+    void AspectMask(VkImageAspectFlags flags);
+    void AspectMaskDepth();
+    void Destroy(const Device &device);
+};
+} // namespace gl

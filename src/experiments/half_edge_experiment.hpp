@@ -87,19 +87,18 @@ public:
     void Update(float dt) override
     {
         transform.Update();
-        if (window->KeyJustReleased(SDLK_TAB))
-            debug = !debug;
+        if (window->KeyJustReleased(SDLK_TAB)) debug = !debug;
 
         if (window->KeyJustReleased(SDLK_1))
         {
             editableMesh = HalfEdgeMesh::NewPlane();
-            mesh = editableMesh->GenerateMesh(false);
+            mesh         = editableMesh->GenerateMesh(false);
         }
 
         if (window->KeyJustReleased(SDLK_2))
         {
             editableMesh = HalfEdgeMesh::NewCube();
-            mesh = editableMesh->GenerateMesh(false);
+            mesh         = editableMesh->GenerateMesh(false);
         }
     }
 
@@ -172,7 +171,7 @@ public:
         //         extrudeTransform.position = hit.Center;
         //         extrudeTransform.Update();
         //     }
-            
+
         //     // test extrude
         //     // editableMesh->Extrude(hit.Face, 0.5f);
         //     selection.Clear();
@@ -209,9 +208,7 @@ public:
         // }
     }
 
-    void RenderUI(const Camera &camera, UI &ui) override
-    {
-    }
+    void RenderUI(const Camera &camera, UI &ui) override {}
 
     void Shutdown() override
     {

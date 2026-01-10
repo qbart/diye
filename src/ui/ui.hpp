@@ -1,8 +1,8 @@
 #pragma once
 
+#include <functional>
 #include <sstream>
 #include <unordered_map>
-#include <functional>
 
 #include "../core/all.hpp"
 #include "../deps/imgui.hpp"
@@ -34,7 +34,6 @@ enum class ObjectTransformAxis
     YZ,
 };
 
-
 class AnimationCurveWidget
 {
 public:
@@ -51,10 +50,7 @@ public:
         std::function<void()> OnHover;
         std::function<void()> OnDoubleClick;
 
-        MouseCallback() : OnHover([]() {}),
-                          OnDoubleClick([]() {})
-        {
-        }
+        MouseCallback() : OnHover([]() {}), OnDoubleClick([]() {}) {}
     };
 
     struct DragHandleStyle
@@ -64,12 +60,7 @@ public:
         Vec4 Color;
         Vec4 BorderColor;
 
-        DragHandleStyle() : GrabRadius(5),
-                            GrabBorder(2),
-                            Color(rgb(96, 0, 255)),
-                            BorderColor(rgb(255, 255, 255))
-        {
-        }
+        DragHandleStyle() : GrabRadius(5), GrabBorder(2), Color(rgb(96, 0, 255)), BorderColor(rgb(255, 255, 255)) {}
     };
 
 public:
@@ -87,17 +78,25 @@ public:
     void PopFont();
     std::string ContextMenu(const std::vector<std::string> &items);
     void Text(const Vec2 &pos, const std::string &text, const Vec4 &color = WHITE);
-    bool TransformGizmo(const Camera &camera,
-                        Transform &transform,
-                        ObjectOperation operation = ObjectOperation::None,
-                        ObjectTransformMode mode = ObjectTransformMode::World,
-                        ObjectTransformAxis axis = ObjectTransformAxis::XYZ);
+    bool TransformGizmo(
+        const Camera &camera,
+        Transform &transform,
+        ObjectOperation operation = ObjectOperation::None,
+        ObjectTransformMode mode  = ObjectTransformMode::World,
+        ObjectTransformAxis axis  = ObjectTransformAxis::XYZ
+    );
     bool TranslateGizmo(const Camera &camera, Transform &transform, bool local = false);
     bool RotationGizmo(const Camera &camera, Transform &transform);
     bool ScaleGizmo(const Camera &camera, Transform &transform);
     bool AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget &widget = {"AnimationCurve"});
     bool AnimationCurvePreview(const AnimationCurve &curve);
-    bool DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const DragHandleStyle &style = {}, const MouseCallback &callback = {});
+    bool DragHandle(
+        const std::string &id,
+        const Vec2 &pos,
+        Vec2 &moved,
+        const DragHandleStyle &style  = {},
+        const MouseCallback &callback = {}
+    );
 
 private:
     ImVec2 screenPosTo01(const ImVec2 &pos, const ImRect &rect, int precision = 3, bool flipY = false) const;

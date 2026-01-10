@@ -7,42 +7,33 @@
 
 namespace io
 {
-    class Image
+
+class Image
+{
+public:
+    Image();
+    ~Image();
+
+    bool Load(const std::string &filename);
+    void Unload();
+
+    inline unsigned char *GetPixelData() const { return data; }
+
+    VkDeviceSize Size() const { return Width * Height * Channels; }
+
+    VkExtent2D Extent() const { return {static_cast<uint32_t>(Width), static_cast<uint32_t>(Height)}; }
+
+    uint32_t RecommendedMipLevels() const
     {
-    public:
-        Image();
-        ~Image();
+        return static_cast<uint32>(std::floor(std::log2(std::max(Width, Height)))) + 1;
+    }
 
-        bool Load(const std::string &filename);
-        void Unload();
+public:
+    int32 Width, Height, Channels;
 
-        inline unsigned char *GetPixelData() const
-        {
-            return data;
-        }
+private:
+    unsigned char *data  = nullptr;
+    SDL_Surface *surface = nullptr;
+};
 
-        VkDeviceSize Size() const
-        {
-            return Width * Height * Channels;
-        }
-
-        VkExtent2D Extent() const
-        {
-            return {
-                static_cast<uint32_t>(Width),
-                static_cast<uint32_t>(Height)};
-        }
-
-        uint32_t RecommendedMipLevels() const
-        {
-            return static_cast<uint32>(std::floor(std::log2(std::max(Width, Height)))) + 1;
-        }
-
-    public:
-        int32 Width, Height, Channels;
-
-    private:
-        unsigned char *data = nullptr;
-        SDL_Surface *surface = nullptr;
-    };
-}
+} // namespace io

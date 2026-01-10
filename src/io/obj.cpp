@@ -5,59 +5,52 @@
 
 namespace io
 {
-    OBJ::OBJ()
+
+OBJ::OBJ() {}
+
+OBJ::~OBJ() { Unload(); }
+
+bool OBJ::Load(const std::string &filename)
+{
+    std::string warn, err;
+
+    bool ok = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str());
+
+    if (!warn.empty()) fmtx::Warn(warn);
+    if (!err.empty()) fmtx::Error(err);
+
+    if (ok) LoadMesh();
+
+    return ok;
+}
+
+void OBJ::Unload() {}
+
+void OBJ::LoadMesh()
+{
+    for (const auto &shape : shapes)
     {
-    }
-
-    OBJ::~OBJ()
-    {
-        Unload();
-    }
-
-    bool OBJ::Load(const std::string &filename)
-    {
-        std::string warn, err;
-
-        bool ok = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str());
-
-        if (!warn.empty())
-            fmtx::Warn(warn);
-        if (!err.empty())
-            fmtx::Error(err);
-
-        if (ok)
-            LoadMesh();
-
-        return ok;
-    }
-
-    void OBJ::Unload()
-    {
-    }
-
-    void OBJ::LoadMesh()
-    {
-        for (const auto &shape : shapes)
+        for (const auto &index : shape.mesh.indices)
         {
-            for (const auto &index : shape.mesh.indices)
-            {
-                Vertex vertex{};
-                vertex.pos = {
-                    attrib.vertices[3 * index.vertex_index + 0], // X stays same
-                    // attrib.vertices[3 * index.vertex_index + 1],  // Y becomes Z
-                    // attrib.vertices[3 * index.vertex_index + 2]}; // Z becomes -Y
-                    attrib.vertices[3 * index.vertex_index + 2],   // Y becomes Z
-                    -attrib.vertices[3 * index.vertex_index + 1]}; // Z becomes -Y
+            Vertex vertex{};
+            vertex.pos = {
+                attrib.vertices[3 * index.vertex_index + 0], // X stays same
+                // attrib.vertices[3 * index.vertex_index + 1],  // Y becomes Z
+                // attrib.vertices[3 * index.vertex_index + 2]}; // Z becomes -Y
+                attrib.vertices[3 * index.vertex_index + 2], // Y becomes Z
+                -attrib.vertices[3 * index.vertex_index + 1]
+            }; // Z becomes -Y
 
-                vertex.texCoord = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]}; // vulkan fix: 1 - v
+            vertex.texCoord = {
+                attrib.texcoords[2 * index.texcoord_index + 0], 1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+            }; // vulkan fix: 1 - v
 
-                vertex.color = {1.0f, 1.0f, 1.0f};
+            vertex.color = {1.0f, 1.0f, 1.0f};
 
-                mesh.vertices.emplace_back(vertex);
-                mesh.indices.emplace_back(mesh.indices.size());
-            }
+            mesh.vertices.emplace_back(vertex);
+            mesh.indices.emplace_back(mesh.indices.size());
         }
     }
 }
+
+} // namespace io

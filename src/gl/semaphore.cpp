@@ -2,36 +2,36 @@
 
 namespace gl
 {
-    Semaphore::Semaphore() {}
+Semaphore::Semaphore() {}
 
-    bool Semaphore::Create(const Device &device, uint32_t count)
+bool Semaphore::Create(const Device &device, uint32_t count)
+{
+    handles.resize(count);
+
+    for (uint32_t i = 0; i < count; ++i)
     {
-        handles.resize(count);
+        VkSemaphoreCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-        for (uint32_t i = 0; i < count; ++i)
+        if (vkCreateSemaphore(device.handle, &createInfo, nullptr, &handles[i]) != VK_SUCCESS)
         {
-            VkSemaphoreCreateInfo createInfo{};
-            createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-            if (vkCreateSemaphore(device.handle, &createInfo, nullptr, &handles[i]) != VK_SUCCESS)
-            {
-                fmtx::Error("Failed to create semaphore");
-                return false;
-            }
+            fmtx::Error("Failed to create semaphore");
+            return false;
         }
-
-        fmtx::Info("Created semaphores");
-
-        return true;
     }
 
-    void Semaphore::Destroy(const Device &device)
-    {
-        for (auto &handle : handles)
-        {
-            vkDestroySemaphore(device.handle, handle, nullptr);
-        }
+    fmtx::Info("Created semaphores");
 
-        handles.clear();
-    }
+    return true;
 }
+
+void Semaphore::Destroy(const Device &device)
+{
+    for (auto &handle : handles)
+    {
+        vkDestroySemaphore(device.handle, handle, nullptr);
+    }
+
+    handles.clear();
+}
+} // namespace gl

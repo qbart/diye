@@ -2,8 +2,8 @@
 
 #include "../core/all.hpp"
 #include "mesh.hpp"
-#include <memory>
 #include <functional>
+#include <memory>
 
 class HalfEdge
 {

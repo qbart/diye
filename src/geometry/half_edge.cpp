@@ -1,7 +1,7 @@
 #include "half_edge.hpp"
-#include <set>
-#include <queue>
 #include <map>
+#include <queue>
+#include <set>
 
 HalfEdge::HalfEdge()
 {
@@ -38,7 +38,7 @@ HalfEdge::Face::~Face()
 Vec3 HalfEdge::Face::Center() const
 {
     Vec3 sum(0);
-    auto e = Edge.lock();
+    auto e       = Edge.lock();
     float points = 0;
     do
     {
@@ -52,24 +52,18 @@ Vec3 HalfEdge::Face::Center() const
 
 Vec3 HalfEdge::Face::Normal() const
 {
-    auto edge1 = Edge.lock()->Next.lock()->Origin.lock()->P - Edge.lock()->Origin.lock()->P;       // v1 - v0
+    auto edge1 = Edge.lock()->Next.lock()->Origin.lock()->P - Edge.lock()->Origin.lock()->P;              // v1 - v0
     auto edge2 = Edge.lock()->Next.lock()->Next.lock()->Origin.lock()->P - Edge.lock()->Origin.lock()->P; // v2 - v0
     return Mathf::Normalize(Mathf::Cross(edge1, edge2));
 }
 
-inline bool HalfEdge::Face::IsTriangle() const
-{
-    return IsPolygon(3);
-}
+inline bool HalfEdge::Face::IsTriangle() const { return IsPolygon(3); }
 
-inline bool HalfEdge::Face::IsQuad() const
-{
-    return IsPolygon(4);
-}
+inline bool HalfEdge::Face::IsQuad() const { return IsPolygon(4); }
 
 inline bool HalfEdge::Face::IsPolygon(int n) const
 {
-    auto e = Edge.lock();
+    auto e    = Edge.lock();
     int count = 0;
     do
     {
@@ -77,20 +71,22 @@ inline bool HalfEdge::Face::IsPolygon(int n) const
         ++count;
     } while (e != Edge.lock());
 
-    if (n == -1)
-        return count >= 5;
+    if (n == -1) return count >= 5;
 
-    if (n == count)
-        return true;
+    if (n == count) return true;
 
     return false;
 }
 
-void HalfEdge::Face::EachTriangle(std::function<void(const Vertex::Ptr &a, const Vertex::Ptr &b, const Vertex::Ptr &c)> fn)
+void HalfEdge::Face::EachTriangle(
+    std::function<void(const Vertex::Ptr &a, const Vertex::Ptr &b, const Vertex::Ptr &c)> fn
+)
 {
     if (IsTriangle())
     {
-        fn(Edge.lock()->Origin.lock(), Edge.lock()->Next.lock()->Origin.lock(), Edge.lock()->Next.lock()->Next.lock()->Origin.lock());
+        fn(Edge.lock()->Origin.lock(),
+           Edge.lock()->Next.lock()->Origin.lock(),
+           Edge.lock()->Next.lock()->Next.lock()->Origin.lock());
     }
     else if (IsQuad())
     {

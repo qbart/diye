@@ -1,19 +1,25 @@
 #pragma once
 
-static inline
-float imdd_asfloat(uint32_t i)
+static inline float imdd_asfloat(uint32_t i)
 {
-	union { float f; uint32_t i; } u;
-	u.i = i;
-	return u.f;
+    union
+    {
+        float f;
+        uint32_t i;
+    } u;
+    u.i = i;
+    return u.f;
 }
 
-static inline
-uint32_t imdd_asuint(float f)
+static inline uint32_t imdd_asuint(float f)
 {
-	union { float f; uint32_t i; } u;
-	u.f = f;
-	return u.i;
+    union
+    {
+        float f;
+        uint32_t i;
+    } u;
+    u.f = f;
+    return u.i;
 }
 
 #if defined(IMDD_NO_SIMD)

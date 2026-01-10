@@ -2,40 +2,31 @@
 
 static void imgui_check_vk_result(VkResult err)
 {
-    if (err == 0)
-        return;
+    if (err == 0) return;
 
     fmtx::Info("Aborting...");
     char buffer[256];
     sprintf(buffer, "[ui] Error: VkResult = %d", err);
     fmtx::Error(fmt::format("%s", buffer));
-    if (err < 0)
-        abort();
+    if (err < 0) abort();
 }
 
-UI::UI() : wnd(nullptr),
-           ptr(nullptr),
-           app(nullptr)
-{
-}
+UI::UI() : wnd(nullptr), ptr(nullptr), app(nullptr) {}
 
-UI::~UI()
-{
-    Shutdown();
-}
+UI::~UI() { Shutdown(); }
 
 bool UI::Init(SDL_Window *wnd, const gl::App &app)
 {
     this->wnd = wnd;
     this->app = &app;
 
-    ptr = ImGui::CreateContext();
+    ptr      = ImGui::CreateContext();
     auto &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
     // ImGui::StyleColorsClassic();
-    auto &style = ImGui::GetStyle();
+    auto &style  = ImGui::GetStyle();
     auto &colors = style.Colors;
 
     if (!ImGui_ImplSDL2_InitForVulkan(wnd))
@@ -56,23 +47,23 @@ bool UI::Init(SDL_Window *wnd, const gl::App &app)
     }
 
     VkPipelineRenderingCreateInfoKHR pipeline{};
-    pipeline.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-    pipeline.colorAttachmentCount = 1;
+    pipeline.sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    pipeline.colorAttachmentCount    = 1;
     pipeline.pColorAttachmentFormats = &app.swapChain.imageFormat;
 
-    ImGui_ImplVulkan_InitInfo init_info = {};
-    init_info.Instance = app.instance.handle;
-    init_info.PhysicalDevice = app.physicalDevice.handle;
-    init_info.Device = app.device.handle;
-    init_info.Queue = app.device.graphicsQueue.handle;
-    init_info.DescriptorPool = descriptorPool.handle;
-    init_info.MinImageCount = app.MaxFramesInFlight();
-    init_info.ImageCount = app.MaxFramesInFlight();
-    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-    init_info.UseDynamicRendering = true;
-    init_info.RenderPass = nullptr;
+    ImGui_ImplVulkan_InitInfo init_info   = {};
+    init_info.Instance                    = app.instance.handle;
+    init_info.PhysicalDevice              = app.physicalDevice.handle;
+    init_info.Device                      = app.device.handle;
+    init_info.Queue                       = app.device.graphicsQueue.handle;
+    init_info.DescriptorPool              = descriptorPool.handle;
+    init_info.MinImageCount               = app.MaxFramesInFlight();
+    init_info.ImageCount                  = app.MaxFramesInFlight();
+    init_info.MSAASamples                 = VK_SAMPLE_COUNT_1_BIT;
+    init_info.UseDynamicRendering         = true;
+    init_info.RenderPass                  = nullptr;
     init_info.PipelineRenderingCreateInfo = pipeline;
-    init_info.CheckVkResultFn = imgui_check_vk_result;
+    init_info.CheckVkResultFn             = imgui_check_vk_result;
 
     if (!ImGui_ImplVulkan_Init(&init_info))
     {
@@ -114,10 +105,7 @@ void UI::Shutdown()
     wnd = nullptr;
 }
 
-void UI::ProcessEvent(const SDL_Event &event)
-{
-    ImGui_ImplSDL2_ProcessEvent(&event);
-}
+void UI::ProcessEvent(const SDL_Event &event) { ImGui_ImplSDL2_ProcessEvent(&event); }
 
 void UI::BeginFrame(const Dimension &size)
 {
@@ -139,33 +127,23 @@ void UI::EndFrame()
     // }
 }
 
-void UI::CmdDraw(VkCommandBuffer cmd)
-{
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
-}
+void UI::CmdDraw(VkCommandBuffer cmd) { ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd); }
 
 void UI::Grid(const Camera &camera)
 {
     auto projection = camera.Projection();
     projection[1][1] *= -1;
 
-    ImGuizmo::DrawGrid(glm::value_ptr(camera.View()), glm::value_ptr(projection), glm::value_ptr(glm::mat4(1.f)), 100.f);
+    ImGuizmo::DrawGrid(
+        glm::value_ptr(camera.View()), glm::value_ptr(projection), glm::value_ptr(glm::mat4(1.f)), 100.f
+    );
 }
 
-void UI::Demo()
-{
-    ImGui::ShowDemoWindow();
-}
+void UI::Demo() { ImGui::ShowDemoWindow(); }
 
-void UI::PushFont(uint size)
-{
-    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[fonts[size]]);
-}
+void UI::PushFont(uint size) { ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[fonts[size]]); }
 
-void UI::PopFont()
-{
-    ImGui::PopFont();
-}
+void UI::PopFont() { ImGui::PopFont(); }
 
 std::string UI::ContextMenu(const std::vector<std::string> &items)
 {
@@ -190,45 +168,44 @@ void UI::Text(const Vec2 &pos, const std::string &text, const Vec4 &color)
     ImGui::TextColored(ImColor(color), "%s", text.c_str());
 }
 
-bool UI::TransformGizmo(const Camera &camera,
-                        Transform &transform,
-                        ObjectOperation operation,
-                        ObjectTransformMode mode,
-                        ObjectTransformAxis axis)
+bool UI::TransformGizmo(
+    const Camera &camera,
+    Transform &transform,
+    ObjectOperation operation,
+    ObjectTransformMode mode,
+    ObjectTransformAxis axis
+)
 {
-    if (operation == ObjectOperation::None)
-        return false;
+    if (operation == ObjectOperation::None) return false;
 
     auto local = (mode == ObjectTransformMode::Local);
 
     switch (operation)
     {
-        case ObjectOperation::Translate:
-            return TranslateGizmo(camera, transform, local);
-        case ObjectOperation::Rotate:
-            return RotationGizmo(camera, transform);
-        case ObjectOperation::Scale:
-            return ScaleGizmo(camera, transform);
+    case ObjectOperation::Translate:
+        return TranslateGizmo(camera, transform, local);
+    case ObjectOperation::Rotate:
+        return RotationGizmo(camera, transform);
+    case ObjectOperation::Scale:
+        return ScaleGizmo(camera, transform);
 
-        default:
-            return false;
-
+    default:
+        return false;
     }
     return false;
 }
-
 
 bool UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
 {
     auto projection = camera.Projection();
     projection[1][1] *= -1; // convert back to OpenGL coords
 
-    auto skew = Vec3(0.f);
-    auto perspective = Vec4(0.0f);
-    auto rotation = transform.rotation;
-    auto scale = transform.scale;
-    auto mode = ImGuizmo::MODE::WORLD;
-    auto mat = transform.ModelMatrix(Transform::Space::WorldOnly);
+    auto skew         = Vec3(0.f);
+    auto perspective  = Vec4(0.0f);
+    auto rotation     = transform.rotation;
+    auto scale        = transform.scale;
+    auto mode         = ImGuizmo::MODE::WORLD;
+    auto mat          = transform.ModelMatrix(Transform::Space::WorldOnly);
     Vec3 &translation = transform.position;
 
     if (local)
@@ -241,7 +218,8 @@ bool UI::TranslateGizmo(const Camera &camera, Transform &transform, bool local)
         glm::value_ptr(projection),
         ImGuizmo::OPERATION::TRANSLATE,
         mode,
-        glm::value_ptr(mat));
+        glm::value_ptr(mat)
+    );
     glm::decompose(mat, scale, rotation, translation, skew, perspective);
     transform.Update();
 
@@ -253,18 +231,19 @@ bool UI::RotationGizmo(const Camera &camera, Transform &transform)
     auto projection = camera.Projection();
     projection[1][1] *= -1; // convert back to OpenGL coords
 
-    auto mat = transform.ModelMatrix(Transform::Space::World);
-    auto skew = Vec3(0.0f);
+    auto mat         = transform.ModelMatrix(Transform::Space::World);
+    auto skew        = Vec3(0.0f);
     auto perspective = Vec4(0.0f);
-    auto position = transform.position;
-    auto rotation = transform.rotation;
-    auto scale = transform.scale;
-    bool changed = ImGuizmo::Manipulate(
+    auto position    = transform.position;
+    auto rotation    = transform.rotation;
+    auto scale       = transform.scale;
+    bool changed     = ImGuizmo::Manipulate(
         glm::value_ptr(camera.View()),
         glm::value_ptr(projection),
         ImGuizmo::OPERATION::ROTATE,
         ImGuizmo::MODE::LOCAL,
-        glm::value_ptr(mat));
+        glm::value_ptr(mat)
+    );
     glm::decompose(mat, scale, transform.rotation, position, skew, perspective);
     transform.Update();
 
@@ -276,17 +255,18 @@ bool UI::ScaleGizmo(const Camera &camera, Transform &transform)
     auto projection = camera.Projection();
     projection[1][1] *= -1; // convert back to OpenGL coords
 
-    auto mat = transform.ModelMatrix(Transform::Space::World);
-    auto skew = Vec3(0.0f);
+    auto mat         = transform.ModelMatrix(Transform::Space::World);
+    auto skew        = Vec3(0.0f);
     auto perspective = Vec4(0.0f);
-    auto rotation = transform.rotation;
-    auto position = transform.position;
-    bool changed = ImGuizmo::Manipulate(
+    auto rotation    = transform.rotation;
+    auto position    = transform.position;
+    bool changed     = ImGuizmo::Manipulate(
         glm::value_ptr(camera.View()),
         glm::value_ptr(projection),
         ImGuizmo::OPERATION::SCALE,
         ImGuizmo::MODE::WORLD,
-        glm::value_ptr(mat));
+        glm::value_ptr(mat)
+    );
     glm::decompose(mat, transform.scale, rotation, position, skew, perspective);
     transform.Update();
 
@@ -306,19 +286,18 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
     static Vec4 inTangentColor(rgb(48, 0, 255));
     static Vec4 outTangentColor(rgb(250, 0, 64));
     static ImColor tangentLineColor(rgb(255, 192, 0));
-    static const float curveWidth = 3;
+    static const float curveWidth   = 3;
     static const float tangentWidth = 1.5f;
 
     // config
     static const int resolution = 64;
-    static const int precision = 3;
-    static const int TN = 10;
-    static float T[TN] = {0, 0.05f, 0.1f, 0.15f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f, 0.45f};
+    static const int precision  = 3;
+    static const int TN         = 10;
+    static float T[TN]          = {0, 0.05f, 0.1f, 0.15f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f, 0.45f};
     for (int i = 0; i < TN; ++i)
     {
         T[i] += ImGui::GetIO().DeltaTime * 0.2f;
-        if (T[i] > 1.0f)
-            T[i] = 0.0f;
+        if (T[i] > 1.0f) T[i] = 0.0f;
     }
 
     // state
@@ -329,16 +308,16 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
     int selectedInTangent = -1;
     Vec2 movedOutTangent(0, 0);
     int selectedOutTangent = -1;
-    int deleted = -1;
-    int tangentSplitJoin = -1;
-    int affectedAnchor = -1;
-    auto dominantTangent = AnimationCurve::Tangent::Out;
+    int deleted            = -1;
+    int tangentSplitJoin   = -1;
+    int affectedAnchor     = -1;
+    auto dominantTangent   = AnimationCurve::Tangent::Out;
     std::string presetName;
     // ui state
     ImRect bb;
     if (ImGui::Begin(widget.Name.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
     {
-        ImVec2 size = ImVec2(600, 600);
+        ImVec2 size      = ImVec2(600, 600);
         ImGuiWindow *win = ImGui::GetCurrentWindowRead();
         ImRect winbb(win->DC.CursorPos, win->DC.CursorPos + size);
         if (!ImGui::ItemAdd(winbb, 0))
@@ -347,15 +326,13 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
             return false;
         }
         ImGui::ItemSize(winbb, 0);
-        ImDrawList *drawList = ImGui::GetWindowDrawList();
+        ImDrawList *drawList   = ImGui::GetWindowDrawList();
         ImVec2 curveEditorSize = ImVec2(400, 400);
 
         // draw grid
         auto halfx = (size.x - curveEditorSize.x) / 2;
         auto halfy = (size.y - curveEditorSize.y) / 2;
-        bb = ImRect(
-            ImVec2(winbb.Min.x + halfx, winbb.Min.y + halfy),
-            ImVec2(winbb.Max.x - halfx, winbb.Max.y - halfy));
+        bb = ImRect(ImVec2(winbb.Min.x + halfx, winbb.Min.y + halfy), ImVec2(winbb.Max.x - halfx, winbb.Max.y - halfy));
         ImGui::RenderFrame(bb.Min, bb.Max, gridSquareColor, true, 0.0f);
 
         float gridStepX = curveEditorSize.x / 4;
@@ -365,39 +342,35 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
         for (int x = -gridStepX; x <= curveEditorSize.x + gridStepX; x += gridStepX)
         {
             drawList->AddLine(
-                ImVec2(bb.Min.x + x, bb.Min.y - gridStepY),
-                ImVec2(bb.Min.x + x, bb.Max.y + gridStepY),
-                gridLineColor);
+                ImVec2(bb.Min.x + x, bb.Min.y - gridStepY), ImVec2(bb.Min.x + x, bb.Max.y + gridStepY), gridLineColor
+            );
         }
         // draw vertical grid lines
         for (int y = -gridStepY; y <= curveEditorSize.y + gridStepY; y += gridStepY)
         {
             drawList->AddLine(
-                ImVec2(bb.Min.x - gridStepX, bb.Min.y + y),
-                ImVec2(bb.Max.x + gridStepX, bb.Min.y + y),
-                gridLineColor);
+                ImVec2(bb.Min.x - gridStepX, bb.Min.y + y), ImVec2(bb.Max.x + gridStepX, bb.Min.y + y), gridLineColor
+            );
         }
         // draw horizontal captions
         for (int x = 0; x <= curveEditorSize.x; x += gridStepX)
         {
             auto pos = screenPosTo01(ImVec2(bb.Min.x + x, bb.Min.y), bb, precision, true);
             drawList->AddText(
-                ImVec2(bb.Min.x + x - 5, bb.Min.y - 20),
-                gridCaptionColor,
-                fmt::format("{}", pos.x).c_str());
+                ImVec2(bb.Min.x + x - 5, bb.Min.y - 20), gridCaptionColor, fmt::format("{}", pos.x).c_str()
+            );
         }
         // draw vertical captions
         for (int y = 0; y <= curveEditorSize.y; y += gridStepY)
         {
             auto pos = screenPosTo01(ImVec2(bb.Min.x, bb.Min.y + y), bb, precision, true);
             drawList->AddText(
-                ImVec2(bb.Max.x + 5, bb.Min.y + y - 5),
-                gridCaptionColor,
-                fmt::format("{}", pos.y).c_str());
+                ImVec2(bb.Max.x + 5, bb.Min.y + y - 5), gridCaptionColor, fmt::format("{}", pos.y).c_str()
+            );
         }
 
         // draw curve
-        float drawStep = 0;
+        float drawStep     = 0;
         float drawStepSize = 0.001f;
         float drawCurveP0;
         float drawCurveP1;
@@ -405,19 +378,19 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
         Vec2 drawCurveEnd;
         while (drawStep + drawStepSize < 1.0)
         {
-            float t0 = drawStep;
-            float t1 = drawStep + drawStepSize;
-            drawCurveP0 = curve.Evaluate(t0);
-            drawCurveP1 = curve.Evaluate(t1);
+            float t0       = drawStep;
+            float t1       = drawStep + drawStepSize;
+            drawCurveP0    = curve.Evaluate(t0);
+            drawCurveP1    = curve.Evaluate(t1);
             drawCurveStart = screenPosFrom01(ImVec2(t0, drawCurveP0), bb, true);
-            drawCurveEnd = screenPosFrom01(ImVec2(t1, drawCurveP1), bb, true);
+            drawCurveEnd   = screenPosFrom01(ImVec2(t1, drawCurveP1), bb, true);
             drawList->AddLine(drawCurveStart, drawCurveEnd, curveColor, curveWidth);
             drawStep += drawStepSize;
         }
-        drawCurveP0 = drawCurveP1;
-        drawCurveP1 = curve.Evaluate(1.0f);
+        drawCurveP0    = drawCurveP1;
+        drawCurveP1    = curve.Evaluate(1.0f);
         drawCurveStart = drawCurveEnd;
-        drawCurveEnd = screenPosFrom01(ImVec2(1.0f, drawCurveP1), bb, true);
+        drawCurveEnd   = screenPosFrom01(ImVec2(1.0f, drawCurveP1), bb, true);
         drawList->AddLine(drawCurveStart, drawCurveEnd, curveColor, curveWidth);
 
         // ghost anchor that could be added
@@ -432,7 +405,7 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
                 if (distance < 0.05f)
                 {
                     auto screenPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
-                    allowAdd = false;
+                    allowAdd       = false;
                     break;
                 }
                 if (curve.HasOutTangent(i))
@@ -441,7 +414,7 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
                     if (distance < 0.05f)
                     {
                         auto screenPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
-                        allowAdd = false;
+                        allowAdd       = false;
                         break;
                     }
                 }
@@ -451,14 +424,16 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
                     if (distance < 0.05f)
                     {
                         auto screenPos = screenPosFrom01(ImVec2(curve[i].Time, curve[i].Value), bb, true);
-                        allowAdd = false;
+                        allowAdd       = false;
                         break;
                     }
                 }
             }
             if (allowAdd)
             {
-                drawList->AddLine(ImVec2(mouse.x, bb.Min.y - gridStepY), ImVec2(mouse.x, bb.Max.y + gridStepY), ImColor(anchorColor));
+                drawList->AddLine(
+                    ImVec2(mouse.x, bb.Min.y - gridStepY), ImVec2(mouse.x, bb.Max.y + gridStepY), ImColor(anchorColor)
+                );
                 auto screenPos = screenPosFrom01(ImVec2(mouse01.x, mouse01.y), bb, true);
                 drawList->AddCircle(screenPos, 8, ImColor(anchorColor));
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
@@ -474,7 +449,11 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
         {
             float time = T[i];
             auto value = curve.Evaluate(time);
-            drawList->AddCircleFilled(ImVec2(time * (bb.Max.x - bb.Min.x) + bb.Min.x, (1 - value) * (bb.Max.y - bb.Min.y) + bb.Min.y), 5, curveColor);
+            drawList->AddCircleFilled(
+                ImVec2(time * (bb.Max.x - bb.Min.x) + bb.Min.x, (1 - value) * (bb.Max.y - bb.Min.y) + bb.Min.y),
+                5,
+                curveColor
+            );
         }
 
         // anchors and tangents with lines and text
@@ -483,15 +462,22 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
         {
             if (curve.HasOutTangent(i))
             {
-                const auto anchorPos = screenPosFrom01(Vec2(curve[i].Time, curve[i].Value), bb, true);
+                const auto anchorPos  = screenPosFrom01(Vec2(curve[i].Time, curve[i].Value), bb, true);
                 const auto tangentPos = screenPosFrom01(Vec2(curve.OutTangent(i)), bb, true);
-                drawList->AddLine(ImVec2(anchorPos.x, anchorPos.y), ImVec2(tangentPos.x, tangentPos.y), tangentLineColor, tangentWidth);
+                drawList->AddLine(
+                    ImVec2(anchorPos.x, anchorPos.y), ImVec2(tangentPos.x, tangentPos.y), tangentLineColor, tangentWidth
+                );
             }
             if (curve.HasInTangent(i))
             {
-                const auto anchorPos = screenPosFrom01(Vec2(curve[i].Time, curve[i].Value), bb, true);
+                const auto anchorPos     = screenPosFrom01(Vec2(curve[i].Time, curve[i].Value), bb, true);
                 const auto outTangentPos = screenPosFrom01(curve.InTangent(i), bb, true);
-                drawList->AddLine(ImVec2(anchorPos.x, anchorPos.y), ImVec2(outTangentPos.x, outTangentPos.y), tangentLineColor, tangentWidth);
+                drawList->AddLine(
+                    ImVec2(anchorPos.x, anchorPos.y),
+                    ImVec2(outTangentPos.x, outTangentPos.y),
+                    tangentLineColor,
+                    tangentWidth
+                );
             }
         }
 
@@ -501,62 +487,66 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
         {
             ImGui::PushID(i);
             const auto outTangentPos = screenPosFrom01(curve.OutTangent(i), bb, true);
-            const auto inTangentPos = screenPosFrom01(curve.InTangent(i), bb, true);
+            const auto inTangentPos  = screenPosFrom01(curve.InTangent(i), bb, true);
 
             MouseCallback callback;
             callback.OnHover = [i, &affectedAnchor]()
-                {
-                    affectedAnchor = i;
-                    // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 25),
-                    //                   captionColor,
-                    //                   fmt::format("OutTangent: {}", curve[i].OutTangent).c_str());
-                    // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 45),
-                    //                   captionColor,
-                    //                   fmt::format("InTangent: {}", curve[i].InTangent).c_str());
-                };
+            {
+                affectedAnchor = i;
+                // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 25),
+                //                   captionColor,
+                //                   fmt::format("OutTangent: {}", curve[i].OutTangent).c_str());
+                // drawList->AddText(ImVec2(outTangentPos.x - 10, outTangentPos.y - 45),
+                //                   captionColor,
+                //                   fmt::format("InTangent: {}", curve[i].InTangent).c_str());
+            };
 
             DragHandleStyle dragHandleStyle;
-            dragHandleStyle.Color = tangentColor;
+            dragHandleStyle.Color      = tangentColor;
             dragHandleStyle.GrabRadius = 4;
             dragHandleStyle.GrabBorder = 1;
             if (curve.HasOutTangent(i))
             {
                 callback.OnDoubleClick = [i, &tangentSplitJoin, &dominantTangent]()
-                    {
-                        tangentSplitJoin = i;
-                        dominantTangent = AnimationCurve::Tangent::Out;
-                    };
+                {
+                    tangentSplitJoin = i;
+                    dominantTangent  = AnimationCurve::Tangent::Out;
+                };
                 callback.OnHover = [&]()
-                    {
-                        auto pos = screenPosFrom01(curve.OutTangent(i), bb, true);
-                        drawList->AddText(ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str());
-                    };
-                if (!curve[i].Locked)
-                    dragHandleStyle.Color = outTangentColor;
-                if (DragHandle("AnimationCurveDragTangentOut", outTangentPos, movedOutTangent, dragHandleStyle, callback))
+                {
+                    auto pos = screenPosFrom01(curve.OutTangent(i), bb, true);
+                    drawList->AddText(
+                        ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str()
+                    );
+                };
+                if (!curve[i].Locked) dragHandleStyle.Color = outTangentColor;
+                if (DragHandle(
+                        "AnimationCurveDragTangentOut", outTangentPos, movedOutTangent, dragHandleStyle, callback
+                    ))
                 {
                     selectedOutTangent = i;
-                    affectedAnchor = i;
+                    affectedAnchor     = i;
                 }
             }
             if (curve.HasInTangent(i))
             {
                 callback.OnDoubleClick = [i, &tangentSplitJoin, &dominantTangent]()
-                    {
-                        tangentSplitJoin = i;
-                        dominantTangent = AnimationCurve::Tangent::In;
-                    };
+                {
+                    tangentSplitJoin = i;
+                    dominantTangent  = AnimationCurve::Tangent::In;
+                };
                 callback.OnHover = [&]()
-                    {
-                        auto pos = screenPosFrom01(curve.InTangent(i), bb, true);
-                        drawList->AddText(ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str());
-                    };
-                if (!curve[i].Locked)
-                    dragHandleStyle.Color = inTangentColor;
+                {
+                    auto pos = screenPosFrom01(curve.InTangent(i), bb, true);
+                    drawList->AddText(
+                        ImVec2(pos.x - 10, pos.y - 25), captionColor, fmt::format("{}", curve[i].OutTangent).c_str()
+                    );
+                };
+                if (!curve[i].Locked) dragHandleStyle.Color = inTangentColor;
                 if (DragHandle("AnimationCurveDragTangentIn", inTangentPos, movedInTangent, dragHandleStyle, callback))
                 {
                     selectedInTangent = i;
-                    affectedAnchor = i;
+                    affectedAnchor    = i;
                 }
             }
             ImGui::PopID(); // i
@@ -572,18 +562,17 @@ bool UI::AnimationCurveEditor(AnimationCurve &curve, const AnimationCurveWidget 
 
             MouseCallback callback;
             callback.OnHover = [i, &pos, &curve, drawList]()
-                {
-                    drawList->AddText(ImVec2(pos.x - 10, pos.y - 25),
-                                      captionColor,
-                                      fmt::format("{},{}", curve[i].Time, curve[i].Value).c_str());
-                };
-            callback.OnDoubleClick = [i, &deleted]()
-                {
-                    deleted = i;
-                };
+            {
+                drawList->AddText(
+                    ImVec2(pos.x - 10, pos.y - 25),
+                    captionColor,
+                    fmt::format("{},{}", curve[i].Time, curve[i].Value).c_str()
+                );
+            };
+            callback.OnDoubleClick = [i, &deleted]() { deleted = i; };
 
             DragHandleStyle dragHandleStyle;
-            dragHandleStyle.Color = anchorColor;
+            dragHandleStyle.Color      = anchorColor;
             dragHandleStyle.GrabRadius = affectedAnchor == i ? 1 : 5;
             dragHandleStyle.GrabBorder = affectedAnchor == i ? 0 : 2;
             if (DragHandle("AnimationCurveDrag", pos, moved, dragHandleStyle, callback))
@@ -657,26 +646,22 @@ bool UI::AnimationCurvePreview(const AnimationCurve &curve)
     static const ImColor curveColor(rgb(255, 255, 200));
     static ImColor gridSquareColor(rgb(32, 32, 32));
     static const float curveWidth = 1;
-    bool changed = false;
+    bool changed                  = false;
 
     ImGuiWindow *win = ImGui::GetCurrentWindow();
-    if (win->SkipItems)
-        return false;
+    if (win->SkipItems) return false;
 
     ImVec2 previewSize = ImVec2(70, 70);
     ImRect winbb(win->DC.CursorPos, win->DC.CursorPos + previewSize);
-    if (!ImGui::ItemAdd(winbb, 0))
-        return false;
+    if (!ImGui::ItemAdd(winbb, 0)) return false;
     ImGui::ItemSize(winbb, 0);
 
-    ImRect bb(
-        ImVec2(winbb.Min.x + 10, winbb.Min.y + 10),
-        ImVec2(winbb.Max.x - 10, winbb.Max.y - 10));
+    ImRect bb(ImVec2(winbb.Min.x + 10, winbb.Min.y + 10), ImVec2(winbb.Max.x - 10, winbb.Max.y - 10));
     ImGui::PushClipRect(winbb.Min, winbb.Max, true);
 
     ImGui::RenderFrame(winbb.Min, winbb.Max, gridSquareColor, false, 0.0f);
-    auto drawList = ImGui::GetWindowDrawList();
-    float drawStep = 0;
+    auto drawList      = ImGui::GetWindowDrawList();
+    float drawStep     = 0;
     float drawStepSize = 0.01f;
     float drawCurveP0;
     float drawCurveP1;
@@ -684,74 +669,77 @@ bool UI::AnimationCurvePreview(const AnimationCurve &curve)
     Vec2 drawCurveEnd;
     while (drawStep + drawStepSize < 1.0)
     {
-        float t0 = drawStep;
-        float t1 = drawStep + drawStepSize;
-        drawCurveP0 = curve.Evaluate(t0);
-        drawCurveP1 = curve.Evaluate(t1);
+        float t0       = drawStep;
+        float t1       = drawStep + drawStepSize;
+        drawCurveP0    = curve.Evaluate(t0);
+        drawCurveP1    = curve.Evaluate(t1);
         drawCurveStart = screenPosFrom01(ImVec2(t0, drawCurveP0), bb, true);
-        drawCurveEnd = screenPosFrom01(ImVec2(t1, drawCurveP1), bb, true);
+        drawCurveEnd   = screenPosFrom01(ImVec2(t1, drawCurveP1), bb, true);
         drawList->AddLine(drawCurveStart, drawCurveEnd, curveColor, curveWidth);
         drawStep += drawStepSize;
     }
-    drawCurveP0 = drawCurveP1;
-    drawCurveP1 = curve.Evaluate(1.0f);
+    drawCurveP0    = drawCurveP1;
+    drawCurveP1    = curve.Evaluate(1.0f);
     drawCurveStart = drawCurveEnd;
-    drawCurveEnd = screenPosFrom01(ImVec2(1.0f, drawCurveP1), bb, true);
+    drawCurveEnd   = screenPosFrom01(ImVec2(1.0f, drawCurveP1), bb, true);
     drawList->AddLine(drawCurveStart, drawCurveEnd, curveColor, curveWidth);
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-        changed = true;
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) changed = true;
     ImGui::PopClipRect();
 
     return changed;
 }
 
-bool UI::DragHandle(const std::string &id, const Vec2 &pos, Vec2 &moved, const UI::DragHandleStyle &style, const UI::MouseCallback &callback)
+bool UI::DragHandle(
+    const std::string &id,
+    const Vec2 &pos,
+    Vec2 &moved,
+    const UI::DragHandleStyle &style,
+    const UI::MouseCallback &callback
+)
 {
-    bool changed = false;
-    ImVec2 handlePos = ImVec2(pos.x, pos.y);
+    bool changed         = false;
+    ImVec2 handlePos     = ImVec2(pos.x, pos.y);
     ImDrawList *drawList = ImGui::GetWindowDrawList();
 
-    auto buttonPos = ImVec2(
-        handlePos.x - style.GrabRadius,
-        handlePos.y - style.GrabRadius);
+    auto buttonPos = ImVec2(handlePos.x - style.GrabRadius, handlePos.y - style.GrabRadius);
 
-    auto cursor = ImGui::GetCursorScreenPos();
+    auto cursor         = ImGui::GetCursorScreenPos();
     bool triggeredHover = false;
     ImGui::SetCursorScreenPos(buttonPos);
     ImGui::InvisibleButton(("@DragHandle__" + id).c_str(), ImVec2(style.GrabRadius * 2, style.GrabRadius * 2));
     ImGui::SetCursorScreenPos(cursor);
 
-    if (ImGui::IsItemHovered())
-        triggeredHover = true;
+    if (ImGui::IsItemHovered()) triggeredHover = true;
 
-    float alpha = style.Color.w;
+    float alpha       = style.Color.w;
     float borderAlpha = style.BorderColor.w;
     if (ImGui::IsItemActive() || ImGui::IsItemHovered())
     {
-        alpha = style.Color.w * 0.8f;
+        alpha       = style.Color.w * 0.8f;
         borderAlpha = style.BorderColor.w * 0.8f;
     }
     if (style.GrabBorder > 0)
-        drawList->AddCircleFilled(handlePos,
-                                  style.GrabRadius * 2,
-                                  ImColor(style.BorderColor.x, style.BorderColor.y, style.BorderColor.z, borderAlpha));
+        drawList->AddCircleFilled(
+            handlePos,
+            style.GrabRadius * 2,
+            ImColor(style.BorderColor.x, style.BorderColor.y, style.BorderColor.z, borderAlpha)
+        );
 
-    drawList->AddCircleFilled(handlePos,
-                              style.GrabRadius * 2 - style.GrabBorder,
-                              ImColor(style.Color.x, style.Color.y, style.Color.z, alpha));
+    drawList->AddCircleFilled(
+        handlePos, style.GrabRadius * 2 - style.GrabBorder, ImColor(style.Color.x, style.Color.y, style.Color.z, alpha)
+    );
 
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
         auto delta = ImGui::GetIO().MouseDelta;
-        moved = Vec2(handlePos.x + delta.x, handlePos.y + delta.y);
-        changed = true;
-        // drawList->AddText(ImVec2(moved.x - 10, moved.y - 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}", moved.x, moved.y).c_str());
+        moved      = Vec2(handlePos.x + delta.x, handlePos.y + delta.y);
+        changed    = true;
+        // drawList->AddText(ImVec2(moved.x - 10, moved.y - 10), ImColor(1.0f, 1.0f, 1.0f), fmt::format("{},{}",
+        // moved.x, moved.y).c_str());
         triggeredHover = true;
     }
-    if (triggeredHover)
-        callback.OnHover();
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-        callback.OnDoubleClick();
+    if (triggeredHover) callback.OnHover();
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) callback.OnDoubleClick();
 
     return changed;
 }
@@ -760,8 +748,7 @@ ImVec2 UI::screenPosTo01(const ImVec2 &pos, const ImRect &rect, int precision, b
 {
     float mappedX = (pos.x - rect.Min.x) / (rect.Max.x - rect.Min.x);
     float mappedY = (pos.y - rect.Min.y) / (rect.Max.y - rect.Min.y);
-    if (flipY)
-        mappedY = 1 - mappedY;
+    if (flipY) mappedY = 1 - mappedY;
 
     mappedX = roundf(mappedX * pow(10, precision)) / pow(10, precision);
     mappedY = roundf(mappedY * pow(10, precision)) / pow(10, precision);
@@ -772,12 +759,9 @@ ImVec2 UI::screenPosTo01(const ImVec2 &pos, const ImRect &rect, int precision, b
 ImVec2 UI::screenPosFrom01(const ImVec2 &pos, const ImRect &rect, bool flipY) const
 {
     float y = pos.y;
-    if (flipY)
-        y = 1 - pos.y;
+    if (flipY) y = 1 - pos.y;
 
-    return ImVec2(
-        pos.x * (rect.Max.x - rect.Min.x) + rect.Min.x,
-        y * (rect.Max.y - rect.Min.y) + rect.Min.y);
+    return ImVec2(pos.x * (rect.Max.x - rect.Min.x) + rect.Min.x, y * (rect.Max.y - rect.Min.y) + rect.Min.y);
 }
 
 ImVec2 UI::screenPosFrom01(const Vec2 &pos, const ImRect &rect, bool flipY) const
@@ -792,5 +776,6 @@ ImVec2 UI::screenPosToMappedRect(const ImVec2 &pos, const ImRect &rect, ImRect &
 
     return ImVec2(
         mappedRect.Min.x + mappedX * (mappedRect.Max.x - mappedRect.Min.x),
-        mappedRect.Min.y + mappedY * (mappedRect.Max.y - mappedRect.Min.y));
+        mappedRect.Min.y + mappedY * (mappedRect.Max.y - mappedRect.Min.y)
+    );
 }

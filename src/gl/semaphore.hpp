@@ -5,13 +5,13 @@
 
 namespace gl
 {
-    class Semaphore
-    {
-    public:
-        std::vector<VkSemaphore> handles;
+class Semaphore
+{
+public:
+    std::vector<VkSemaphore> handles;
 
-        Semaphore();
-        bool Create(const Device &device, uint32_t count);
-        void Destroy(const Device &device);
-    };
-}
+    Semaphore();
+    bool Create(const Device &device, uint32_t count);
+    void Destroy(const Device &device);
+};
+} // namespace gl

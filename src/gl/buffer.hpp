@@ -5,24 +5,31 @@
 
 namespace gl
 {
-    class Memory;
+class Memory;
 
-    class Buffer
-    {
-    public:
-        VkBuffer handle;
-        VkBufferCreateInfo createInfo;
-        std::string label;
+class Buffer
+{
+public:
+    VkBuffer handle;
+    VkBufferCreateInfo createInfo;
+    std::string label;
 
-        Buffer();
+    Buffer();
 
-        void Usage(VkBufferUsageFlags usage);
-        bool Create(const Device &device, VkDeviceSize size);
-        void Destroy(const Device &device);
-        VkMemoryRequirements MemoryRequirements(const Device &device) const;
-        VkDeviceSize Size() const;
-        void BindMemory(const Device &device, const Memory &memory, VkDeviceSize offset);
-    };
+    void Usage(VkBufferUsageFlags usage);
+    bool Create(const Device &device, VkDeviceSize size);
+    void Destroy(const Device &device);
+    VkMemoryRequirements MemoryRequirements(const Device &device) const;
+    VkDeviceSize Size() const;
+    void BindMemory(const Device &device, const Memory &memory, VkDeviceSize offset);
+};
 
-    void CopyBuffer(const Device &device, VkCommandPool commandPool, VkQueue queue, const Buffer &srcBuffer, Buffer &dstBuffer, VkDeviceSize size);
-}
+void CopyBuffer(
+    const Device &device,
+    VkCommandPool commandPool,
+    VkQueue queue,
+    const Buffer &srcBuffer,
+    Buffer &dstBuffer,
+    VkDeviceSize size
+);
+} // namespace gl

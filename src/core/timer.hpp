@@ -5,12 +5,7 @@
 class Timer
 {
 public:
-    inline Timer(float alert = 1) : alert(alert),
-                                    accumulatedTime(0),
-                                    triggered(false)
-
-    {
-    }
+    inline Timer(float alert = 1) : alert(alert), accumulatedTime(0), triggered(false) {}
 
     inline void Update(float dt)
     {
@@ -19,38 +14,26 @@ public:
         if (accumulatedTime >= alert)
         {
             accumulatedTime = 0;
-            triggered = true;
+            triggered       = true;
         }
     }
 
-    inline float Evaluate() const
-    {
-        return Mathf::Clamp01(accumulatedTime / alert);
-    }
+    inline float Evaluate() const { return Mathf::Clamp01(accumulatedTime / alert); }
 
-    inline float EvaluateReversed() const
-    {
-        return Mathf::Clamp01((1*alert - accumulatedTime) / alert);
-    }
+    inline float EvaluateReversed() const { return Mathf::Clamp01((1 * alert - accumulatedTime) / alert); }
 
     inline void Reset()
     {
         accumulatedTime = 0;
-        triggered = false;
+        triggered       = false;
     }
 
-    inline bool IsTriggered() const
-    {
-        return triggered;
-    }
+    inline bool IsTriggered() const { return triggered; }
 
 private:
     float accumulatedTime = 0;
-    float alert = 1;
-    bool triggered = false;
+    float alert           = 1;
+    bool triggered        = false;
 };
 
-inline Timer operator""_ms(unsigned long long ms)
-{
-    return Timer(ms / 1000.0f);
-}
+inline Timer operator""_ms(unsigned long long ms) { return Timer(ms / 1000.0f); }
